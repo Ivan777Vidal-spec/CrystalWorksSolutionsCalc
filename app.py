@@ -3,11 +3,10 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 # ----------------------------
-# PRICING SETTINGS
+# SETTINGS
 # ----------------------------
 
-RESIDENTIAL_RATE_PER_HOUR = 70
-COMMERCIAL_RATE_PER_HOUR = 63
+RATE_PER_HOUR = 70
 MINIMUM_SERVICE_PRICE = 150
 OPEN_HOUSE_MINIMUM = 150
 
@@ -18,7 +17,7 @@ RECURRING_DISCOUNTS = {
     "monthly": 0.10,
 }
 
-SERVICE_MULTIPLIERS = {
+RESIDENTIAL_MULTIPLIERS = {
     "basic": 1.00,
     "first_time": 1.18,
     "deep": 1.30,
@@ -47,6 +46,138 @@ CONDITION_RANGE = {
     "normal": (0.97, 1.05),
     "dirty": (0.98, 1.08),
     "very_dirty": (1.00, 1.12),
+}
+
+
+# ----------------------------
+# SERVICE DETAILS
+# ----------------------------
+
+RESIDENTIAL_SERVICE_DETAILS = {
+    "basic": {
+        "label": "Basic Cleaning",
+        "purpose": "Routine cleaning for homes that are already maintained. Best for recurring clients.",
+        "includes": [
+            "Kitchen: wipe countertops, clean sink and faucet, clean stovetop, wipe cabinet fronts, exterior appliance wipe-down",
+            "Bathrooms: clean toilet, clean sink and faucet, clean mirrors, light scrub of tub/shower",
+            "Bedrooms & living areas: dust accessible surfaces, vacuum carpets, sweep floors, mop floors",
+            "General: trash removal, light straightening",
+        ],
+        "not_included": [
+            "Baseboards",
+            "Inside appliances",
+            "Inside cabinets or drawers",
+            "Window cleaning",
+            "Heavy scrubbing",
+            "Wall cleaning",
+        ],
+    },
+    "first_time": {
+        "label": "First-Time Cleaning",
+        "purpose": "Used when cleaning a home for the first time. Homes usually need extra work on the first visit.",
+        "includes": [
+            "Everything in Basic Cleaning",
+            "Extra dust removal",
+            "Detailed bathroom cleaning",
+            "Extra kitchen detailing",
+            "Additional buildup removal",
+        ],
+        "not_included": [
+            "Inside oven",
+            "Inside refrigerator",
+            "Interior windows",
+            "Carpet shampooing",
+            "Exterior pressure washing",
+        ],
+    },
+    "deep": {
+        "label": "Deep Cleaning",
+        "purpose": "A more detailed cleaning service for homes needing a thorough reset.",
+        "includes": [
+            "Everything in Basic Cleaning",
+            "Kitchen: clean backsplash, detail around appliances, clean inside microwave",
+            "Bathrooms: scrub tile and grout areas, remove soap scum buildup, detail around fixtures",
+            "Whole house: baseboards cleaned, door frames wiped, light switch plates cleaned, vent covers dusted",
+        ],
+        "not_included": [
+            "Inside oven",
+            "Inside refrigerator",
+            "Interior windows",
+            "Carpet shampooing",
+            "Exterior pressure washing",
+        ],
+    },
+}
+
+REALTOR_SERVICE_DETAILS = {
+    "listing_prep": {
+        "label": "Listing Preparation",
+        "purpose": "Prepare a home for listing photos, showings, and marketing.",
+        "includes": [
+            "Kitchen: wipe countertops, clean sink and faucet, clean exterior appliances, wipe cabinet fronts, clean stovetop",
+            "Bathrooms: clean toilet, clean sink and faucet, clean mirrors, light scrub of shower/tub",
+            "Bedrooms & living areas: dust accessible surfaces, vacuum carpets, sweep and mop floors",
+            "General: trash removal, quick detail cleaning",
+        ],
+        "not_included": [
+            "Inside cabinets",
+            "Inside appliances",
+            "Window cleaning",
+            "Carpet shampooing",
+            "Pressure washing",
+        ],
+    },
+    "vacant_move_out": {
+        "label": "Vacant / Move-Out",
+        "purpose": "Clean empty homes after tenants move out or before listing.",
+        "includes": [
+            "Kitchen: wipe cabinets, clean countertops, clean sink and faucet, clean exterior appliances",
+            "Bathrooms: deep clean toilets, scrub tubs and showers, clean mirrors and sinks",
+            "Whole house: baseboards wiped, closets dusted, floors vacuumed, sweep and mop floors, trash removal",
+        ],
+        "not_included": [
+            "Carpet shampooing",
+            "Window cleaning",
+            "Exterior pressure washing",
+            "Heavy stain removal",
+        ],
+    },
+    "open_house_touchup": {
+        "label": "Open House Touch-Up",
+        "purpose": "Quick refresh before an open house or showing.",
+        "includes": [
+            "Wipe countertops",
+            "Bathroom quick clean",
+            "Mirror cleaning",
+            "Vacuum or sweep floors",
+            "Trash removal",
+            "Quick dusting",
+        ],
+        "not_included": [
+            "Deep cleaning",
+            "Appliances",
+            "Cabinets",
+            "Baseboards",
+        ],
+    },
+    "post_renovation": {
+        "label": "Post-Renovation Cleaning",
+        "purpose": "Cleaning after remodeling or repairs.",
+        "includes": [
+            "Removal of dust from surfaces",
+            "Cleaning countertops and fixtures",
+            "Vacuuming floors",
+            "Sweeping and mopping floors",
+            "Bathroom wipe-down",
+            "Trash removal",
+        ],
+        "not_included": [
+            "Paint removal",
+            "Adhesive removal",
+            "Window scraping",
+            "Heavy debris removal",
+        ],
+    },
 }
 
 
@@ -84,34 +215,6 @@ def get_sqft_adjustment(square_feet: int) -> float:
     return 0.00
 
 
-def estimate_base_hours(square_feet: int) -> float:
-    if square_feet <= 1000:
-        return 2.0
-    elif square_feet <= 1500:
-        return 2.5
-    elif square_feet <= 2000:
-        return 3.0
-    elif square_feet <= 2500:
-        return 3.5
-    elif square_feet <= 3000:
-        return 4.0
-    elif square_feet <= 4000:
-        return 5.0
-    elif square_feet <= 5000:
-        return 6.0
-    return 7.5
-
-
-def estimate_detail_hours(bedrooms: int, bathrooms: int, half_baths: int, stories: int) -> float:
-    extra = 0.0
-    extra += bedrooms * 0.20
-    extra += bathrooms * 0.30
-    extra += half_baths * 0.15
-    if stories > 1:
-        extra += (stories - 1) * 0.25
-    return extra
-
-
 def build_range(total_price: float, condition_key: str):
     low_mult, high_mult = CONDITION_RANGE.get(condition_key, (0.97, 1.05))
     low = max(MINIMUM_SERVICE_PRICE, total_price * low_mult)
@@ -119,106 +222,165 @@ def build_range(total_price: float, condition_key: str):
     return money(low), money(high)
 
 
-def add_residential_addons(square_feet: int, oven: bool, fridge: bool, windows: bool,
-                           carpet: bool, pressure: bool, bins: bool):
-    add_ons_total = 0.0
-    add_on_details = []
+def residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
+    return (
+        (bedrooms * 0.75) +
+        (bathrooms * 1.0) +
+        (kitchens * 1.0) +
+        (living_rooms * 0.5) +
+        (dining_rooms * 0.5) +
+        (hallways * 0.25)
+    )
+
+
+def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
+    return (
+        (bedrooms * 0.6) +
+        (bathrooms * 1.0) +
+        (kitchens * 1.25) +
+        (living_rooms * 0.5) +
+        (dining_rooms * 0.5) +
+        (hallways * 0.25)
+    )
+
+
+def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins):
+    addon_details = []
+    addon_total = 0.0
+
+    if window_count > 0:
+        total = window_count * 5
+        addon_total += total
+        addon_details.append(("Window Cleaning", money(total)))
 
     if oven:
-        add_ons_total += 25
-        add_on_details.append(("Oven Cleaning", 25))
+        addon_total += 25
+        addon_details.append(("Inside Oven Cleaning", 25))
+
     if fridge:
-        add_ons_total += 25
-        add_on_details.append(("Fridge Cleaning", 25))
-    if windows:
-        add_ons_total += 40
-        add_on_details.append(("Interior Windows", 40))
-    if carpet:
-        carpet_price = square_feet * 0.35
-        add_ons_total += carpet_price
-        add_on_details.append(("Carpet Cleaning", money(carpet_price)))
-    if pressure:
-        pressure_price = square_feet * 0.37
-        add_ons_total += pressure_price
-        add_on_details.append(("Pressure Washing", money(pressure_price)))
-    if bins:
-        bin_price = 17 if (oven or fridge or windows or carpet or pressure) else 20
-        add_ons_total += bin_price
-        add_on_details.append(("Trash Bin Cleaning", bin_price))
+        addon_total += 20
+        addon_details.append(("Inside Refrigerator Cleaning", 20))
 
-    return money(add_ons_total), add_on_details
+    if carpet_sqft > 0:
+        total = carpet_sqft * 0.35
+        addon_total += total
+        addon_details.append(("Carpet Cleaning", money(total)))
+
+    if pressure_sqft > 0:
+        total = pressure_sqft * 0.37
+        addon_total += total
+        addon_details.append(("Pressure Washing", money(total)))
+
+    if bins > 0:
+        has_other_service = (
+            window_count > 0 or oven or fridge or carpet_sqft > 0 or pressure_sqft > 0
+        )
+        bin_rate = 17 if has_other_service else 20
+        total = bins * bin_rate
+        addon_total += total
+        addon_details.append(("Trash Bin Cleaning", money(total)))
+
+    return money(addon_total), addon_details
 
 
-def calculate_residential(square_feet: int, bedrooms: int, bathrooms: int, half_baths: int,
-                          stories: int, condition: str, oven: bool, fridge: bool,
-                          windows: bool, carpet: bool, pressure: bool, bins: bool):
+def calculate_residential(
+    square_feet,
+    bedrooms,
+    bathrooms,
+    kitchens,
+    living_rooms,
+    dining_rooms,
+    hallways,
+    condition,
+    window_count,
+    oven,
+    fridge,
+    carpet_sqft,
+    pressure_sqft,
+    bins,
+):
+    formula_units = residential_formula_units(
+        bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways
+    )
 
-    base_hours = estimate_base_hours(square_feet)
-    detail_hours = estimate_detail_hours(bedrooms, bathrooms, half_baths, stories)
-    total_hours = base_hours + detail_hours
-
-    base_price = total_hours * RESIDENTIAL_RATE_PER_HOUR
+    base_price = formula_units * RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
     after_sqft = base_price * (1 + sqft_adjustment)
 
     condition_mult = CONDITION_MULTIPLIERS.get(condition, 1.00)
     conditioned_subtotal = after_sqft * condition_mult
 
-    add_ons_total, add_on_details = add_residential_addons(
-        square_feet, oven, fridge, windows, carpet, pressure, bins
+    addon_total, addon_details = calculate_addons(
+        window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
     )
 
-    service_rows = []
-
-    for service_key, service_mult in SERVICE_MULTIPLIERS.items():
-        one_time_total = conditioned_subtotal * service_mult + add_ons_total
+    rows = []
+    for service_key, multiplier in RESIDENTIAL_MULTIPLIERS.items():
+        one_time_total = (conditioned_subtotal * multiplier) + addon_total
         one_time_total = max(one_time_total, MINIMUM_SERVICE_PRICE)
 
         weekly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
         biweekly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
         monthly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
 
-        low_range, high_range = build_range(one_time_total, condition)
+        range_low, range_high = build_range(one_time_total, condition)
 
-        service_rows.append({
+        rows.append({
             "key": service_key,
-            "label": {
-                "basic": "Basic Cleaning",
-                "first_time": "First-Time Cleaning",
-                "deep": "Deep Cleaning",
-            }[service_key],
-            "multiplier": service_mult,
+            "label": RESIDENTIAL_SERVICE_DETAILS[service_key]["label"],
             "one_time": money(one_time_total),
             "weekly": money(weekly_total),
             "biweekly": money(biweekly_total),
             "monthly": money(monthly_total),
-            "range_low": low_range,
-            "range_high": high_range,
+            "range_low": range_low,
+            "range_high": range_high,
+            "purpose": RESIDENTIAL_SERVICE_DETAILS[service_key]["purpose"],
+            "includes": RESIDENTIAL_SERVICE_DETAILS[service_key]["includes"],
+            "not_included": RESIDENTIAL_SERVICE_DETAILS[service_key]["not_included"],
         })
 
     return {
         "square_feet": square_feet,
         "bedrooms": bedrooms,
         "bathrooms": bathrooms,
-        "half_baths": half_baths,
-        "stories": stories,
+        "kitchens": kitchens,
+        "living_rooms": living_rooms,
+        "dining_rooms": dining_rooms,
+        "hallways": hallways,
         "condition": condition,
-        "base_hours": money(base_hours),
-        "detail_hours": money(detail_hours),
-        "total_hours": money(total_hours),
+        "formula_units": money(formula_units),
         "base_price": money(base_price),
         "sqft_adjustment_pct": int(sqft_adjustment * 100),
         "condition_pct": int((condition_mult - 1) * 100),
-        "add_ons_total": money(add_ons_total),
-        "add_on_details": add_on_details,
-        "rows": service_rows,
+        "addon_total": money(addon_total),
+        "addon_details": addon_details,
+        "rows": rows,
     }
 
 
-def calculate_realtor(square_feet: int, service_type: str, rush_type: str, condition: str):
-    base_hours = estimate_base_hours(square_feet)
-    base_price = base_hours * RESIDENTIAL_RATE_PER_HOUR
+def calculate_realtor(
+    square_feet,
+    bedrooms,
+    bathrooms,
+    kitchens,
+    living_rooms,
+    dining_rooms,
+    hallways,
+    service_type,
+    rush_type,
+    condition,
+    window_count,
+    oven,
+    fridge,
+    carpet_sqft,
+    pressure_sqft,
+    bins,
+):
+    formula_units = realtor_formula_units(
+        bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways
+    )
 
+    base_price = formula_units * RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
     after_sqft = base_price * (1 + sqft_adjustment)
 
@@ -228,8 +390,14 @@ def calculate_realtor(square_feet: int, service_type: str, rush_type: str, condi
     service_mult = REALTOR_MULTIPLIERS.get(service_type, 1.00)
     subtotal = after_condition * service_mult
 
+    addon_total, addon_details = calculate_addons(
+        window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
+    )
+
+    subtotal_with_addons = subtotal + addon_total
+
     rush_pct = RUSH_FEES.get(rush_type, 0.00)
-    total = subtotal * (1 + rush_pct)
+    total = subtotal_with_addons * (1 + rush_pct)
 
     if service_type == "open_house_touchup":
         total = max(total, OPEN_HOUSE_MINIMUM)
@@ -237,16 +405,21 @@ def calculate_realtor(square_feet: int, service_type: str, rush_type: str, condi
         total = max(total, MINIMUM_SERVICE_PRICE)
 
     range_low, range_high = build_range(total, condition)
+    details = REALTOR_SERVICE_DETAILS[service_type]
 
     return {
         "square_feet": square_feet,
+        "bedrooms": bedrooms,
+        "bathrooms": bathrooms,
+        "kitchens": kitchens,
+        "living_rooms": living_rooms,
+        "dining_rooms": dining_rooms,
+        "hallways": hallways,
         "service_type": service_type,
-        "service_label": {
-            "listing_prep": "Listing Preparation",
-            "vacant_move_out": "Vacant / Move-Out",
-            "post_renovation": "Post-Renovation Cleaning",
-            "open_house_touchup": "Open House Touch-Up",
-        }[service_type],
+        "service_label": details["label"],
+        "purpose": details["purpose"],
+        "includes": details["includes"],
+        "not_included": details["not_included"],
         "rush_type": rush_type,
         "rush_label": {
             "none": "None",
@@ -254,34 +427,17 @@ def calculate_realtor(square_feet: int, service_type: str, rush_type: str, condi
             "same_day": "Same-Day",
         }[rush_type],
         "condition": condition,
-        "base_hours": money(base_hours),
+        "formula_units": money(formula_units),
         "base_price": money(base_price),
         "sqft_adjustment_pct": int(sqft_adjustment * 100),
         "condition_pct": int((condition_mult - 1) * 100),
         "service_multiplier": service_mult,
         "rush_pct": int(rush_pct * 100),
+        "addon_total": money(addon_total),
+        "addon_details": addon_details,
         "total": money(total),
         "range_low": range_low,
         "range_high": range_high,
-    }
-
-
-def calculate_exterior(pressure_sqft: float, carpet_sqft: float, trash_bins: int, bins_with_service: bool):
-    pressure_total = pressure_sqft * 0.37
-    carpet_total = carpet_sqft * 0.35
-    bin_price = 17 if bins_with_service else 20
-    bins_total = trash_bins * bin_price if trash_bins > 0 else 0
-    total = pressure_total + carpet_total + bins_total
-
-    return {
-        "pressure_sqft": pressure_sqft,
-        "carpet_sqft": carpet_sqft,
-        "trash_bins": trash_bins,
-        "bins_with_service": bins_with_service,
-        "pressure_total": money(pressure_total),
-        "carpet_total": money(carpet_total),
-        "bins_total": money(bins_total),
-        "total": money(total),
     }
 
 
@@ -294,67 +450,47 @@ def index():
     active_tab = "residential"
     residential_result = None
     realtor_result = None
-    exterior_result = None
 
     if request.method == "POST":
         form_type = request.form.get("form_type", "residential")
         active_tab = form_type
 
         if form_type == "residential":
-            square_feet = safe_int(request.form.get("square_feet"))
-            bedrooms = safe_int(request.form.get("bedrooms"))
-            bathrooms = safe_int(request.form.get("bathrooms"))
-            half_baths = safe_int(request.form.get("half_baths"))
-            stories = safe_int(request.form.get("stories"), 1)
-
-            condition = request.form.get("condition", "normal")
-
-            oven = "oven" in request.form
-            fridge = "fridge" in request.form
-            windows = "windows" in request.form
-            carpet = "carpet" in request.form
-            pressure = "pressure" in request.form
-            bins = "bins" in request.form
-
             residential_result = calculate_residential(
-                square_feet=square_feet,
-                bedrooms=bedrooms,
-                bathrooms=bathrooms,
-                half_baths=half_baths,
-                stories=stories,
-                condition=condition,
-                oven=oven,
-                fridge=fridge,
-                windows=windows,
-                carpet=carpet,
-                pressure=pressure,
-                bins=bins
+                square_feet=safe_int(request.form.get("square_feet")),
+                bedrooms=safe_int(request.form.get("bedrooms")),
+                bathrooms=safe_int(request.form.get("bathrooms")),
+                kitchens=safe_int(request.form.get("kitchens"), 1),
+                living_rooms=safe_int(request.form.get("living_rooms"), 1),
+                dining_rooms=safe_int(request.form.get("dining_rooms"), 1),
+                hallways=safe_int(request.form.get("hallways"), 1),
+                condition=request.form.get("condition", "normal"),
+                window_count=safe_int(request.form.get("window_count")),
+                oven=("oven" in request.form),
+                fridge=("fridge" in request.form),
+                carpet_sqft=safe_float(request.form.get("carpet_sqft")),
+                pressure_sqft=safe_float(request.form.get("pressure_sqft")),
+                bins=safe_int(request.form.get("bins")),
             )
 
         elif form_type == "realtor":
-            square_feet = safe_int(request.form.get("realtor_square_feet"))
-            service_type = request.form.get("service_type", "listing_prep")
-            rush_type = request.form.get("rush_type", "none")
-            condition = request.form.get("realtor_condition", "normal")
-
             realtor_result = calculate_realtor(
-                square_feet=square_feet,
-                service_type=service_type,
-                rush_type=rush_type,
-                condition=condition
-            )
-
-        elif form_type == "exterior":
-            pressure_sqft = safe_float(request.form.get("pressure_sqft"))
-            carpet_sqft = safe_float(request.form.get("carpet_sqft"))
-            trash_bins = safe_int(request.form.get("trash_bins"), 0)
-            bins_with_service = request.form.get("bins_with_service") == "yes"
-
-            exterior_result = calculate_exterior(
-                pressure_sqft=pressure_sqft,
-                carpet_sqft=carpet_sqft,
-                trash_bins=trash_bins,
-                bins_with_service=bins_with_service
+                square_feet=safe_int(request.form.get("realtor_square_feet")),
+                bedrooms=safe_int(request.form.get("realtor_bedrooms")),
+                bathrooms=safe_int(request.form.get("realtor_bathrooms")),
+                kitchens=safe_int(request.form.get("realtor_kitchens"), 1),
+                living_rooms=safe_int(request.form.get("realtor_living_rooms"), 1),
+                dining_rooms=safe_int(request.form.get("realtor_dining_rooms"), 1),
+                hallways=safe_int(request.form.get("realtor_hallways"), 1),
+                service_type=request.form.get("service_type", "listing_prep"),
+                rush_type=request.form.get("rush_type", "none"),
+                condition=request.form.get("realtor_condition", "normal"),
+                window_count=safe_int(request.form.get("realtor_window_count")),
+                oven=("realtor_oven" in request.form),
+                fridge=("realtor_fridge" in request.form),
+                carpet_sqft=safe_float(request.form.get("realtor_carpet_sqft")),
+                pressure_sqft=safe_float(request.form.get("realtor_pressure_sqft")),
+                bins=safe_int(request.form.get("realtor_bins")),
             )
 
     return render_template(
@@ -362,7 +498,6 @@ def index():
         active_tab=active_tab,
         residential_result=residential_result,
         realtor_result=realtor_result,
-        exterior_result=exterior_result
     )
 
 
