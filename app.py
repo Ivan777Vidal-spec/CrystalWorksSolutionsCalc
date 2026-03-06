@@ -1,325 +1,260 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-HTML = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crystal Works Solutions Estimator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f7f8;
-      color: #222;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-    h1, h2, h3 {
-      margin-top: 0;
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-    }
-    input[type="number"], select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-      padding: 8px 0;
-    }
-    .checkbox-row input {
-      transform: scale(1.2);
-    }
-    button {
-      width: 100%;
-      background: #1f7a8c;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 18px;
-    }
-    button:hover {
-      background: #175d6a;
-    }
-    .results p {
-      margin: 8px 0;
-      font-size: 17px;
-    }
-    .price {
-      font-weight: bold;
-      font-size: 18px;
-    }
-    .section-note {
-      font-size: 14px;
-      color: #555;
-      margin-top: 8px;
-    }
-    .small {
-      font-size: 14px;
-      color: #666;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #e5e5e5;
-      margin: 16px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <h1>Crystal Works Solutions</h1>
-      <p>Residential Cleaning Estimator</p>
-    </div>
+# ----------------------------
+# PRICING SETTINGS
+# ----------------------------
 
-    <form method="POST">
-      <div class="card">
-        <h2>Home Details</h2>
+# Residential
+RESIDENTIAL_RATE_PER_HOUR = 70
+MINIMUM_SERVICE_PRICE = 150
 
-        <label>Bedrooms</label>
-        <input type="number" name="bedrooms" min="0" step="1" value="{{ form.bedrooms }}">
+# Recurring discounts
+RECURRING_DISCOUNTS = {
+    "one_time": 0.00,
+    "weekly": 0.20,
+    "biweekly": 0.15,
+    "monthly": 0.10,
+}
 
-        <label>Bathrooms</label>
-        <input type="number" name="bathrooms" min="0" step="0.5" value="{{ form.bathrooms }}">
+# Realtor rush fees
+RUSH_FEES = {
+    "none": 0.00,
+    "next_day": 0.15,
+    "same_day": 0.25,
+}
 
-        <label>Kitchen(s)</label>
-        <input type="number" name="kitchen" min="0" step="1" value="{{ form.kitchen }}">
 
-        <label>Living Room(s)</label>
-        <input type="number" name="living" min="0" step="1" value="{{ form.living }}">
+# ----------------------------
+# HELPER FUNCTIONS
+# ----------------------------
 
-        <label>Dining Room(s)</label>
-        <input type="number" name="dining" min="0" step="1" value="{{ form.dining }}">
+def get_sqft_adjustment(square_feet: int) -> float:
+    """Residential sqft increase."""
+    if square_feet > 5000:
+        return 0.30
+    elif square_feet > 4000:
+        return 0.20
+    elif square_feet > 3000:
+        return 0.15
+    elif square_feet > 2000:
+        return 0.10
+    return 0.00
 
-        <label>Hallway(s)</label>
-        <input type="number" name="hallway" min="0" step="1" value="{{ form.hallway }}">
 
-        <label>Home Square Footage</label>
-        <input type="number" name="sqft" min="0" step="1" value="{{ form.sqft }}">
+def estimate_cleaning_hours(square_feet: int) -> float:
+    """
+    Simple residential/realtor base time estimate.
+    Adjust this anytime if you want tighter pricing.
+    """
+    if square_feet <= 1000:
+        return 2.0
+    elif square_feet <= 1500:
+        return 2.5
+    elif square_feet <= 2000:
+        return 3.0
+    elif square_feet <= 2500:
+        return 3.5
+    elif square_feet <= 3000:
+        return 4.0
+    elif square_feet <= 4000:
+        return 5.0
+    elif square_feet <= 5000:
+        return 6.0
+    return 7.5
 
-        <p class="section-note">
-          Minimum service price: $150
-        </p>
-      </div>
 
-      <div class="card">
-        <h2>Add-Ons</h2>
+def safe_int(value, default=0):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
 
-        <div class="checkbox-row">
-          <input type="checkbox" name="oven" id="oven" {% if form.oven %}checked{% endif %}>
-          <label for="oven" style="margin:0;">Inside Oven Cleaning (+$25)</label>
-        </div>
 
-        <div class="checkbox-row">
-          <input type="checkbox" name="fridge" id="fridge" {% if form.fridge %}checked{% endif %}>
-          <label for="fridge" style="margin:0;">Inside Refrigerator Cleaning (+$20)</label>
-        </div>
-
-        <div class="checkbox-row">
-          <input type="checkbox" name="trash_bin" id="trash_bin" {% if form.trash_bin %}checked{% endif %}>
-          <label for="trash_bin" style="margin:0;">Trash Bin Cleaning (+$17 with service)</label>
-        </div>
-
-        <label>Number of Windows (+$5 each)</label>
-        <input type="number" name="windows" min="0" step="1" value="{{ form.windows }}">
-
-        <label>Carpet Cleaning Sq Ft (+$0.35/sq ft)</label>
-        <input type="number" name="carpet_sqft" min="0" step="1" value="{{ form.carpet_sqft }}">
-
-        <label>Pressure Washing Sq Ft (+$0.37/sq ft)</label>
-        <input type="number" name="pressure_sqft" min="0" step="1" value="{{ form.pressure_sqft }}">
-      </div>
-
-      <div class="card">
-        <button type="submit">Calculate Estimate</button>
-      </div>
-    </form>
-
-    {% if results %}
-    <div class="card results">
-      <h2>Estimate Results</h2>
-
-      <p><strong>Base Formula Price:</strong> ${{ results.base_formula_price }}</p>
-      <p><strong>Square Footage Adjustment:</strong> {{ results.sqft_adjustment }}</p>
-      <p><strong>Adjusted Base Price:</strong> ${{ results.adjusted_base_price }}</p>
-      <p><strong>Add-On Total:</strong> ${{ results.addons_total }}</p>
-
-      <hr>
-
-      <h3>One-Time Service Prices</h3>
-      <p class="price">Basic Cleaning: ${{ results.basic_total }}</p>
-      <p class="price">First-Time Cleaning: ${{ results.first_time_total }}</p>
-      <p class="price">Deep Cleaning: ${{ results.deep_total }}</p>
-
-      <hr>
-
-      <h3>Recurring Maintenance Prices</h3>
-      <p class="price">Weekly (-20%): ${{ results.weekly_total }}</p>
-      <p class="price">Biweekly (-15%): ${{ results.biweekly_total }}</p>
-      <p class="price">Monthly (-10%): ${{ results.monthly_total }}</p>
-
-      <p class="small">
-        Recurring pricing starts after the initial first-time cleaning.
-      </p>
-    </div>
-    {% endif %}
-  </div>
-</body>
-</html>
-"""
-
-def to_float(value, default=0):
+def safe_float(value, default=0.0):
     try:
         return float(value)
     except (TypeError, ValueError):
         return default
 
-def money(value):
-    return f"{value:,.2f}"
+
+# ----------------------------
+# ROUTE
+# ----------------------------
 
 @app.route("/", methods=["GET", "POST"])
-def home():
-    form = {
-        "bedrooms": 3,
-        "bathrooms": 2,
-        "kitchen": 1,
-        "living": 1,
-        "dining": 1,
-        "hallway": 1,
-        "sqft": 1400,
-        "oven": False,
-        "fridge": False,
-        "trash_bin": False,
-        "windows": 0,
-        "carpet_sqft": 0,
-        "pressure_sqft": 0
-    }
-
-    results = None
+def index():
+    residential_result = None
+    realtor_result = None
+    exterior_result = None
+    active_tab = "residential"
 
     if request.method == "POST":
-        form["bedrooms"] = to_float(request.form.get("bedrooms"), 0)
-        form["bathrooms"] = to_float(request.form.get("bathrooms"), 0)
-        form["kitchen"] = to_float(request.form.get("kitchen"), 0)
-        form["living"] = to_float(request.form.get("living"), 0)
-        form["dining"] = to_float(request.form.get("dining"), 0)
-        form["hallway"] = to_float(request.form.get("hallway"), 0)
-        form["sqft"] = to_float(request.form.get("sqft"), 0)
+        form_type = request.form.get("form_type", "residential")
+        active_tab = form_type
 
-        form["oven"] = request.form.get("oven") == "on"
-        form["fridge"] = request.form.get("fridge") == "on"
-        form["trash_bin"] = request.form.get("trash_bin") == "on"
+        # ----------------------------
+        # RESIDENTIAL ESTIMATOR
+        # ----------------------------
+        if form_type == "residential":
+            square_feet = safe_int(request.form.get("square_feet"))
+            cleaning_type = request.form.get("cleaning_type", "basic")
+            frequency = request.form.get("frequency", "one_time")
 
-        form["windows"] = to_float(request.form.get("windows"), 0)
-        form["carpet_sqft"] = to_float(request.form.get("carpet_sqft"), 0)
-        form["pressure_sqft"] = to_float(request.form.get("pressure_sqft"), 0)
+            oven = "oven" in request.form
+            fridge = "fridge" in request.form
+            windows = "windows" in request.form
+            carpet = "carpet" in request.form
+            pressure = "pressure" in request.form
+            bins = "bins" in request.form
 
-        # Base residential formula
-        base_formula_price = (
-            (form["bedrooms"] * 0.75) +
-            (form["bathrooms"] * 1.0) +
-            (form["kitchen"] * 1.0) +
-            (form["living"] * 0.5) +
-            (form["dining"] * 0.5) +
-            (form["hallway"] * 0.25)
-        ) * 70
+            base_hours = estimate_cleaning_hours(square_feet)
+            base_price = base_hours * RESIDENTIAL_RATE_PER_HOUR
 
-        # Minimum service price
-        adjusted_base_price = max(base_formula_price, 150)
+            sqft_adjustment = get_sqft_adjustment(square_feet)
+            price_after_sqft = base_price * (1 + sqft_adjustment)
 
-        # Square footage adjustment
-        sqft_adjustment_text = "No adjustment"
-        if form["sqft"] > 5000:
-            adjusted_base_price *= 1.30
-            sqft_adjustment_text = "+30% (over 5000 sq ft)"
-        elif form["sqft"] > 4000:
-            adjusted_base_price *= 1.20
-            sqft_adjustment_text = "+20% (over 4000 sq ft)"
-        elif form["sqft"] > 3000:
-            adjusted_base_price *= 1.15
-            sqft_adjustment_text = "+15% (over 3000 sq ft)"
-        elif form["sqft"] > 2000:
-            adjusted_base_price *= 1.10
-            sqft_adjustment_text = "+10% (over 2000 sq ft)"
+            service_multiplier = 1.00
+            if cleaning_type == "first_time":
+                service_multiplier = 1.18
+            elif cleaning_type == "deep":
+                service_multiplier = 1.30
 
-        # Add-ons
-        addons_total = 0
+            subtotal = price_after_sqft * service_multiplier
 
-        if form["oven"]:
-            addons_total += 25
+            add_ons_total = 0.0
+            add_on_details = []
 
-        if form["fridge"]:
-            addons_total += 20
+            if oven:
+                add_ons_total += 25
+                add_on_details.append(("Oven Cleaning", 25))
+            if fridge:
+                add_ons_total += 25
+                add_on_details.append(("Fridge Cleaning", 25))
+            if windows:
+                add_ons_total += 40
+                add_on_details.append(("Interior Windows", 40))
+            if carpet:
+                carpet_sqft = square_feet
+                carpet_price = carpet_sqft * 0.35
+                add_ons_total += carpet_price
+                add_on_details.append(("Carpet Cleaning", carpet_price))
+            if pressure:
+                pressure_sqft = square_feet
+                pressure_price = pressure_sqft * 0.37
+                add_ons_total += pressure_price
+                add_on_details.append(("Pressure Washing", pressure_price))
+            if bins:
+                bin_price = 17 if (oven or fridge or windows or carpet or pressure or subtotal > 0) else 20
+                add_ons_total += bin_price
+                add_on_details.append(("Trash Bin Cleaning", bin_price))
 
-        if form["trash_bin"]:
-            addons_total += 17
+            subtotal_with_addons = subtotal + add_ons_total
 
-        addons_total += form["windows"] * 5
-        addons_total += form["carpet_sqft"] * 0.35
-        addons_total += form["pressure_sqft"] * 0.37
+            discount_rate = RECURRING_DISCOUNTS.get(frequency, 0.00)
+            total = subtotal_with_addons * (1 - discount_rate)
 
-        # Main service prices
-        basic_price = adjusted_base_price
-        first_time_price = adjusted_base_price * 1.18
-        deep_price = adjusted_base_price * 1.30
+            if total < MINIMUM_SERVICE_PRICE:
+                total = MINIMUM_SERVICE_PRICE
 
-        # Recurring pricing based on basic maintenance price
-        weekly_price = adjusted_base_price * 0.80
-        biweekly_price = adjusted_base_price * 0.85
-        monthly_price = adjusted_base_price * 0.90
+            residential_result = {
+                "square_feet": square_feet,
+                "cleaning_type": cleaning_type,
+                "frequency": frequency,
+                "base_hours": round(base_hours, 2),
+                "base_price": round(base_price, 2),
+                "sqft_adjustment_pct": int(sqft_adjustment * 100),
+                "service_multiplier": service_multiplier,
+                "discount_pct": int(discount_rate * 100),
+                "add_on_details": add_on_details,
+                "total": round(total, 2),
+            }
 
-        # Totals with add-ons
-        basic_total = basic_price + addons_total
-        first_time_total = first_time_price + addons_total
-        deep_total = deep_price + addons_total
-        weekly_total = weekly_price + addons_total
-        biweekly_total = biweekly_price + addons_total
-        monthly_total = monthly_price + addons_total
+        # ----------------------------
+        # REALTOR ESTIMATOR
+        # ----------------------------
+        elif form_type == "realtor":
+            square_feet = safe_int(request.form.get("realtor_square_feet"))
+            service_type = request.form.get("service_type", "listing_prep")
+            rush_type = request.form.get("rush_type", "none")
 
-        results = {
-            "base_formula_price": money(base_formula_price),
-            "sqft_adjustment": sqft_adjustment_text,
-            "adjusted_base_price": money(adjusted_base_price),
-            "addons_total": money(addons_total),
-            "basic_total": money(basic_total),
-            "first_time_total": money(first_time_total),
-            "deep_total": money(deep_total),
-            "weekly_total": money(weekly_total),
-            "biweekly_total": money(biweekly_total),
-            "monthly_total": money(monthly_total),
-        }
+            base_hours = estimate_cleaning_hours(square_feet)
+            base_price = base_hours * RESIDENTIAL_RATE_PER_HOUR
 
-    return render_template_string(HTML, form=form, results=results)
+            sqft_adjustment = get_sqft_adjustment(square_feet)
+            price_after_sqft = base_price * (1 + sqft_adjustment)
+
+            service_multiplier = 1.00
+            if service_type == "vacant_move_out":
+                service_multiplier = 1.15
+            elif service_type == "post_renovation":
+                service_multiplier = 1.30
+            elif service_type == "open_house_touchup":
+                service_multiplier = 1.00
+
+            subtotal = price_after_sqft * service_multiplier
+
+            rush_fee_rate = RUSH_FEES.get(rush_type, 0.00)
+            total = subtotal * (1 + rush_fee_rate)
+
+            if service_type == "open_house_touchup" and total < 150:
+                total = 150
+
+            if total < MINIMUM_SERVICE_PRICE and service_type != "open_house_touchup":
+                total = MINIMUM_SERVICE_PRICE
+
+            realtor_result = {
+                "square_feet": square_feet,
+                "service_type": service_type,
+                "rush_type": rush_type,
+                "base_hours": round(base_hours, 2),
+                "base_price": round(base_price, 2),
+                "sqft_adjustment_pct": int(sqft_adjustment * 100),
+                "service_multiplier": service_multiplier,
+                "rush_pct": int(rush_fee_rate * 100),
+                "total": round(total, 2),
+            }
+
+        # ----------------------------
+        # EXTERIOR ESTIMATOR
+        # ----------------------------
+        elif form_type == "exterior":
+            pressure_sqft = safe_float(request.form.get("pressure_sqft"))
+            carpet_sqft = safe_float(request.form.get("carpet_sqft"))
+            trash_bins = safe_int(request.form.get("trash_bins"), 0)
+            bins_with_service = request.form.get("bins_with_service") == "yes"
+
+            pressure_total = pressure_sqft * 0.37
+            carpet_total = carpet_sqft * 0.35
+
+            if trash_bins > 0:
+                per_bin_price = 17 if bins_with_service else 20
+                bins_total = trash_bins * per_bin_price
+            else:
+                bins_total = 0
+
+            total = pressure_total + carpet_total + bins_total
+
+            exterior_result = {
+                "pressure_sqft": pressure_sqft,
+                "carpet_sqft": carpet_sqft,
+                "trash_bins": trash_bins,
+                "bins_with_service": bins_with_service,
+                "pressure_total": round(pressure_total, 2),
+                "carpet_total": round(carpet_total, 2),
+                "bins_total": round(bins_total, 2),
+                "total": round(total, 2),
+            }
+
+    return render_template(
+        "index.html",
+        residential_result=residential_result,
+        realtor_result=realtor_result,
+        exterior_result=exterior_result,
+        active_tab=active_tab,
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
