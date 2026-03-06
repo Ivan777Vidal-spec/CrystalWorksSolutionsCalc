@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 980px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 18px;
             background: #f5f5f5;
@@ -163,11 +163,7 @@
             padding: 16px;
         }
 
-        .result h3, .result h4 {
-            margin-top: 0;
-        }
-
-        .summary-box {
+        .summary-box, .service-box {
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 12px;
@@ -193,6 +189,7 @@
             border-bottom: 1px solid #e5e5e5;
             text-align: left;
             white-space: nowrap;
+            vertical-align: top;
         }
 
         th {
@@ -204,13 +201,27 @@
             border-bottom: none;
         }
 
-        .note {
-            color: #666;
-            font-size: 14px;
-            margin-top: 8px;
+        .service-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .service-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         ul {
+            margin-top: 8px;
+            padding-left: 18px;
+        }
+
+        .note {
+            color: #666;
+            font-size: 14px;
             margin-top: 8px;
         }
     </style>
@@ -222,7 +233,6 @@
     <div class="tabs">
         <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential</button>
         <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
-        <button class="tab-btn {% if active_tab == 'exterior' %}active{% endif %}" onclick="showTab('exterior')">Exterior</button>
     </div>
 
     <!-- Residential -->
@@ -240,43 +250,55 @@
                     <label>Bedrooms</label>
                     <input type="number" name="bedrooms" min="0" value="3" required>
 
-                    <label>Full Bathrooms</label>
+                    <label>Bathrooms</label>
                     <input type="number" name="bathrooms" min="0" value="2" required>
+
+                    <label>Kitchens</label>
+                    <input type="number" name="kitchens" min="0" value="1" required>
+
+                    <label>Living Rooms</label>
+                    <input type="number" name="living_rooms" min="0" value="1" required>
                 </div>
 
                 <div>
-                    <label>Half Bathrooms</label>
-                    <input type="number" name="half_baths" min="0" value="0" required>
+                    <label>Dining Rooms</label>
+                    <input type="number" name="dining_rooms" min="0" value="1" required>
 
-                    <label>Stories</label>
-                    <input type="number" name="stories" min="1" value="1" required>
+                    <label>Hallways</label>
+                    <input type="number" name="hallways" min="0" value="1" required>
 
-                    <label>Condition</label>
-                    <div class="condition-buttons">
-                        <label>
-                            <input type="radio" name="condition" value="normal" checked>
-                            <span class="condition-chip">Normal</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="condition" value="dirty">
-                            <span class="condition-chip">Dirty</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="condition" value="very_dirty">
-                            <span class="condition-chip">Very Dirty</span>
-                        </label>
-                    </div>
+                    <label>Window Count</label>
+                    <input type="number" name="window_count" min="0" value="0">
+
+                    <label>Carpet Cleaning Sqft</label>
+                    <input type="number" step="0.01" name="carpet_sqft" min="0" value="0">
+
+                    <label>Pressure Washing Sqft</label>
+                    <input type="number" step="0.01" name="pressure_sqft" min="0" value="0">
                 </div>
+            </div>
+
+            <label>Condition</label>
+            <div class="condition-buttons">
+                <label>
+                    <input type="radio" name="condition" value="normal" checked>
+                    <span class="condition-chip">Normal</span>
+                </label>
+                <label>
+                    <input type="radio" name="condition" value="dirty">
+                    <span class="condition-chip">Dirty</span>
+                </label>
+                <label>
+                    <input type="radio" name="condition" value="very_dirty">
+                    <span class="condition-chip">Very Dirty</span>
+                </label>
             </div>
 
             <label>Add-Ons</label>
             <div class="checkbox-group">
-                <label><input type="checkbox" name="oven"> Oven Cleaning</label>
-                <label><input type="checkbox" name="fridge"> Fridge Cleaning</label>
-                <label><input type="checkbox" name="windows"> Interior Windows</label>
-                <label><input type="checkbox" name="carpet"> Carpet Cleaning</label>
-                <label><input type="checkbox" name="pressure"> Pressure Washing</label>
-                <label><input type="checkbox" name="bins"> Trash Bin Cleaning</label>
+                <label><input type="checkbox" name="oven"> Inside Oven Cleaning</label>
+                <label><input type="checkbox" name="fridge"> Inside Refrigerator Cleaning</label>
+                <label>Trash Bins <input type="number" name="bins" min="0" value="0"></label>
             </div>
 
             <button type="submit" class="calculate">Calculate Residential Prices</button>
@@ -289,21 +311,21 @@
             <div class="summary-box">
                 <p><strong>Square Feet:</strong> {{ residential_result.square_feet }}</p>
                 <p><strong>Bedrooms:</strong> {{ residential_result.bedrooms }}</p>
-                <p><strong>Full Baths:</strong> {{ residential_result.bathrooms }}</p>
-                <p><strong>Half Baths:</strong> {{ residential_result.half_baths }}</p>
-                <p><strong>Stories:</strong> {{ residential_result.stories }}</p>
-                <p><strong>Base Hours:</strong> {{ residential_result.base_hours }}</p>
-                <p><strong>Detail Hours:</strong> {{ residential_result.detail_hours }}</p>
-                <p><strong>Total Estimated Hours:</strong> {{ residential_result.total_hours }}</p>
+                <p><strong>Bathrooms:</strong> {{ residential_result.bathrooms }}</p>
+                <p><strong>Kitchens:</strong> {{ residential_result.kitchens }}</p>
+                <p><strong>Living Rooms:</strong> {{ residential_result.living_rooms }}</p>
+                <p><strong>Dining Rooms:</strong> {{ residential_result.dining_rooms }}</p>
+                <p><strong>Hallways:</strong> {{ residential_result.hallways }}</p>
+                <p><strong>Formula Units:</strong> {{ residential_result.formula_units }}</p>
                 <p><strong>Base Price:</strong> ${{ residential_result.base_price }}</p>
                 <p><strong>Sqft Adjustment:</strong> {{ residential_result.sqft_adjustment_pct }}%</p>
                 <p><strong>Condition Upcharge:</strong> {{ residential_result.condition_pct }}%</p>
-                <p><strong>Add-Ons Total:</strong> ${{ residential_result.add_ons_total }}</p>
+                <p><strong>Add-Ons Total:</strong> ${{ residential_result.addon_total }}</p>
 
-                {% if residential_result.add_on_details %}
+                {% if residential_result.addon_details %}
                 <p><strong>Add-Ons:</strong></p>
                 <ul>
-                    {% for item, price in residential_result.add_on_details %}
+                    {% for item, price in residential_result.addon_details %}
                     <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
                     {% endfor %}
                 </ul>
@@ -337,8 +359,31 @@
                 </table>
             </div>
 
+            <div class="service-grid">
+                {% for row in residential_result.rows %}
+                <div class="service-box">
+                    <h4>{{ row.label }}</h4>
+                    <p><strong>Purpose:</strong> {{ row.purpose }}</p>
+
+                    <p><strong>Includes:</strong></p>
+                    <ul>
+                        {% for item in row.includes %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <p><strong>Does NOT include:</strong></p>
+                    <ul>
+                        {% for item in row.not_included %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+
             <div class="note">
-                Quote range is there so you can give yourself room if the job is worse once you start.
+                Carpet and pressure washing are entered by sqft now, not as checkboxes.
             </div>
         </div>
         {% endif %}
@@ -356,6 +401,26 @@
                     <label>Square Footage</label>
                     <input type="number" name="realtor_square_feet" required>
 
+                    <label>Bedrooms</label>
+                    <input type="number" name="realtor_bedrooms" min="0" value="3" required>
+
+                    <label>Bathrooms</label>
+                    <input type="number" name="realtor_bathrooms" min="0" value="2" required>
+
+                    <label>Kitchens</label>
+                    <input type="number" name="realtor_kitchens" min="0" value="1" required>
+
+                    <label>Living Rooms</label>
+                    <input type="number" name="realtor_living_rooms" min="0" value="1" required>
+
+                    <label>Dining Rooms</label>
+                    <input type="number" name="realtor_dining_rooms" min="0" value="1" required>
+                </div>
+
+                <div>
+                    <label>Hallways</label>
+                    <input type="number" name="realtor_hallways" min="0" value="1" required>
+
                     <label>Service Type</label>
                     <select name="service_type">
                         <option value="listing_prep">Listing Preparation</option>
@@ -363,9 +428,7 @@
                         <option value="post_renovation">Post-Renovation Cleaning</option>
                         <option value="open_house_touchup">Open House Touch-Up</option>
                     </select>
-                </div>
 
-                <div>
                     <label>Rush Service</label>
                     <select name="rush_type">
                         <option value="none">None</option>
@@ -373,22 +436,38 @@
                         <option value="same_day">Same-Day (+25%)</option>
                     </select>
 
-                    <label>Condition</label>
-                    <div class="condition-buttons">
-                        <label>
-                            <input type="radio" name="realtor_condition" value="normal" checked>
-                            <span class="condition-chip">Normal</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="realtor_condition" value="dirty">
-                            <span class="condition-chip">Dirty</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="realtor_condition" value="very_dirty">
-                            <span class="condition-chip">Very Dirty</span>
-                        </label>
-                    </div>
+                    <label>Window Count</label>
+                    <input type="number" name="realtor_window_count" min="0" value="0">
+
+                    <label>Carpet Cleaning Sqft</label>
+                    <input type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="0">
+
+                    <label>Pressure Washing Sqft</label>
+                    <input type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="0">
                 </div>
+            </div>
+
+            <label>Condition</label>
+            <div class="condition-buttons">
+                <label>
+                    <input type="radio" name="realtor_condition" value="normal" checked>
+                    <span class="condition-chip">Normal</span>
+                </label>
+                <label>
+                    <input type="radio" name="realtor_condition" value="dirty">
+                    <span class="condition-chip">Dirty</span>
+                </label>
+                <label>
+                    <input type="radio" name="realtor_condition" value="very_dirty">
+                    <span class="condition-chip">Very Dirty</span>
+                </label>
+            </div>
+
+            <label>Add-Ons</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="realtor_oven"> Inside Oven Cleaning</label>
+                <label><input type="checkbox" name="realtor_fridge"> Inside Refrigerator Cleaning</label>
+                <label>Trash Bins <input type="number" name="realtor_bins" min="0" value="0"></label>
             </div>
 
             <button type="submit" class="calculate">Calculate Realtor Estimate</button>
@@ -397,56 +476,46 @@
         {% if realtor_result %}
         <div class="result">
             <h3>Realtor Result</h3>
+
             <div class="summary-box">
-                <p><strong>Square Feet:</strong> {{ realtor_result.square_feet }}</p>
                 <p><strong>Service:</strong> {{ realtor_result.service_label }}</p>
-                <p><strong>Rush:</strong> {{ realtor_result.rush_label }}</p>
-                <p><strong>Base Hours:</strong> {{ realtor_result.base_hours }}</p>
+                <p><strong>Purpose:</strong> {{ realtor_result.purpose }}</p>
+                <p><strong>Square Feet:</strong> {{ realtor_result.square_feet }}</p>
+                <p><strong>Formula Units:</strong> {{ realtor_result.formula_units }}</p>
                 <p><strong>Base Price:</strong> ${{ realtor_result.base_price }}</p>
                 <p><strong>Sqft Adjustment:</strong> {{ realtor_result.sqft_adjustment_pct }}%</p>
                 <p><strong>Condition Upcharge:</strong> {{ realtor_result.condition_pct }}%</p>
                 <p><strong>Service Multiplier:</strong> {{ realtor_result.service_multiplier }}x</p>
-                <p><strong>Rush Fee:</strong> {{ realtor_result.rush_pct }}%</p>
+                <p><strong>Rush:</strong> {{ realtor_result.rush_label }} ({{ realtor_result.rush_pct }}%)</p>
+                <p><strong>Add-Ons Total:</strong> ${{ realtor_result.addon_total }}</p>
+
+                {% if realtor_result.addon_details %}
+                <p><strong>Add-Ons:</strong></p>
+                <ul>
+                    {% for item, price in realtor_result.addon_details %}
+                    <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
                 <p><strong>Total:</strong> ${{ realtor_result.total }}</p>
                 <p><strong>Quote Range:</strong> ${{ realtor_result.range_low }} - ${{ realtor_result.range_high }}</p>
             </div>
-        </div>
-        {% endif %}
-    </div>
 
-    <!-- Exterior -->
-    <div id="exterior" class="tab-content {% if active_tab == 'exterior' %}active{% endif %}">
-        <h2>Exterior Services Estimate</h2>
+            <div class="service-box">
+                <p><strong>Includes:</strong></p>
+                <ul>
+                    {% for item in realtor_result.includes %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
 
-        <form method="POST">
-            <input type="hidden" name="form_type" value="exterior">
-
-            <label>Pressure Washing Sqft</label>
-            <input type="number" step="0.01" name="pressure_sqft" value="0">
-
-            <label>Carpet Cleaning Sqft</label>
-            <input type="number" step="0.01" name="carpet_sqft" value="0">
-
-            <label>Number of Trash Bins</label>
-            <input type="number" name="trash_bins" min="0" value="0">
-
-            <label>Bins With Another Service?</label>
-            <select name="bins_with_service">
-                <option value="yes">Yes ($17 each)</option>
-                <option value="no">No ($20 each)</option>
-            </select>
-
-            <button type="submit" class="calculate">Calculate Exterior Estimate</button>
-        </form>
-
-        {% if exterior_result %}
-        <div class="result">
-            <h3>Exterior Result</h3>
-            <div class="summary-box">
-                <p><strong>Pressure Washing:</strong> ${{ exterior_result.pressure_total }}</p>
-                <p><strong>Carpet Cleaning:</strong> ${{ exterior_result.carpet_total }}</p>
-                <p><strong>Trash Bin Cleaning:</strong> ${{ exterior_result.bins_total }}</p>
-                <p><strong>Total:</strong> ${{ exterior_result.total }}</p>
+                <p><strong>Does NOT include:</strong></p>
+                <ul>
+                    {% for item in realtor_result.not_included %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
         {% endif %}
@@ -467,7 +536,6 @@
             const buttons = document.querySelectorAll(".tab-btn");
             if (tabId === "residential") buttons[0].classList.add("active");
             if (tabId === "realtor") buttons[1].classList.add("active");
-            if (tabId === "exterior") buttons[2].classList.add("active");
         }
     </script>
 </body>
