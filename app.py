@@ -11,7 +11,6 @@ MINIMUM_SERVICE_PRICE = 150
 OPEN_HOUSE_MINIMUM = 150
 
 RECURRING_DISCOUNTS = {
-    "one_time": 0.00,
     "weekly": 0.20,
     "biweekly": 0.15,
     "monthly": 0.10,
@@ -36,75 +35,65 @@ RUSH_FEES = {
     "same_day": 0.25,
 }
 
-CONDITION_MULTIPLIERS = {
-    "normal": 1.00,
-    "dirty": 1.10,
-    "very_dirty": 1.20,
+CONDITION_ADJUSTMENTS = {
+    "normal": 0.00,
+    "dirty": 0.10,
+    "very_dirty": 0.20,
 }
-
-CONDITION_RANGE = {
-    "normal": (0.97, 1.05),
-    "dirty": (0.98, 1.08),
-    "very_dirty": (1.00, 1.12),
-}
-
-
-# ----------------------------
-# SERVICE DETAILS
-# ----------------------------
 
 RESIDENTIAL_SERVICE_DETAILS = {
     "basic": {
         "label": "Basic Cleaning",
-        "purpose": "Routine cleaning for homes that are already maintained. Best for recurring clients.",
+        "purpose": "Routine cleaning for homes that are already maintained.",
         "includes": [
-            "Kitchen: wipe countertops, clean sink and faucet, clean stovetop, wipe cabinet fronts, exterior appliance wipe-down",
-            "Bathrooms: clean toilet, clean sink and faucet, clean mirrors, light scrub of tub/shower",
-            "Bedrooms & living areas: dust accessible surfaces, vacuum carpets, sweep floors, mop floors",
-            "General: trash removal, light straightening",
+            "Kitchen counters wiped",
+            "Sink and faucet cleaned",
+            "Bathrooms cleaned",
+            "Floors vacuumed and mopped",
+            "Dusting accessible surfaces",
+            "Trash removal",
         ],
         "not_included": [
+            "Inside oven",
+            "Inside refrigerator",
+            "Interior windows",
+            "Heavy buildup removal",
             "Baseboards",
-            "Inside appliances",
-            "Inside cabinets or drawers",
-            "Window cleaning",
-            "Heavy scrubbing",
-            "Wall cleaning",
         ],
     },
     "first_time": {
         "label": "First-Time Cleaning",
-        "purpose": "Used when cleaning a home for the first time. Homes usually need extra work on the first visit.",
+        "purpose": "For first visits when the home usually needs more work than a maintenance clean.",
         "includes": [
             "Everything in Basic Cleaning",
             "Extra dust removal",
-            "Detailed bathroom cleaning",
-            "Extra kitchen detailing",
-            "Additional buildup removal",
+            "More detailed bathroom cleaning",
+            "Extra kitchen attention",
+            "More buildup removal than basic",
         ],
         "not_included": [
-            "Inside oven",
-            "Inside refrigerator",
-            "Interior windows",
-            "Carpet shampooing",
-            "Exterior pressure washing",
+            "Inside oven unless added",
+            "Inside refrigerator unless added",
+            "Carpet cleaning unless added",
+            "Pressure washing unless added",
         ],
     },
     "deep": {
         "label": "Deep Cleaning",
-        "purpose": "A more detailed cleaning service for homes needing a thorough reset.",
+        "purpose": "More detailed reset cleaning for homes that need heavier work.",
         "includes": [
             "Everything in Basic Cleaning",
-            "Kitchen: clean backsplash, detail around appliances, clean inside microwave",
-            "Bathrooms: scrub tile and grout areas, remove soap scum buildup, detail around fixtures",
-            "Whole house: baseboards cleaned, door frames wiped, light switch plates cleaned, vent covers dusted",
+            "Baseboards wiped",
+            "Door frames wiped",
+            "Light switch plates wiped",
+            "More detailed bathroom scrubbing",
+            "More detailed kitchen cleaning",
         ],
         "not_included": [
-            "Inside oven",
-            "Inside refrigerator",
-            "Interior windows",
-            "Carpet shampooing",
-            "Exterior pressure washing",
+            "Inside oven unless added",
+            "Inside refrigerator unless added",
+            "Carpet cleaning unless added",
+            "Pressure washing unless added",
         ],
     },
 }
@@ -112,70 +101,66 @@ RESIDENTIAL_SERVICE_DETAILS = {
 REALTOR_SERVICE_DETAILS = {
     "listing_prep": {
         "label": "Listing Preparation",
-        "purpose": "Prepare a home for listing photos, showings, and marketing.",
+        "purpose": "Prepare a home for listing photos and showings.",
         "includes": [
-            "Kitchen: wipe countertops, clean sink and faucet, clean exterior appliances, wipe cabinet fronts, clean stovetop",
-            "Bathrooms: clean toilet, clean sink and faucet, clean mirrors, light scrub of shower/tub",
-            "Bedrooms & living areas: dust accessible surfaces, vacuum carpets, sweep and mop floors",
-            "General: trash removal, quick detail cleaning",
+            "Counters wiped",
+            "Bathrooms cleaned",
+            "Dusting",
+            "Floors vacuumed and mopped",
+            "General detail cleaning",
         ],
         "not_included": [
-            "Inside cabinets",
-            "Inside appliances",
-            "Window cleaning",
-            "Carpet shampooing",
-            "Pressure washing",
+            "Inside appliances unless added",
+            "Carpet cleaning unless added",
+            "Pressure washing unless added",
         ],
     },
     "vacant_move_out": {
         "label": "Vacant / Move-Out",
-        "purpose": "Clean empty homes after tenants move out or before listing.",
+        "purpose": "Cleaning for empty homes before listing or after move-out.",
         "includes": [
-            "Kitchen: wipe cabinets, clean countertops, clean sink and faucet, clean exterior appliances",
-            "Bathrooms: deep clean toilets, scrub tubs and showers, clean mirrors and sinks",
-            "Whole house: baseboards wiped, closets dusted, floors vacuumed, sweep and mop floors, trash removal",
+            "Kitchen cleaning",
+            "Bathroom detail cleaning",
+            "Closets dusted",
+            "Floors vacuumed and mopped",
+            "Trash removal",
         ],
         "not_included": [
-            "Carpet shampooing",
-            "Window cleaning",
-            "Exterior pressure washing",
             "Heavy stain removal",
+            "Carpet cleaning unless added",
+            "Pressure washing unless added",
+        ],
+    },
+    "post_renovation": {
+        "label": "Post-Renovation Cleaning",
+        "purpose": "Cleaning after remodeling or repair work.",
+        "includes": [
+            "Dust removal from surfaces",
+            "Counters and fixtures cleaned",
+            "Floors vacuumed",
+            "Floors swept and mopped",
+            "Bathroom wipe-down",
+        ],
+        "not_included": [
+            "Paint removal",
+            "Adhesive removal",
+            "Heavy debris hauling",
         ],
     },
     "open_house_touchup": {
         "label": "Open House Touch-Up",
         "purpose": "Quick refresh before an open house or showing.",
         "includes": [
-            "Wipe countertops",
-            "Bathroom quick clean",
+            "Quick countertop wipe-down",
+            "Bathroom touch-up",
             "Mirror cleaning",
-            "Vacuum or sweep floors",
-            "Trash removal",
+            "Quick vacuum or sweep",
             "Quick dusting",
         ],
         "not_included": [
             "Deep cleaning",
-            "Appliances",
-            "Cabinets",
-            "Baseboards",
-        ],
-    },
-    "post_renovation": {
-        "label": "Post-Renovation Cleaning",
-        "purpose": "Cleaning after remodeling or repairs.",
-        "includes": [
-            "Removal of dust from surfaces",
-            "Cleaning countertops and fixtures",
-            "Vacuuming floors",
-            "Sweeping and mopping floors",
-            "Bathroom wipe-down",
-            "Trash removal",
-        ],
-        "not_included": [
-            "Paint removal",
-            "Adhesive removal",
-            "Window scraping",
-            "Heavy debris removal",
+            "Appliance interior cleaning",
+            "Detailed buildup removal",
         ],
     },
 }
@@ -213,13 +198,6 @@ def get_sqft_adjustment(square_feet: int) -> float:
     elif square_feet > 2000:
         return 0.10
     return 0.00
-
-
-def build_range(total_price: float, condition_key: str):
-    low_mult, high_mult = CONDITION_RANGE.get(condition_key, (0.97, 1.05))
-    low = max(MINIMUM_SERVICE_PRICE, total_price * low_mult)
-    high = max(MINIMUM_SERVICE_PRICE, total_price * high_mult)
-    return money(low), money(high)
 
 
 def residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
@@ -283,6 +261,37 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return money(addon_total), addon_details
 
 
+def build_residential_rows(base_subtotal, addon_total):
+    rows = []
+
+    for key, multiplier in RESIDENTIAL_MULTIPLIERS.items():
+        label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
+
+        normal_price = max((base_subtotal * multiplier) + addon_total, MINIMUM_SERVICE_PRICE)
+        dirty_price = max((base_subtotal * multiplier * 1.10) + addon_total, MINIMUM_SERVICE_PRICE)
+        very_dirty_price = max((base_subtotal * multiplier * 1.20) + addon_total, MINIMUM_SERVICE_PRICE)
+
+        weekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
+        biweekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
+        monthly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
+
+        rows.append({
+            "key": key,
+            "label": label,
+            "normal": money(normal_price),
+            "dirty": money(dirty_price),
+            "very_dirty": money(very_dirty_price),
+            "weekly": money(weekly_price),
+            "biweekly": money(biweekly_price),
+            "monthly": money(monthly_price),
+            "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
+            "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
+            "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
+        })
+
+    return rows
+
+
 def calculate_residential(
     square_feet,
     bedrooms,
@@ -291,13 +300,14 @@ def calculate_residential(
     living_rooms,
     dining_rooms,
     hallways,
-    condition,
     window_count,
     oven,
     fridge,
     carpet_sqft,
     pressure_sqft,
     bins,
+    chosen_service="first_time",
+    chosen_condition="normal",
 ):
     formula_units = residential_formula_units(
         bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways
@@ -305,39 +315,28 @@ def calculate_residential(
 
     base_price = formula_units * RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
-    after_sqft = base_price * (1 + sqft_adjustment)
-
-    condition_mult = CONDITION_MULTIPLIERS.get(condition, 1.00)
-    conditioned_subtotal = after_sqft * condition_mult
+    base_subtotal = base_price * (1 + sqft_adjustment)
 
     addon_total, addon_details = calculate_addons(
         window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
     )
 
-    rows = []
-    for service_key, multiplier in RESIDENTIAL_MULTIPLIERS.items():
-        one_time_total = (conditioned_subtotal * multiplier) + addon_total
-        one_time_total = max(one_time_total, MINIMUM_SERVICE_PRICE)
+    rows = build_residential_rows(base_subtotal, addon_total)
 
-        weekly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
-        biweekly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
-        monthly_total = max(one_time_total * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
+    chosen_row = next((row for row in rows if row["key"] == chosen_service), rows[1])
 
-        range_low, range_high = build_range(one_time_total, condition)
+    if chosen_condition == "dirty":
+        final_quote = chosen_row["dirty"]
+    elif chosen_condition == "very_dirty":
+        final_quote = chosen_row["very_dirty"]
+    else:
+        final_quote = chosen_row["normal"]
 
-        rows.append({
-            "key": service_key,
-            "label": RESIDENTIAL_SERVICE_DETAILS[service_key]["label"],
-            "one_time": money(one_time_total),
-            "weekly": money(weekly_total),
-            "biweekly": money(biweekly_total),
-            "monthly": money(monthly_total),
-            "range_low": range_low,
-            "range_high": range_high,
-            "purpose": RESIDENTIAL_SERVICE_DETAILS[service_key]["purpose"],
-            "includes": RESIDENTIAL_SERVICE_DETAILS[service_key]["includes"],
-            "not_included": RESIDENTIAL_SERVICE_DETAILS[service_key]["not_included"],
-        })
+    recurring_lookup = {
+        "weekly": chosen_row["weekly"],
+        "biweekly": chosen_row["biweekly"],
+        "monthly": chosen_row["monthly"],
+    }
 
     return {
         "square_feet": square_feet,
@@ -347,14 +346,22 @@ def calculate_residential(
         "living_rooms": living_rooms,
         "dining_rooms": dining_rooms,
         "hallways": hallways,
-        "condition": condition,
         "formula_units": money(formula_units),
         "base_price": money(base_price),
         "sqft_adjustment_pct": int(sqft_adjustment * 100),
-        "condition_pct": int((condition_mult - 1) * 100),
-        "addon_total": money(addon_total),
+        "addon_total": addon_total,
         "addon_details": addon_details,
         "rows": rows,
+        "chosen_service": chosen_service,
+        "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[chosen_service]["label"],
+        "chosen_condition": chosen_condition,
+        "chosen_condition_label": {
+            "normal": "Normal (+0%)",
+            "dirty": "Dirty (+10%)",
+            "very_dirty": "Very Dirty (+20%)",
+        }[chosen_condition],
+        "final_quote": money(final_quote),
+        "recurring_for_selected": recurring_lookup,
     }
 
 
@@ -382,29 +389,28 @@ def calculate_realtor(
 
     base_price = formula_units * RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
-    after_sqft = base_price * (1 + sqft_adjustment)
+    subtotal = base_price * (1 + sqft_adjustment)
 
-    condition_mult = CONDITION_MULTIPLIERS.get(condition, 1.00)
-    after_condition = after_sqft * condition_mult
+    condition_rate = CONDITION_ADJUSTMENTS.get(condition, 0.00)
+    subtotal *= (1 + condition_rate)
 
-    service_mult = REALTOR_MULTIPLIERS.get(service_type, 1.00)
-    subtotal = after_condition * service_mult
+    service_multiplier = REALTOR_MULTIPLIERS.get(service_type, 1.00)
+    subtotal *= service_multiplier
 
     addon_total, addon_details = calculate_addons(
         window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
     )
 
-    subtotal_with_addons = subtotal + addon_total
+    subtotal += addon_total
 
     rush_pct = RUSH_FEES.get(rush_type, 0.00)
-    total = subtotal_with_addons * (1 + rush_pct)
+    total = subtotal * (1 + rush_pct)
 
     if service_type == "open_house_touchup":
         total = max(total, OPEN_HOUSE_MINIMUM)
     else:
         total = max(total, MINIMUM_SERVICE_PRICE)
 
-    range_low, range_high = build_range(total, condition)
     details = REALTOR_SERVICE_DETAILS[service_type]
 
     return {
@@ -415,29 +421,28 @@ def calculate_realtor(
         "living_rooms": living_rooms,
         "dining_rooms": dining_rooms,
         "hallways": hallways,
-        "service_type": service_type,
+        "formula_units": money(formula_units),
+        "base_price": money(base_price),
+        "sqft_adjustment_pct": int(sqft_adjustment * 100),
+        "condition_label": {
+            "normal": "Normal",
+            "dirty": "Dirty",
+            "very_dirty": "Very Dirty",
+        }[condition],
         "service_label": details["label"],
         "purpose": details["purpose"],
         "includes": details["includes"],
         "not_included": details["not_included"],
-        "rush_type": rush_type,
         "rush_label": {
             "none": "None",
             "next_day": "Next-Day",
             "same_day": "Same-Day",
         }[rush_type],
-        "condition": condition,
-        "formula_units": money(formula_units),
-        "base_price": money(base_price),
-        "sqft_adjustment_pct": int(sqft_adjustment * 100),
-        "condition_pct": int((condition_mult - 1) * 100),
-        "service_multiplier": service_mult,
-        "rush_pct": int(rush_pct * 100),
-        "addon_total": money(addon_total),
+        "addon_total": addon_total,
         "addon_details": addon_details,
+        "service_multiplier": service_multiplier,
+        "rush_pct": int(rush_pct * 100),
         "total": money(total),
-        "range_low": range_low,
-        "range_high": range_high,
     }
 
 
@@ -464,13 +469,14 @@ def index():
                 living_rooms=safe_int(request.form.get("living_rooms"), 1),
                 dining_rooms=safe_int(request.form.get("dining_rooms"), 1),
                 hallways=safe_int(request.form.get("hallways"), 1),
-                condition=request.form.get("condition", "normal"),
                 window_count=safe_int(request.form.get("window_count")),
                 oven=("oven" in request.form),
                 fridge=("fridge" in request.form),
                 carpet_sqft=safe_float(request.form.get("carpet_sqft")),
                 pressure_sqft=safe_float(request.form.get("pressure_sqft")),
                 bins=safe_int(request.form.get("bins")),
+                chosen_service=request.form.get("chosen_service", "first_time"),
+                chosen_condition=request.form.get("chosen_condition", "normal"),
             )
 
         elif form_type == "realtor":
