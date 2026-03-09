@@ -13,300 +13,93 @@
             background: #ececf1;
             color: #1d2d50;
         }
+        h1 { text-align: center; margin-bottom: 6px; }
+        .sub { text-align: center; color: #5e6b83; margin-bottom: 20px; }
+        .tabs { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
+        .tab-btn { border:none; border-radius:10px; padding:12px 18px; background:#d1d5df; color:#1d2d50; font-weight:bold; cursor:pointer; }
+        .tab-btn.active { background:#3f73b7; color:white; }
+        .tab-content { display:none; background:transparent; border-radius:14px; }
+        .tab-content.active { display:block; }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 6px;
-        }
-
-        .sub {
-            text-align: center;
-            color: #5e6b83;
-            margin-bottom: 20px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-        }
-
-        .tab-btn {
-            border: none;
-            border-radius: 10px;
-            padding: 12px 18px;
-            background: #d1d5df;
-            color: #1d2d50;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .tab-btn.active {
-            background: #3f73b7;
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-            background: white;
+        .panel {
+            background: #f6f7fb;
+            border: 1px solid #d8dce6;
             border-radius: 14px;
             padding: 18px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .tab-content.active {
-            display: block;
-        }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
+        .card { background:white; border:1px solid #d8dce6; border-radius:12px; margin-top:14px; overflow:hidden; }
+        .card-title { background:#3f73b7; color:white; font-weight:bold; padding:14px 16px; font-size:18px; }
+        .card-body { padding:16px; }
 
-        @media (max-width: 760px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        label { display:block; font-weight:bold; margin-top:12px; margin-bottom:5px; color:#1d2d50; }
+        input, select { width:100%; box-sizing:border-box; border:1px solid #cfd5e2; border-radius:10px; padding:11px; font-size:15px; background:white; }
+        .checkbox-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+        @media (max-width:760px){ .checkbox-row{grid-template-columns:1fr;} }
+        .checkbox-row label { font-weight:normal; display:flex; align-items:center; gap:8px; margin:0; }
+        .checkbox-row input[type="checkbox"] { width:auto; }
 
-        .card {
-            background: white;
-            border: 1px solid #d8dce6;
+        .calculate { width:100%; margin-top:18px; border:none; border-radius:12px; padding:14px; background:#3f73b7; color:white; font-size:16px; font-weight:bold; cursor:pointer; }
+        .reset-btn { width:320px; max-width:100%; margin:20px auto 0 auto; display:block; border:none; border-radius:10px; padding:15px; background:#4e9a47; color:white; font-size:16px; font-weight:bold; cursor:pointer; text-align:center; text-decoration:none; }
+
+        .house-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 30px; font-size:18px; }
+        @media (max-width:760px){ .house-grid{grid-template-columns:1fr;} }
+        .summary-line { font-size:20px; font-weight:bold; color:#224b87; }
+        .simple-3-col { display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; }
+        @media (max-width:760px){ .simple-3-col{grid-template-columns:1fr; gap:0;} }
+        .simple-3-col .cell { padding:14px 10px; border-right:1px solid #d8dce6; }
+        .simple-3-col .cell:last-child{ border-right:none; }
+        @media (max-width:760px){ .simple-3-col .cell{border-right:none; border-bottom:1px solid #d8dce6;} .simple-3-col .cell:last-child{border-bottom:none;} }
+
+        .big-label { font-size:22px; font-weight:bold; margin-bottom:8px; }
+        .big-price { font-size:22px; font-weight:bold; color:#1d2d50; }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { padding:14px 10px; border:1px solid #d8dce6; text-align:center; white-space:nowrap; }
+        th { background:#f4f6fa; color:#1d2d50; font-size:18px; }
+        td:first-child, th:first-child { text-align:left; font-weight:bold; }
+
+        .quick-summary { font-size:18px; line-height:1.7; }
+        .result-wrapper { margin-top:20px; }
+        details { background:white; border:1px solid #d8dce6; border-radius:10px; margin-top:12px; overflow:hidden; }
+        summary { list-style:none; cursor:pointer; padding:16px; font-size:18px; font-weight:bold; color:#1d2d50; display:flex; justify-content:space-between; align-items:center; }
+        summary::-webkit-details-marker { display:none; }
+        .details-body { padding:0 16px 16px 16px; border-top:1px solid #e2e6ef; }
+        ul { margin-top:8px; padding-left:20px; }
+
+        .final-quote-box {
+            margin-top: 16px;
+            background: #49a35a;
+            color: white;
+            text-align: center;
             border-radius: 12px;
-            margin-top: 14px;
-            overflow: hidden;
+            padding: 16px;
+            font-weight: bold;
+            font-size: 28px;
         }
-
-        .card-title {
+        .lock-btn {
+            margin-top: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
             background: #3f73b7;
             color: white;
+            font-size: 16px;
             font-weight: bold;
-            padding: 14px 16px;
-            font-size: 18px;
+            cursor: pointer;
         }
-
-        .card-body {
-            padding: 16px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 12px;
-            margin-bottom: 5px;
-            color: #1d2d50;
-        }
-
-        input, select {
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #cfd5e2;
-            border-radius: 10px;
-            padding: 11px;
-            font-size: 15px;
-            background: white;
-        }
-
-        .checkbox-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .locked-note {
             margin-top: 10px;
-        }
-
-        @media (max-width: 760px) {
-            .checkbox-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .checkbox-row label {
-            font-weight: normal;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0;
-        }
-
-        .checkbox-row input[type="checkbox"] {
-            width: auto;
-        }
-
-        .calculate {
-            width: 100%;
-            margin-top: 18px;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            background: #3f73b7;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .reset-btn {
-            width: 320px;
-            max-width: 100%;
-            margin: 20px auto 0 auto;
-            display: block;
-            border: none;
+            background: #ecf5ff;
+            border: 1px solid #b7d5fb;
             border-radius: 10px;
-            padding: 15px;
-            background: #4e9a47;
-            color: white;
-            font-size: 16px;
+            padding: 12px;
             font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .house-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px 30px;
-            font-size: 18px;
-        }
-
-        @media (max-width: 760px) {
-            .house-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .house-grid div {
-            padding: 4px 0;
-        }
-
-        .summary-line {
-            font-size: 18px;
-            font-weight: bold;
-            color: #224b87;
-        }
-
-        .simple-3-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            text-align: center;
-        }
-
-        @media (max-width: 760px) {
-            .simple-3-col {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-
-        .simple-3-col .cell {
-            padding: 14px 10px;
-            border-right: 1px solid #d8dce6;
-        }
-
-        .simple-3-col .cell:last-child {
-            border-right: none;
-        }
-
-        @media (max-width: 760px) {
-            .simple-3-col .cell {
-                border-right: none;
-                border-bottom: 1px solid #d8dce6;
-            }
-
-            .simple-3-col .cell:last-child {
-                border-bottom: none;
-            }
-        }
-
-        .big-label {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .big-price {
-            font-size: 22px;
-            font-weight: bold;
-            color: #1d2d50;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th, td {
-            padding: 14px 10px;
-            border: 1px solid #d8dce6;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        th {
-            background: #f4f6fa;
-            color: #1d2d50;
-            font-size: 18px;
-        }
-
-        td:first-child, th:first-child {
-            text-align: left;
-            font-weight: bold;
-        }
-
-        .quick-summary {
-            font-size: 18px;
-            line-height: 1.7;
-        }
-
-        details {
-            background: white;
-            border: 1px solid #d8dce6;
-            border-radius: 10px;
-            margin-top: 12px;
-            overflow: hidden;
-        }
-
-        summary {
-            list-style: none;
-            cursor: pointer;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #1d2d50;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .details-body {
-            padding: 0 16px 16px 16px;
-            border-top: 1px solid #e2e6ef;
-        }
-
-        ul {
-            margin-top: 8px;
-            padding-left: 20px;
-        }
-
-        .small-muted {
-            color: #5e6b83;
-            margin-top: 8px;
-        }
-
-        .result-wrapper {
-            margin-top: 20px;
         }
     </style>
 </head>
@@ -319,364 +112,238 @@
         <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
     </div>
 
-    <!-- RESIDENTIAL -->
     <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
-        <h2>Residential Cleaning Estimate</h2>
-
-        <form method="POST">
-            <input type="hidden" name="form_type" value="residential">
-
-            <div class="grid">
-                <div>
-                    <label>Square Footage</label>
-                    <input type="number" name="square_feet" required>
-
-                    <label>Bedrooms</label>
-                    <input type="number" name="bedrooms" min="0" value="3" required>
-
-                    <label>Bathrooms</label>
-                    <input type="number" name="bathrooms" min="0" value="2" required>
-
-                    <label>Kitchens</label>
-                    <input type="number" name="kitchens" min="0" value="1" required>
-
-                    <label>Living Rooms</label>
-                    <input type="number" name="living_rooms" min="0" value="1" required>
-                </div>
-
-                <div>
-                    <label>Dining Rooms</label>
-                    <input type="number" name="dining_rooms" min="0" value="1" required>
-
-                    <label>Hallways</label>
-                    <input type="number" name="hallways" min="0" value="1" required>
-
-                    <label>Window Count</label>
-                    <input type="number" name="window_count" min="0" value="0">
-
-                    <label>Carpet Cleaning Sqft</label>
-                    <input type="number" step="0.01" name="carpet_sqft" min="0" value="0">
-
-                    <label>Pressure Washing Sqft</label>
-                    <input type="number" step="0.01" name="pressure_sqft" min="0" value="0">
-                </div>
-            </div>
-
-            <div class="checkbox-row" style="margin-top: 14px;">
-                <label><input type="checkbox" name="oven"> Inside Oven Cleaning</label>
-                <label><input type="checkbox" name="fridge"> Inside Refrigerator Cleaning</label>
-            </div>
-
-            <label>Trash Bins</label>
-            <input type="number" name="bins" min="0" value="0">
-
-            <div class="grid">
-                <div>
-                    <label>Chosen Service for Quick Quote</label>
-                    <select name="chosen_service">
-                        <option value="basic">Basic Cleaning</option>
-                        <option value="first_time" selected>First-Time Cleaning</option>
-                        <option value="deep">Deep Cleaning</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label>Chosen Condition for Quick Quote</label>
-                    <select name="chosen_condition">
-                        <option value="normal" selected>Normal (+0%)</option>
-                        <option value="dirty">Dirty (+10%)</option>
-                        <option value="very_dirty">Very Dirty (+20%)</option>
-                    </select>
-                </div>
-            </div>
-
-            <button type="submit" class="calculate">Calculate Residential Prices</button>
-        </form>
-
-        {% if residential_result %}
-        <div class="result-wrapper">
-
-            <div class="card">
-                <div class="card-title">House Details:</div>
-                <div class="card-body">
-                    <div class="house-grid">
-                        <div>• Size: {{ residential_result.square_feet }} sq ft</div>
-                        <div>• Bedrooms: {{ residential_result.bedrooms }}</div>
-                        <div>• Bathrooms: {{ residential_result.bathrooms }}</div>
-                        <div>• Kitchens: {{ residential_result.kitchens }}</div>
-                        <div>• Living Rooms: {{ residential_result.living_rooms }}</div>
-                        <div>• Dining Rooms: {{ residential_result.dining_rooms }}</div>
-                        <div>• Hallways: {{ residential_result.hallways }}</div>
-                        <div>• Formula Units: {{ residential_result.formula_units }}</div>
+        <div class="panel">
+            <h2>Residential Cleaning Estimate</h2>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="residential">
+                <div class="grid">
+                    <div>
+                        <label>Square Footage</label><input type="number" name="square_feet" required>
+                        <label>Bedrooms</label><input type="number" name="bedrooms" min="0" value="3" required>
+                        <label>Bathrooms</label><input type="number" name="bathrooms" min="0" value="2" required>
+                        <label>Kitchens</label><input type="number" name="kitchens" min="0" value="1" required>
+                        <label>Living Rooms</label><input type="number" name="living_rooms" min="0" value="1" required>
+                    </div>
+                    <div>
+                        <label>Dining Rooms</label><input type="number" name="dining_rooms" min="0" value="1" required>
+                        <label>Hallways</label><input type="number" name="hallways" min="0" value="1" required>
+                        <label>Window Count</label><input type="number" name="window_count" min="0" value="0">
+                        <label>Carpet Cleaning Sqft</label><input type="number" step="0.01" name="carpet_sqft" min="0" value="0">
+                        <label>Pressure Washing Sqft</label><input type="number" step="0.01" name="pressure_sqft" min="0" value="0">
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <div class="summary-line">Add-Ons Total: ${{ "%.2f"|format(residential_result.addon_total) }}</div>
-                    {% if residential_result.addon_details %}
-                    <ul>
-                        {% for item, price in residential_result.addon_details %}
-                        <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
+                <div class="checkbox-row" style="margin-top:14px;">
+                    <label><input type="checkbox" name="oven"> Inside Oven Cleaning</label>
+                    <label><input type="checkbox" name="fridge"> Inside Refrigerator Cleaning</label>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Service Prices</div>
-                <div class="card-body">
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Service</th>
-                                    <th>Normal</th>
-                                    <th>Dirty</th>
-                                    <th>Very Dirty</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in residential_result.rows %}
-                                <tr>
-                                    <td>{{ row.label }}</td>
-                                    <td>${{ "%.2f"|format(row.normal) }}</td>
-                                    <td>${{ "%.2f"|format(row.dirty) }}</td>
-                                    <td>${{ "%.2f"|format(row.very_dirty) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <label>Trash Bins</label><input type="number" name="bins" min="0" value="0">
+                <div class="grid">
+                    <div>
+                        <label>Chosen Service for Quick Quote</label>
+                        <select name="chosen_service">
+                            <option value="basic">Basic Cleaning</option><option value="first_time" selected>First-Time Cleaning</option><option value="deep">Deep Cleaning</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Chosen Condition for Quick Quote</label>
+                        <select name="chosen_condition">
+                            <option value="normal" selected>Normal (+0%)</option><option value="dirty">Dirty (+10%)</option><option value="very_dirty">Very Dirty (+20%)</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+                <button type="submit" class="calculate">Calculate Residential Prices</button>
+            </form>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="big-label" style="margin-bottom: 14px;">Condition Adjustment</div>
-                    <div class="simple-3-col">
-                        <div class="cell">
-                            <div class="big-label">Normal + 0%</div>
+            {% if residential_result %}
+            <div class="result-wrapper">
+                <div class="card"><div class="card-title">House Details</div><div class="card-body"><div class="house-grid">
+                    <div>• Size: {{ residential_result.square_feet }} sq ft</div><div>• Bedrooms: {{ residential_result.bedrooms }}</div><div>• Bathrooms: {{ residential_result.bathrooms }}</div><div>• Kitchens: {{ residential_result.kitchens }}</div><div>• Living Rooms: {{ residential_result.living_rooms }}</div><div>• Dining Rooms: {{ residential_result.dining_rooms }}</div><div>• Hallways: {{ residential_result.hallways }}</div><div>• Formula Units: {{ residential_result.formula_units }}</div>
+                </div></div></div>
+
+                <div class="card"><div class="card-body"><div class="summary-line">Add-Ons Total: ${{ "%.2f"|format(residential_result.addon_total) }}</div>
+                    <ul>{% if residential_result.addon_details %}{% for item, price in residential_result.addon_details %}<li>{{ item }} — ${{ "%.2f"|format(price) }}</li>{% endfor %}{% else %}<li>None</li>{% endif %}</ul>
+                </div></div>
+
+                <div class="card"><div class="card-title">Service Prices</div><div class="card-body"><div class="table-wrap"><table><thead><tr><th>Service</th><th>Normal</th><th>Dirty</th><th>Very Dirty</th></tr></thead><tbody>
+                    {% for row in residential_result.rows %}<tr><td>{{ row.label }}</td><td>${{ "%.2f"|format(row.normal) }}</td><td>${{ "%.2f"|format(row.dirty) }}</td><td>${{ "%.2f"|format(row.very_dirty) }}</td></tr>{% endfor %}
+                </tbody></table></div></div></div>
+
+                <div class="card"><div class="card-body"><div class="big-label" style="margin-bottom:14px;">Condition Adjustment</div><div class="simple-3-col">
+                    <div class="cell"><div class="big-label">Normal +0%</div></div><div class="cell"><div class="big-label">Dirty +10%</div></div><div class="cell"><div class="big-label">Very Dirty +20%</div></div>
+                </div></div></div>
+
+                <div class="card"><div class="card-title">Recurring Rates</div><div class="card-body"><div class="simple-3-col">
+                    <div class="cell"><div class="big-label">Weekly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.weekly) }}</div></div>
+                    <div class="cell"><div class="big-label">Biweekly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.biweekly) }}</div></div>
+                    <div class="cell"><div class="big-label">Monthly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.monthly) }}</div></div>
+                </div></div></div>
+
+                <div class="card"><div class="card-body"><div class="big-label" style="margin-bottom:14px;">Quick Quote Summary</div><div class="quick-summary">
+                    Chosen Service: <strong>{{ residential_result.chosen_service_label }}</strong><br>
+                    Condition Applied: <strong>{{ residential_result.chosen_condition_label }}</strong><br>
+                    Add-Ons: <strong>{{ residential_result.addon_summary }}</strong><br>
+                    Final Quote: <strong>${{ "%.2f"|format(residential_result.final_quote) }}</strong>
+                </div></div></div>
+
+                <div class="card">
+                    <div class="card-title">Finalize Chosen Quote</div>
+                    <div class="card-body">
+                        <label>Chosen Service</label>
+                        <select id="finalize_service">
+                            <option value="basic" {% if residential_result.chosen_service == 'basic' %}selected{% endif %}>Basic Cleaning</option>
+                            <option value="first_time" {% if residential_result.chosen_service == 'first_time' %}selected{% endif %}>First-Time Cleaning</option>
+                            <option value="deep" {% if residential_result.chosen_service == 'deep' %}selected{% endif %}>Deep Cleaning</option>
+                        </select>
+
+                        <label>Condition Applied</label>
+                        <select id="finalize_condition">
+                            <option value="normal" {% if residential_result.chosen_condition == 'normal' %}selected{% endif %}>Normal (+0%)</option>
+                            <option value="dirty" {% if residential_result.chosen_condition == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
+                            <option value="very_dirty" {% if residential_result.chosen_condition == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
+                        </select>
+
+                        <label>Selected Add-Ons</label>
+                        <select id="finalize_addons"><option value="{{ residential_result.addon_total }}" selected>{{ residential_result.addon_summary }}</option></select>
+
+                        <label>Travel Fee</label>
+                        <select id="finalize_travel">
+                            <option value="0" selected>None</option>
+                            <option value="10">$10</option>
+                            <option value="20">$20</option>
+                            <option value="30">$30</option>
+                            <option value="custom">Custom</option>
+                        </select>
+
+                        <div id="custom_travel_wrap" style="display:none;">
+                            <label>Custom Travel Fee</label>
+                            <input type="number" id="finalize_travel_custom" min="0" step="0.01" value="0">
                         </div>
-                        <div class="cell">
-                            <div class="big-label">Dirty + 10%</div>
-                        </div>
-                        <div class="cell">
-                            <div class="big-label">Very Dirty + 20%</div>
-                        </div>
+
+                        <div class="final-quote-box" id="live_final_quote">FINAL QUOTE: ${{ "%.2f"|format(residential_result.final_quote) }}</div>
+                        <button type="button" class="lock-btn" id="lock_quote_btn">LOCK IN FINAL QUOTE</button>
+                        <div class="locked-note" id="locked_quote_note" style="display:none;"></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-title">Recurring Rates</div>
-                <div class="card-body">
-                    <div class="simple-3-col">
-                        <div class="cell">
-                            <div class="big-label">Weekly</div>
-                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.weekly) }}</div>
-                        </div>
-                        <div class="cell">
-                            <div class="big-label">Biweekly</div>
-                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.biweekly) }}</div>
-                        </div>
-                        <div class="cell">
-                            <div class="big-label">Monthly</div>
-                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.monthly) }}</div>
-                        </div>
-                    </div>
-                    <div class="small-muted">
-                        Recurring rates shown here are based on the selected quick quote service using the normal price.
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <div class="big-label" style="margin-bottom: 14px;">Quick Quote Summary:</div>
-                    <div class="quick-summary">
-                        Chosen Service: <strong>{{ residential_result.chosen_service_label }}</strong><br>
-                        Condition Applied: <strong>{{ residential_result.chosen_condition_label }}</strong><br>
-                        Add-Ons:
-                        <strong>
-                            {% if residential_result.addon_details %}
-                                {% for item, price in residential_result.addon_details %}
-                                    {{ item }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                None
-                            {% endif %}
-                        </strong><br>
-                        Final Quote: <strong>${{ "%.2f"|format(residential_result.final_quote) }}</strong>
-                    </div>
-                </div>
-            </div>
-
-            {% for row in residential_result.rows %}
-            <details>
-                <summary>
-                    {{ row.label }}
-                    <span>⌄</span>
-                </summary>
-                <div class="details-body">
+                {% for row in residential_result.rows %}
+                <details><summary>{{ row.label }} <span>⌄</span></summary><div class="details-body">
                     <p><strong>Purpose:</strong> {{ row.purpose }}</p>
+                    <p><strong>Includes:</strong></p><ul>{% for item in row.includes %}<li>{{ item }}</li>{% endfor %}</ul>
+                    <p><strong>Does NOT include:</strong></p><ul>{% for item in row.not_included %}<li>{{ item }}</li>{% endfor %}</ul>
+                </div></details>
+                {% endfor %}
 
-                    <p><strong>Includes:</strong></p>
-                    <ul>
-                        {% for item in row.includes %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-
-                    <p><strong>Does NOT include:</strong></p>
-                    <ul>
-                        {% for item in row.not_included %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </details>
-            {% endfor %}
-
-            <a href="/" class="reset-btn">Reset Form</a>
+                <a href="/" class="reset-btn">Reset Form</a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
-    <!-- REALTOR -->
     <div id="realtor" class="tab-content {% if active_tab == 'realtor' %}active{% endif %}">
-        <h2>Realtor Estimate</h2>
-
-        <form method="POST">
-            <input type="hidden" name="form_type" value="realtor">
-
-            <div class="grid">
-                <div>
-                    <label>Square Footage</label>
-                    <input type="number" name="realtor_square_feet" required>
-
-                    <label>Bedrooms</label>
-                    <input type="number" name="realtor_bedrooms" min="0" value="3" required>
-
-                    <label>Bathrooms</label>
-                    <input type="number" name="realtor_bathrooms" min="0" value="2" required>
-
-                    <label>Kitchens</label>
-                    <input type="number" name="realtor_kitchens" min="0" value="1" required>
-
-                    <label>Living Rooms</label>
-                    <input type="number" name="realtor_living_rooms" min="0" value="1" required>
-
-                    <label>Dining Rooms</label>
-                    <input type="number" name="realtor_dining_rooms" min="0" value="1" required>
-                </div>
-
-                <div>
-                    <label>Hallways</label>
-                    <input type="number" name="realtor_hallways" min="0" value="1" required>
-
-                    <label>Service Type</label>
-                    <select name="service_type">
-                        <option value="listing_prep">Listing Preparation</option>
-                        <option value="vacant_move_out">Vacant / Move-Out</option>
-                        <option value="post_renovation">Post-Renovation Cleaning</option>
-                        <option value="open_house_touchup">Open House Touch-Up</option>
-                    </select>
-
-                    <label>Rush Service</label>
-                    <select name="rush_type">
-                        <option value="none">None</option>
-                        <option value="next_day">Next-Day (+15%)</option>
-                        <option value="same_day">Same-Day (+25%)</option>
-                    </select>
-
-                    <label>Condition</label>
-                    <select name="realtor_condition">
-                        <option value="normal">Normal</option>
-                        <option value="dirty">Dirty</option>
-                        <option value="very_dirty">Very Dirty</option>
-                    </select>
-
-                    <label>Window Count</label>
-                    <input type="number" name="realtor_window_count" min="0" value="0">
-
-                    <label>Carpet Cleaning Sqft</label>
-                    <input type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="0">
-
-                    <label>Pressure Washing Sqft</label>
-                    <input type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="0">
-                </div>
-            </div>
-
-            <div class="checkbox-row" style="margin-top: 14px;">
-                <label><input type="checkbox" name="realtor_oven"> Inside Oven Cleaning</label>
-                <label><input type="checkbox" name="realtor_fridge"> Inside Refrigerator Cleaning</label>
-            </div>
-
-            <label>Trash Bins</label>
-            <input type="number" name="realtor_bins" min="0" value="0">
-
-            <button type="submit" class="calculate">Calculate Realtor Estimate</button>
-        </form>
-
-        {% if realtor_result %}
-        <div class="result-wrapper">
-            <div class="card">
-                <div class="card-title">{{ realtor_result.service_label }}</div>
-                <div class="card-body">
-                    <div class="quick-summary">
-                        Purpose: <strong>{{ realtor_result.purpose }}</strong><br>
-                        Condition: <strong>{{ realtor_result.condition_label }}</strong><br>
-                        Rush: <strong>{{ realtor_result.rush_label }}</strong><br>
-                        Add-Ons Total: <strong>${{ "%.2f"|format(realtor_result.addon_total) }}</strong><br>
-                        Final Quote: <strong>${{ "%.2f"|format(realtor_result.total) }}</strong>
+        <div class="panel">
+            <h2>Realtor Estimate</h2>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="realtor">
+                <div class="grid">
+                    <div>
+                        <label>Square Footage</label><input type="number" name="realtor_square_feet" required>
+                        <label>Bedrooms</label><input type="number" name="realtor_bedrooms" min="0" value="3" required>
+                        <label>Bathrooms</label><input type="number" name="realtor_bathrooms" min="0" value="2" required>
+                        <label>Kitchens</label><input type="number" name="realtor_kitchens" min="0" value="1" required>
+                        <label>Living Rooms</label><input type="number" name="realtor_living_rooms" min="0" value="1" required>
+                        <label>Dining Rooms</label><input type="number" name="realtor_dining_rooms" min="0" value="1" required>
                     </div>
-
-                    {% if realtor_result.addon_details %}
-                    <ul>
-                        {% for item, price in realtor_result.addon_details %}
-                        <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-
-                    <p><strong>Includes:</strong></p>
-                    <ul>
-                        {% for item in realtor_result.includes %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-
-                    <p><strong>Does NOT include:</strong></p>
-                    <ul>
-                        {% for item in realtor_result.not_included %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
+                    <div>
+                        <label>Hallways</label><input type="number" name="realtor_hallways" min="0" value="1" required>
+                        <label>Service Type</label>
+                        <select name="service_type"><option value="listing_prep">Listing Preparation</option><option value="vacant_move_out">Vacant / Move-Out</option><option value="post_renovation">Post-Renovation Cleaning</option><option value="open_house_touchup">Open House Touch-Up</option></select>
+                        <label>Rush Service</label>
+                        <select name="rush_type"><option value="none">None</option><option value="next_day">Next-Day (+15%)</option><option value="same_day">Same-Day (+25%)</option></select>
+                        <label>Condition</label>
+                        <select name="realtor_condition"><option value="normal">Normal</option><option value="dirty">Dirty</option><option value="very_dirty">Very Dirty</option></select>
+                        <label>Window Count</label><input type="number" name="realtor_window_count" min="0" value="0">
+                        <label>Carpet Cleaning Sqft</label><input type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="0">
+                        <label>Pressure Washing Sqft</label><input type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="0">
+                    </div>
                 </div>
+                <div class="checkbox-row" style="margin-top:14px;"><label><input type="checkbox" name="realtor_oven"> Inside Oven Cleaning</label><label><input type="checkbox" name="realtor_fridge"> Inside Refrigerator Cleaning</label></div>
+                <label>Trash Bins</label><input type="number" name="realtor_bins" min="0" value="0">
+                <button type="submit" class="calculate">Calculate Realtor Estimate</button>
+            </form>
+
+            {% if realtor_result %}
+            <div class="result-wrapper"><div class="card"><div class="card-title">{{ realtor_result.service_label }}</div><div class="card-body"><div class="quick-summary">
+                Purpose: <strong>{{ realtor_result.purpose }}</strong><br>
+                Condition: <strong>{{ realtor_result.condition_label }}</strong><br>
+                Rush: <strong>{{ realtor_result.rush_label }}</strong><br>
+                Add-Ons Total: <strong>${{ "%.2f"|format(realtor_result.addon_total) }}</strong><br>
+                Final Quote: <strong>${{ "%.2f"|format(realtor_result.total) }}</strong>
             </div>
+            {% if realtor_result.addon_details %}<ul>{% for item, price in realtor_result.addon_details %}<li>{{ item }} — ${{ "%.2f"|format(price) }}</li>{% endfor %}</ul>{% endif %}
+            <p><strong>Includes:</strong></p><ul>{% for item in realtor_result.includes %}<li>{{ item }}</li>{% endfor %}</ul>
+            <p><strong>Does NOT include:</strong></p><ul>{% for item in realtor_result.not_included %}<li>{{ item }}</li>{% endfor %}</ul>
+            </div></div></div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
     <script>
         function showTab(tabId) {
-            document.querySelectorAll(".tab-content").forEach(tab => {
-                tab.classList.remove("active");
-            });
-
-            document.querySelectorAll(".tab-btn").forEach(btn => {
-                btn.classList.remove("active");
-            });
-
-            document.getElementById(tabId).classList.add("active");
-
-            const buttons = document.querySelectorAll(".tab-btn");
-            if (tabId === "residential") buttons[0].classList.add("active");
-            if (tabId === "realtor") buttons[1].classList.add("active");
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            const buttons = document.querySelectorAll('.tab-btn');
+            if (tabId === 'residential') buttons[0].classList.add('active');
+            if (tabId === 'realtor') buttons[1].classList.add('active');
         }
+
+        const residentialPrices = {{ residential_result.service_price_lookup|tojson if residential_result else '{}' }};
+
+        function updateLiveFinalQuote() {
+            const service = document.getElementById('finalize_service');
+            const condition = document.getElementById('finalize_condition');
+            const travel = document.getElementById('finalize_travel');
+            const customWrap = document.getElementById('custom_travel_wrap');
+            const customInput = document.getElementById('finalize_travel_custom');
+            const output = document.getElementById('live_final_quote');
+            if (!service || !condition || !travel || !output) return;
+
+            const selectedService = service.value;
+            const selectedCondition = condition.value;
+            const servicePrice = residentialPrices[selectedService]?.[selectedCondition] || 0;
+
+            let travelFee = parseFloat(travel.value || '0');
+            if (travel.value === 'custom') {
+                customWrap.style.display = 'block';
+                travelFee = parseFloat(customInput.value || '0');
+            } else {
+                customWrap.style.display = 'none';
+            }
+
+            const finalAmount = servicePrice + (isNaN(travelFee) ? 0 : travelFee);
+            output.textContent = `FINAL QUOTE: $${finalAmount.toFixed(2)}`;
+        }
+
+        function lockFinalQuote() {
+            const live = document.getElementById('live_final_quote');
+            const note = document.getElementById('locked_quote_note');
+            if (!live || !note) return;
+            note.style.display = 'block';
+            note.textContent = `Locked ${live.textContent}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            ['finalize_service', 'finalize_condition', 'finalize_travel', 'finalize_travel_custom'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateLiveFinalQuote);
+                if (el) el.addEventListener('change', updateLiveFinalQuote);
+            });
+
+            const lockBtn = document.getElementById('lock_quote_btn');
+            if (lockBtn) lockBtn.addEventListener('click', lockFinalQuote);
+            updateLiveFinalQuote();
+        });
     </script>
 </body>
 </html>

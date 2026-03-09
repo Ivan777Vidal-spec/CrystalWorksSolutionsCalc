@@ -338,6 +338,17 @@ def calculate_residential(
         "monthly": chosen_row["monthly"],
     }
 
+    service_price_lookup = {
+        row["key"]: {
+            "normal": row["normal"],
+            "dirty": row["dirty"],
+            "very_dirty": row["very_dirty"],
+        }
+        for row in rows
+    }
+
+    addon_summary = ", ".join(item for item, _ in addon_details) if addon_details else "None"
+
     return {
         "square_feet": square_feet,
         "bedrooms": bedrooms,
@@ -362,6 +373,8 @@ def calculate_residential(
         }[chosen_condition],
         "final_quote": money(final_quote),
         "recurring_for_selected": recurring_lookup,
+        "service_price_lookup": service_price_lookup,
+        "addon_summary": addon_summary,
     }
 
 
