@@ -10,8 +10,8 @@
             max-width: 1100px;
             margin: 0 auto;
             padding: 18px;
-            background: #f5f5f5;
-            color: #222;
+            background: #ececf1;
+            color: #1d2d50;
         }
 
         h1 {
@@ -21,7 +21,7 @@
 
         .sub {
             text-align: center;
-            color: #666;
+            color: #5e6b83;
             margin-bottom: 20px;
         }
 
@@ -36,14 +36,15 @@
         .tab-btn {
             border: none;
             border-radius: 10px;
-            padding: 12px 16px;
-            background: #d9d9d9;
+            padding: 12px 18px;
+            background: #d1d5df;
+            color: #1d2d50;
             font-weight: bold;
             cursor: pointer;
         }
 
         .tab-btn.active {
-            background: #111;
+            background: #3f73b7;
             color: white;
         }
 
@@ -65,10 +66,30 @@
             gap: 14px;
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 760px) {
             .grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #d8dce6;
+            border-radius: 12px;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+
+        .card-title {
+            background: #3f73b7;
+            color: white;
+            font-weight: bold;
+            padding: 14px 16px;
+            font-size: 18px;
+        }
+
+        .card-body {
+            padding: 16px;
         }
 
         label {
@@ -76,31 +97,33 @@
             font-weight: bold;
             margin-top: 12px;
             margin-bottom: 5px;
+            color: #1d2d50;
         }
 
         input, select {
             width: 100%;
             box-sizing: border-box;
-            border: 1px solid #ccc;
+            border: 1px solid #cfd5e2;
             border-radius: 10px;
             padding: 11px;
             font-size: 15px;
+            background: white;
         }
 
-        .checkbox-group {
-            margin-top: 8px;
+        .checkbox-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        @media (max-width: 700px) {
-            .checkbox-group {
+        @media (max-width: 760px) {
+            .checkbox-row {
                 grid-template-columns: 1fr;
             }
         }
 
-        .checkbox-group label {
+        .checkbox-row label {
             font-weight: normal;
             display: flex;
             align-items: center;
@@ -108,38 +131,8 @@
             margin: 0;
         }
 
-        .checkbox-group input[type="checkbox"] {
+        .checkbox-row input[type="checkbox"] {
             width: auto;
-        }
-
-        .condition-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .condition-buttons label {
-            margin: 0;
-            font-weight: normal;
-        }
-
-        .condition-buttons input[type="radio"] {
-            display: none;
-        }
-
-        .condition-chip {
-            display: inline-block;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: #e7e7e7;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .condition-buttons input[type="radio"]:checked + .condition-chip {
-            background: #111;
-            color: white;
         }
 
         .calculate {
@@ -148,81 +141,172 @@
             border: none;
             border-radius: 12px;
             padding: 14px;
-            background: #111;
+            background: #3f73b7;
             color: white;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
         }
 
-        .result {
-            margin-top: 20px;
-            background: #eef7ee;
-            border: 1px solid #cfe5cf;
-            border-radius: 12px;
-            padding: 16px;
+        .reset-btn {
+            width: 320px;
+            max-width: 100%;
+            margin: 20px auto 0 auto;
+            display: block;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            background: #4e9a47;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
         }
 
-        .summary-box, .service-box {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 12px;
+        .house-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 30px;
+            font-size: 18px;
+        }
+
+        @media (max-width: 760px) {
+            .house-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .house-grid div {
+            padding: 4px 0;
+        }
+
+        .summary-line {
+            font-size: 18px;
+            font-weight: bold;
+            color: #224b87;
+        }
+
+        .simple-3-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            .simple-3-col {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .simple-3-col .cell {
+            padding: 14px 10px;
+            border-right: 1px solid #d8dce6;
+        }
+
+        .simple-3-col .cell:last-child {
+            border-right: none;
+        }
+
+        @media (max-width: 760px) {
+            .simple-3-col .cell {
+                border-right: none;
+                border-bottom: 1px solid #d8dce6;
+            }
+
+            .simple-3-col .cell:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .big-label {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .big-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1d2d50;
         }
 
         .table-wrap {
             overflow-x: auto;
-            margin-top: 12px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 12px;
-            overflow: hidden;
         }
 
         th, td {
-            padding: 10px;
-            border-bottom: 1px solid #e5e5e5;
-            text-align: left;
+            padding: 14px 10px;
+            border: 1px solid #d8dce6;
+            text-align: center;
             white-space: nowrap;
-            vertical-align: top;
         }
 
         th {
-            background: #111;
-            color: white;
+            background: #f4f6fa;
+            color: #1d2d50;
+            font-size: 18px;
         }
 
-        tr:last-child td {
-            border-bottom: none;
+        td:first-child, th:first-child {
+            text-align: left;
+            font-weight: bold;
         }
 
-        .service-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            margin-top: 14px;
+        .quick-summary {
+            font-size: 18px;
+            line-height: 1.7;
         }
 
-        @media (max-width: 900px) {
-            .service-grid {
-                grid-template-columns: 1fr;
-            }
+        details {
+            background: white;
+            border: 1px solid #d8dce6;
+            border-radius: 10px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1d2d50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .details-body {
+            padding: 0 16px 16px 16px;
+            border-top: 1px solid #e2e6ef;
         }
 
         ul {
             margin-top: 8px;
-            padding-left: 18px;
+            padding-left: 20px;
         }
 
-        .note {
-            color: #666;
-            font-size: 14px;
+        .small-muted {
+            color: #5e6b83;
             margin-top: 8px;
+        }
+
+        .result-wrapper {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -235,9 +319,9 @@
         <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
     </div>
 
-    <!-- Residential -->
+    <!-- RESIDENTIAL -->
     <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
-        <h2>Residential Estimate</h2>
+        <h2>Residential Cleaning Estimate</h2>
 
         <form method="POST">
             <input type="hidden" name="form_type" value="residential">
@@ -278,91 +362,165 @@
                 </div>
             </div>
 
-            <label>Condition</label>
-            <div class="condition-buttons">
-                <label>
-                    <input type="radio" name="condition" value="normal" checked>
-                    <span class="condition-chip">Normal</span>
-                </label>
-                <label>
-                    <input type="radio" name="condition" value="dirty">
-                    <span class="condition-chip">Dirty</span>
-                </label>
-                <label>
-                    <input type="radio" name="condition" value="very_dirty">
-                    <span class="condition-chip">Very Dirty</span>
-                </label>
-            </div>
-
-            <label>Add-Ons</label>
-            <div class="checkbox-group">
+            <div class="checkbox-row" style="margin-top: 14px;">
                 <label><input type="checkbox" name="oven"> Inside Oven Cleaning</label>
                 <label><input type="checkbox" name="fridge"> Inside Refrigerator Cleaning</label>
-                <label>Trash Bins <input type="number" name="bins" min="0" value="0"></label>
+            </div>
+
+            <label>Trash Bins</label>
+            <input type="number" name="bins" min="0" value="0">
+
+            <div class="grid">
+                <div>
+                    <label>Chosen Service for Quick Quote</label>
+                    <select name="chosen_service">
+                        <option value="basic">Basic Cleaning</option>
+                        <option value="first_time" selected>First-Time Cleaning</option>
+                        <option value="deep">Deep Cleaning</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Chosen Condition for Quick Quote</label>
+                    <select name="chosen_condition">
+                        <option value="normal" selected>Normal (+0%)</option>
+                        <option value="dirty">Dirty (+10%)</option>
+                        <option value="very_dirty">Very Dirty (+20%)</option>
+                    </select>
+                </div>
             </div>
 
             <button type="submit" class="calculate">Calculate Residential Prices</button>
         </form>
 
         {% if residential_result %}
-        <div class="result">
-            <h3>Residential Results</h3>
+        <div class="result-wrapper">
 
-            <div class="summary-box">
-                <p><strong>Square Feet:</strong> {{ residential_result.square_feet }}</p>
-                <p><strong>Bedrooms:</strong> {{ residential_result.bedrooms }}</p>
-                <p><strong>Bathrooms:</strong> {{ residential_result.bathrooms }}</p>
-                <p><strong>Kitchens:</strong> {{ residential_result.kitchens }}</p>
-                <p><strong>Living Rooms:</strong> {{ residential_result.living_rooms }}</p>
-                <p><strong>Dining Rooms:</strong> {{ residential_result.dining_rooms }}</p>
-                <p><strong>Hallways:</strong> {{ residential_result.hallways }}</p>
-                <p><strong>Formula Units:</strong> {{ residential_result.formula_units }}</p>
-                <p><strong>Base Price:</strong> ${{ residential_result.base_price }}</p>
-                <p><strong>Sqft Adjustment:</strong> {{ residential_result.sqft_adjustment_pct }}%</p>
-                <p><strong>Condition Upcharge:</strong> {{ residential_result.condition_pct }}%</p>
-                <p><strong>Add-Ons Total:</strong> ${{ residential_result.addon_total }}</p>
-
-                {% if residential_result.addon_details %}
-                <p><strong>Add-Ons:</strong></p>
-                <ul>
-                    {% for item, price in residential_result.addon_details %}
-                    <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+            <div class="card">
+                <div class="card-title">House Details:</div>
+                <div class="card-body">
+                    <div class="house-grid">
+                        <div>• Size: {{ residential_result.square_feet }} sq ft</div>
+                        <div>• Bedrooms: {{ residential_result.bedrooms }}</div>
+                        <div>• Bathrooms: {{ residential_result.bathrooms }}</div>
+                        <div>• Kitchens: {{ residential_result.kitchens }}</div>
+                        <div>• Living Rooms: {{ residential_result.living_rooms }}</div>
+                        <div>• Dining Rooms: {{ residential_result.dining_rooms }}</div>
+                        <div>• Hallways: {{ residential_result.hallways }}</div>
+                        <div>• Formula Units: {{ residential_result.formula_units }}</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Service</th>
-                            <th>One-Time</th>
-                            <th>Weekly</th>
-                            <th>Biweekly</th>
-                            <th>Monthly</th>
-                            <th>Range</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in residential_result.rows %}
-                        <tr>
-                            <td>{{ row.label }}</td>
-                            <td>${{ "%.2f"|format(row.one_time) }}</td>
-                            <td>${{ "%.2f"|format(row.weekly) }}</td>
-                            <td>${{ "%.2f"|format(row.biweekly) }}</td>
-                            <td>${{ "%.2f"|format(row.monthly) }}</td>
-                            <td>${{ "%.2f"|format(row.range_low) }} - ${{ "%.2f"|format(row.range_high) }}</td>
-                        </tr>
+            <div class="card">
+                <div class="card-body">
+                    <div class="summary-line">Add-Ons Total: ${{ "%.2f"|format(residential_result.addon_total) }}</div>
+                    {% if residential_result.addon_details %}
+                    <ul>
+                        {% for item, price in residential_result.addon_details %}
+                        <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    </ul>
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="service-grid">
-                {% for row in residential_result.rows %}
-                <div class="service-box">
-                    <h4>{{ row.label }}</h4>
+            <div class="card">
+                <div class="card-title">Service Prices</div>
+                <div class="card-body">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Normal</th>
+                                    <th>Dirty</th>
+                                    <th>Very Dirty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in residential_result.rows %}
+                                <tr>
+                                    <td>{{ row.label }}</td>
+                                    <td>${{ "%.2f"|format(row.normal) }}</td>
+                                    <td>${{ "%.2f"|format(row.dirty) }}</td>
+                                    <td>${{ "%.2f"|format(row.very_dirty) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="big-label" style="margin-bottom: 14px;">Condition Adjustment</div>
+                    <div class="simple-3-col">
+                        <div class="cell">
+                            <div class="big-label">Normal + 0%</div>
+                        </div>
+                        <div class="cell">
+                            <div class="big-label">Dirty + 10%</div>
+                        </div>
+                        <div class="cell">
+                            <div class="big-label">Very Dirty + 20%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Recurring Rates</div>
+                <div class="card-body">
+                    <div class="simple-3-col">
+                        <div class="cell">
+                            <div class="big-label">Weekly</div>
+                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.weekly) }}</div>
+                        </div>
+                        <div class="cell">
+                            <div class="big-label">Biweekly</div>
+                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.biweekly) }}</div>
+                        </div>
+                        <div class="cell">
+                            <div class="big-label">Monthly</div>
+                            <div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.monthly) }}</div>
+                        </div>
+                    </div>
+                    <div class="small-muted">
+                        Recurring rates shown here are based on the selected quick quote service using the normal price.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="big-label" style="margin-bottom: 14px;">Quick Quote Summary:</div>
+                    <div class="quick-summary">
+                        Chosen Service: <strong>{{ residential_result.chosen_service_label }}</strong><br>
+                        Condition Applied: <strong>{{ residential_result.chosen_condition_label }}</strong><br>
+                        Add-Ons:
+                        <strong>
+                            {% if residential_result.addon_details %}
+                                {% for item, price in residential_result.addon_details %}
+                                    {{ item }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </strong><br>
+                        Final Quote: <strong>${{ "%.2f"|format(residential_result.final_quote) }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            {% for row in residential_result.rows %}
+            <details>
+                <summary>
+                    {{ row.label }}
+                    <span>⌄</span>
+                </summary>
+                <div class="details-body">
                     <p><strong>Purpose:</strong> {{ row.purpose }}</p>
 
                     <p><strong>Includes:</strong></p>
@@ -379,17 +537,15 @@
                         {% endfor %}
                     </ul>
                 </div>
-                {% endfor %}
-            </div>
+            </details>
+            {% endfor %}
 
-            <div class="note">
-                Carpet and pressure washing are entered by sqft now, not as checkboxes.
-            </div>
+            <a href="/" class="reset-btn">Reset Form</a>
         </div>
         {% endif %}
     </div>
 
-    <!-- Realtor -->
+    <!-- REALTOR -->
     <div id="realtor" class="tab-content {% if active_tab == 'realtor' %}active{% endif %}">
         <h2>Realtor Estimate</h2>
 
@@ -436,6 +592,13 @@
                         <option value="same_day">Same-Day (+25%)</option>
                     </select>
 
+                    <label>Condition</label>
+                    <select name="realtor_condition">
+                        <option value="normal">Normal</option>
+                        <option value="dirty">Dirty</option>
+                        <option value="very_dirty">Very Dirty</option>
+                    </select>
+
                     <label>Window Count</label>
                     <input type="number" name="realtor_window_count" min="0" value="0">
 
@@ -447,75 +610,52 @@
                 </div>
             </div>
 
-            <label>Condition</label>
-            <div class="condition-buttons">
-                <label>
-                    <input type="radio" name="realtor_condition" value="normal" checked>
-                    <span class="condition-chip">Normal</span>
-                </label>
-                <label>
-                    <input type="radio" name="realtor_condition" value="dirty">
-                    <span class="condition-chip">Dirty</span>
-                </label>
-                <label>
-                    <input type="radio" name="realtor_condition" value="very_dirty">
-                    <span class="condition-chip">Very Dirty</span>
-                </label>
-            </div>
-
-            <label>Add-Ons</label>
-            <div class="checkbox-group">
+            <div class="checkbox-row" style="margin-top: 14px;">
                 <label><input type="checkbox" name="realtor_oven"> Inside Oven Cleaning</label>
                 <label><input type="checkbox" name="realtor_fridge"> Inside Refrigerator Cleaning</label>
-                <label>Trash Bins <input type="number" name="realtor_bins" min="0" value="0"></label>
             </div>
+
+            <label>Trash Bins</label>
+            <input type="number" name="realtor_bins" min="0" value="0">
 
             <button type="submit" class="calculate">Calculate Realtor Estimate</button>
         </form>
 
         {% if realtor_result %}
-        <div class="result">
-            <h3>Realtor Result</h3>
+        <div class="result-wrapper">
+            <div class="card">
+                <div class="card-title">{{ realtor_result.service_label }}</div>
+                <div class="card-body">
+                    <div class="quick-summary">
+                        Purpose: <strong>{{ realtor_result.purpose }}</strong><br>
+                        Condition: <strong>{{ realtor_result.condition_label }}</strong><br>
+                        Rush: <strong>{{ realtor_result.rush_label }}</strong><br>
+                        Add-Ons Total: <strong>${{ "%.2f"|format(realtor_result.addon_total) }}</strong><br>
+                        Final Quote: <strong>${{ "%.2f"|format(realtor_result.total) }}</strong>
+                    </div>
 
-            <div class="summary-box">
-                <p><strong>Service:</strong> {{ realtor_result.service_label }}</p>
-                <p><strong>Purpose:</strong> {{ realtor_result.purpose }}</p>
-                <p><strong>Square Feet:</strong> {{ realtor_result.square_feet }}</p>
-                <p><strong>Formula Units:</strong> {{ realtor_result.formula_units }}</p>
-                <p><strong>Base Price:</strong> ${{ realtor_result.base_price }}</p>
-                <p><strong>Sqft Adjustment:</strong> {{ realtor_result.sqft_adjustment_pct }}%</p>
-                <p><strong>Condition Upcharge:</strong> {{ realtor_result.condition_pct }}%</p>
-                <p><strong>Service Multiplier:</strong> {{ realtor_result.service_multiplier }}x</p>
-                <p><strong>Rush:</strong> {{ realtor_result.rush_label }} ({{ realtor_result.rush_pct }}%)</p>
-                <p><strong>Add-Ons Total:</strong> ${{ realtor_result.addon_total }}</p>
+                    {% if realtor_result.addon_details %}
+                    <ul>
+                        {% for item, price in realtor_result.addon_details %}
+                        <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
 
-                {% if realtor_result.addon_details %}
-                <p><strong>Add-Ons:</strong></p>
-                <ul>
-                    {% for item, price in realtor_result.addon_details %}
-                    <li>{{ item }} — ${{ "%.2f"|format(price) }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+                    <p><strong>Includes:</strong></p>
+                    <ul>
+                        {% for item in realtor_result.includes %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
 
-                <p><strong>Total:</strong> ${{ realtor_result.total }}</p>
-                <p><strong>Quote Range:</strong> ${{ realtor_result.range_low }} - ${{ realtor_result.range_high }}</p>
-            </div>
-
-            <div class="service-box">
-                <p><strong>Includes:</strong></p>
-                <ul>
-                    {% for item in realtor_result.includes %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-
-                <p><strong>Does NOT include:</strong></p>
-                <ul>
-                    {% for item in realtor_result.not_included %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
+                    <p><strong>Does NOT include:</strong></p>
+                    <ul>
+                        {% for item in realtor_result.not_included %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
         {% endif %}
