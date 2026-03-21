@@ -5,285 +5,1387 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crystal Works Solutions Estimator</title>
     <style>
+        :root {
+            --bg: #f8fafc;
+            --bg-accent: #eff6ff;
+            --card: #ffffff;
+            --card-strong: #0f235c;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: rgba(148, 163, 184, 0.28);
+            --border-strong: rgba(59, 130, 246, 0.28);
+            --primary: #1e3a8a;
+            --accent: #3b82f6;
+            --accent-soft: rgba(59, 130, 246, 0.12);
+            --success: #16a34a;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+            --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.06);
+            --radius-lg: 24px;
+            --radius-md: 18px;
+            --radius-sm: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1100px;
+            margin: 0;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(59, 130, 246, 0.10), transparent 30%),
+                linear-gradient(180deg, #f8fbff 0%, #f8fafc 100%);
+            color: var(--text);
+        }
+
+        .page-shell {
+            max-width: 1380px;
             margin: 0 auto;
-            padding: 18px;
-            background: #ececf1;
-            color: #1d2d50;
-        }
-        h1 { text-align: center; margin-bottom: 6px; }
-        .sub { text-align: center; color: #5e6b83; margin-bottom: 20px; }
-        .tabs { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
-        .tab-btn { border:none; border-radius:10px; padding:12px 18px; background:#d1d5df; color:#1d2d50; font-weight:bold; cursor:pointer; }
-        .tab-btn.active { background:#3f73b7; color:white; }
-        .tab-content { display:none; background:transparent; border-radius:14px; }
-        .tab-content.active { display:block; }
-
-        .panel {
-            background: #f6f7fb;
-            border: 1px solid #d8dce6;
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 28px 20px 56px;
         }
 
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
+        .hero {
+            background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239,246,255,0.92));
+            border: 1px solid var(--border-strong);
+            border-radius: 30px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
 
-        .card { background:white; border:1px solid #d8dce6; border-radius:12px; margin-top:14px; overflow:hidden; }
-        .card-title { background:#3f73b7; color:white; font-weight:bold; padding:14px 16px; font-size:18px; }
-        .card-body { padding:16px; }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(30, 58, 138, 0.08);
+            color: var(--primary);
+            border: 1px solid rgba(30, 58, 138, 0.12);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
 
-        label { display:block; font-weight:bold; margin-top:12px; margin-bottom:5px; color:#1d2d50; }
-        input, select { width:100%; box-sizing:border-box; border:1px solid #cfd5e2; border-radius:10px; padding:11px; font-size:15px; background:white; }
-        .checkbox-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-        @media (max-width:760px){ .checkbox-row{grid-template-columns:1fr;} }
-        .checkbox-row label { font-weight:normal; display:flex; align-items:center; gap:8px; margin:0; }
-        .checkbox-row input[type="checkbox"] { width:auto; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+            gap: 24px;
+            align-items: center;
+        }
 
-        .calculate { width:100%; margin-top:18px; border:none; border-radius:12px; padding:14px; background:#3f73b7; color:white; font-size:16px; font-weight:bold; cursor:pointer; }
-        .reset-btn { width:320px; max-width:100%; margin:20px auto 0 auto; display:block; border:none; border-radius:10px; padding:15px; background:#4e9a47; color:white; font-size:16px; font-weight:bold; cursor:pointer; text-align:center; text-decoration:none; }
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 1.02;
+            margin: 0 0 12px;
+            letter-spacing: -0.04em;
+        }
 
-        .house-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 30px; font-size:18px; }
-        @media (max-width:760px){ .house-grid{grid-template-columns:1fr;} }
-        .summary-line { font-size:20px; font-weight:bold; color:#224b87; }
-        .simple-3-col { display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; }
-        @media (max-width:760px){ .simple-3-col{grid-template-columns:1fr; gap:0;} }
-        .simple-3-col .cell { padding:14px 10px; border-right:1px solid #d8dce6; }
-        .simple-3-col .cell:last-child{ border-right:none; }
-        @media (max-width:760px){ .simple-3-col .cell{border-right:none; border-bottom:1px solid #d8dce6;} .simple-3-col .cell:last-child{border-bottom:none;} }
+        .hero p {
+            margin: 0;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--muted);
+            max-width: 760px;
+        }
 
-        .big-label { font-size:22px; font-weight:bold; margin-bottom:8px; }
-        .big-price { font-size:22px; font-weight:bold; color:#1d2d50; }
-        .table-wrap { overflow-x:auto; }
-        table { width:100%; border-collapse:collapse; background:white; }
-        th, td { padding:14px 10px; border:1px solid #d8dce6; text-align:center; white-space:nowrap; }
-        th { background:#f4f6fa; color:#1d2d50; font-size:18px; }
-        td:first-child, th:first-child { text-align:left; font-weight:bold; }
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
 
-        .quick-summary { font-size:18px; line-height:1.7; }
-        .result-wrapper { margin-top:20px; }
-        details { background:white; border:1px solid #d8dce6; border-radius:10px; margin-top:12px; overflow:hidden; }
-        summary { list-style:none; cursor:pointer; padding:16px; font-size:18px; font-weight:bold; color:#1d2d50; display:flex; justify-content:space-between; align-items:center; }
-        summary::-webkit-details-marker { display:none; }
-        .details-body { padding:0 16px 16px 16px; border-top:1px solid #e2e6ef; }
-        ul { margin-top:8px; padding-left:20px; }
-
-        .final-quote-box {
-            margin-top: 16px;
-            background: #49a35a;
-            color: white;
-            text-align: center;
-            border-radius: 12px;
+        .stat-chip {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 18px;
             padding: 16px;
-            font-weight: bold;
-            font-size: 28px;
+            box-shadow: var(--shadow-soft);
         }
-        .lock-btn {
-            margin-top: 12px;
-            width: 100%;
+
+        .stat-chip strong {
+            display: block;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-chip span {
+            color: var(--muted);
+            font-size: 0.93rem;
+        }
+
+        .tabs {
+            display: inline-flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 8px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
             border: none;
-            border-radius: 10px;
-            padding: 13px;
-            background: #3f73b7;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 999px;
+            padding: 13px 20px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(30, 58, 138, 0.25);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .estimator-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(310px, 0.85fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .stack { display: grid; gap: 18px; }
+
+        .card,
+        details.card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 22px 24px 0;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1.12rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .card-subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.96rem;
+            line-height: 1.6;
+        }
+
+        .card-body {
+            padding: 22px 24px 24px;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, rgba(148,163,184,0.08), rgba(59,130,246,0.22), rgba(148,163,184,0.08));
+            margin: 0 24px;
+        }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .field-group { display: grid; gap: 8px; }
+
+        .field-group label,
+        .inline-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        input,
+        select,
+        textarea,
+        button {
+            font: inherit;
+        }
+
+        .text-input,
+        .select-input,
+        .stepper-control input {
+            width: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: #fff;
+            border-radius: 16px;
+            min-height: 52px;
+            padding: 14px 16px;
+            color: var(--text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .text-input:focus,
+        .select-input:focus,
+        .stepper-control input:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.7);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+        }
+
+        .stepper-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .stepper-control {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid rgba(148, 163, 184, 0.30);
+            border-radius: 18px;
+            padding: 8px;
+        }
+
+        .stepper-control input {
+            text-align: center;
+            border: none;
+            box-shadow: none;
+            padding: 8px;
+            min-height: 40px;
+            background: transparent;
+            font-weight: 700;
+        }
+
+        .stepper-control input::-webkit-outer-spin-button,
+        .stepper-control input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .stepper-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 12px;
+            background: var(--bg-accent);
+            color: var(--primary);
+            font-weight: 800;
             cursor: pointer;
         }
+
+        .stepper-btn:hover { background: rgba(59, 130, 246, 0.18); }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .choice-grid.choice-grid-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .choice-card {
+            position: relative;
+            display: block;
+            cursor: pointer;
+        }
+
+        .choice-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .choice-card-content {
+            height: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.30);
+            border-radius: 20px;
+            padding: 18px;
+            background: linear-gradient(180deg, #fff, #fbfdff);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .choice-card strong,
+        .addon-title strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .choice-card span,
+        .choice-card small,
+        .addon-meta,
+        .muted {
+            display: block;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .choice-card small { font-size: 0.84rem; margin-top: 10px; }
+
+        .choice-card input:checked + .choice-card-content {
+            border-color: rgba(59, 130, 246, 0.95);
+            background: linear-gradient(180deg, rgba(239,246,255,0.96), #fff);
+            box-shadow: 0 18px 34px rgba(59, 130, 246, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .choice-card input:checked + .choice-card-content strong,
+        .choice-card input:checked + .choice-card-content .pill-note {
+            color: var(--primary);
+        }
+
+        .pill-note {
+            margin-top: 12px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .addon-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .addon-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(110px, 0.8fr) minmax(120px, 0.7fr);
+            gap: 14px;
+            align-items: center;
+            padding: 16px 18px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(248,250,252,0.8), #fff);
+        }
+
+        .addon-row.compact-toggle {
+            grid-template-columns: minmax(0, 1.5fr) auto;
+        }
+
+        .price-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.10);
+            color: var(--primary);
+            padding: 10px 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .toggle-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            justify-self: end;
+        }
+
+        .toggle-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toggle-track {
+            position: relative;
+            width: 54px;
+            height: 32px;
+            border-radius: 999px;
+            background: #dbe5f2;
+            transition: 0.2s ease;
+            display: inline-block;
+        }
+
+        .toggle-track::after {
+            content: "";
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+            transition: 0.2s ease;
+        }
+
+        .toggle-input:checked + .toggle-track {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+        }
+
+        .toggle-input:checked + .toggle-track::after {
+            transform: translateX(22px);
+        }
+
+        .summary-panel {
+            position: sticky;
+            top: 20px;
+            background: linear-gradient(180deg, #173074, #0f235c);
+            color: #fff;
+            border-radius: 28px;
+            box-shadow: 0 24px 60px rgba(15, 35, 92, 0.28);
+            overflow: hidden;
+        }
+
+        .summary-head {
+            padding: 24px 24px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.14);
+        }
+
+        .summary-head h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .summary-head p {
+            margin: 8px 0 0;
+            color: rgba(255,255,255,0.78);
+            line-height: 1.6;
+            font-size: 0.94rem;
+        }
+
+        .quote-total {
+            padding: 22px 24px 12px;
+        }
+
+        .quote-total-label {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.72);
+        }
+
+        .quote-total-amount {
+            font-size: clamp(2.1rem, 5vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            margin: 10px 0 0;
+        }
+
+        .summary-body {
+            padding: 8px 24px 24px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .summary-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .summary-box h4 {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 800;
+        }
+
+        .summary-row,
+        .price-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            color: rgba(255,255,255,0.88);
+        }
+
+        .price-row strong,
+        .summary-row strong { color: #fff; }
+
+        .summary-row + .summary-row,
+        .price-row + .price-row {
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .summary-muted {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .summary-cta,
+        .primary-btn,
+        .secondary-btn,
+        .reset-btn,
+        .lock-btn {
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            border-radius: 16px;
+            min-height: 52px;
+            font-weight: 800;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .primary-btn,
+        .summary-cta,
+        .lock-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            box-shadow: 0 16px 30px rgba(30, 58, 138, 0.22);
+        }
+
+        .secondary-btn,
+        .reset-btn {
+            background: rgba(255,255,255,0.10);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .primary-btn:hover,
+        .summary-cta:hover,
+        .lock-btn:hover,
+        .secondary-btn:hover,
+        .reset-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.08);
+            border: 1px dashed rgba(255,255,255,0.16);
+            color: rgba(255,255,255,0.78);
+            line-height: 1.7;
+        }
+
+        details.card summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            padding: 22px 24px;
+            font-weight: 800;
+        }
+
+        details.card summary::-webkit-details-marker { display: none; }
+        details.card[open] summary { border-bottom: 1px solid var(--border); }
+        .details-body { padding: 18px 24px 24px; }
+
+        .clean-list {
+            display: grid;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .clean-list li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: #334155;
+        }
+
+        .clean-list li::before {
+            content: "✓";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            flex: 0 0 22px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary);
+            font-size: 0.82rem;
+            font-weight: 800;
+            margin-top: 1px;
+        }
+
+        .not-included li::before {
+            content: "–";
+            background: rgba(148, 163, 184, 0.16);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .result-stat {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 16px;
+            background: linear-gradient(180deg, #fff, #f8fbff);
+        }
+
+        .result-stat strong {
+            display: block;
+            font-size: 1.02rem;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+
+        .pricing-table {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        td strong { color: var(--text); }
+
+        .split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
         .locked-note {
-            margin-top: 10px;
-            background: #ecf5ff;
-            border: 1px solid #b7d5fb;
-            border-radius: 10px;
-            padding: 12px;
-            font-weight: bold;
+            margin-top: 12px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 16px;
+            padding: 14px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .footer-note {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .two-col-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        @media (max-width: 1120px) {
+            .hero-grid,
+            .estimator-layout,
+            .choice-grid.choice-grid-4 { grid-template-columns: 1fr; }
+            .summary-panel { position: static; }
+        }
+
+        @media (max-width: 860px) {
+            .fields-grid,
+            .stepper-grid,
+            .choice-grid,
+            .results-grid,
+            .split-grid,
+            .two-col-list,
+            .addon-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero { padding: 22px; }
+            .card-header { padding: 20px 20px 0; }
+            .card-body,
+            .details-body,
+            details.card summary,
+            .summary-head,
+            .quote-total,
+            .summary-body { padding-left: 20px; padding-right: 20px; }
+
+            .toggle-wrap { justify-self: start; }
         }
     </style>
 </head>
 <body>
-    <h1>Crystal Works Solutions</h1>
-    <div class="sub">Private Estimator</div>
-
-    <div class="tabs">
-        <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential</button>
-        <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
-    </div>
-
-    <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
-        <div class="panel">
-            <h2>Residential Cleaning Estimate</h2>
-            <form method="POST">
-                <input type="hidden" name="form_type" value="residential">
-                <div class="grid">
-                    <div>
-                        <label>Square Footage</label><input type="number" name="square_feet" required>
-                        <label>Bedrooms</label><input type="number" name="bedrooms" min="0" value="3" required>
-                        <label>Bathrooms</label><input type="number" name="bathrooms" min="0" value="2" required>
-                        <label>Kitchens</label><input type="number" name="kitchens" min="0" value="1" required>
-                        <label>Living Rooms</label><input type="number" name="living_rooms" min="0" value="1" required>
+    <div class="page-shell">
+        <section class="hero">
+            <div class="hero-badge">Premium Quote Builder</div>
+            <div class="hero-grid">
+                <div>
+                    <h1>Crystal Works Solutions Pricing Calculator</h1>
+                    <p>Create fast residential and realtor cleaning quotes in a cleaner, more polished workspace that keeps your existing pricing rules intact while making field use quicker on desktop and mobile.</p>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-chip">
+                        <strong>Blue Brand Refresh</strong>
+                        <span>Modern card layout, softer borders, and polished controls.</span>
                     </div>
-                    <div>
-                        <label>Dining Rooms</label><input type="number" name="dining_rooms" min="0" value="1" required>
-                        <label>Hallways</label><input type="number" name="hallways" min="0" value="1" required>
-                        <label>Window Count</label><input type="number" name="window_count" min="0" value="0">
-                        <label>Carpet Cleaning Sqft</label><input type="number" step="0.01" name="carpet_sqft" min="0" value="0">
-                        <label>Pressure Washing Sqft</label><input type="number" step="0.01" name="pressure_sqft" min="0" value="0">
+                    <div class="stat-chip">
+                        <strong>Sticky Summary</strong>
+                        <span>Quote details stay visible while you work through the form.</span>
+                    </div>
+                    <div class="stat-chip">
+                        <strong>Fast Inputs</strong>
+                        <span>Cleaner steppers, organized add-ons, and sharper hierarchy.</span>
+                    </div>
+                    <div class="stat-chip">
+                        <strong>Logic Preserved</strong>
+                        <span>Pricing formulas, discounts, and quote math still come from the backend.</span>
                     </div>
                 </div>
-                <div class="checkbox-row" style="margin-top:14px;">
-                    <label><input type="checkbox" name="oven"> Inside Oven Cleaning</label>
-                    <label><input type="checkbox" name="fridge"> Inside Refrigerator Cleaning</label>
-                </div>
-                <label>Trash Bins</label><input type="number" name="bins" min="0" value="0">
-                <div class="grid">
+            </div>
+        </section>
+
+        <div class="tabs">
+            <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential Estimator</button>
+            <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor Estimator</button>
+        </div>
+
+        <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
+            <div class="estimator-layout">
+                <form method="POST" class="stack">
+                    <input type="hidden" name="form_type" value="residential">
+
+                    <details class="card" {% if residential_result %}open{% endif %}>
+                        <summary>
+                            <span>Pricing Customizer</span>
+                            <span class="muted">Core pricing settings overview</span>
+                        </summary>
+                        <div class="details-body">
+                            <div class="results-grid">
+                                <div class="result-stat">
+                                    <strong>${{ '%.0f'|format(pricing_snapshot.rate_per_hour) }}/hr</strong>
+                                    <span class="muted">Base hourly rate in the current pricing formula.</span>
+                                </div>
+                                <div class="result-stat">
+                                    <strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }} minimum</strong>
+                                    <span class="muted">Existing residential minimum pricing stays enforced.</span>
+                                </div>
+                                <div class="result-stat">
+                                    <strong>{{ pricing_snapshot.weekly_discount }}% / {{ pricing_snapshot.biweekly_discount }}% / {{ pricing_snapshot.monthly_discount }}%</strong>
+                                    <span class="muted">Recurring discounts for weekly, biweekly, and monthly service.</span>
+                                </div>
+                            </div>
+                            <p class="footer-note">This redesign keeps your current formulas, add-on prices, recurring discounts, and minimum quote logic untouched while presenting the information in a more premium settings card.</p>
+                        </div>
+                    </details>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Property Details</h2>
+                            <p class="card-subtitle">Enter the home details quickly using the updated stepper controls and pricing inputs.</p>
+                        </div>
+                        <div class="card-body stack">
+                            <div class="fields-grid">
+                                <div class="field-group">
+                                    <label for="square_feet">Square Footage</label>
+                                    <input class="text-input" id="square_feet" type="number" name="square_feet" required value="{{ request.form.get('square_feet', '') }}" placeholder="e.g. 2400">
+                                </div>
+                            </div>
+                            <div class="stepper-grid">
+                                <div class="field-group">
+                                    <label for="bedrooms">Bedrooms</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="bedrooms" data-direction="down">−</button>
+                                        <input id="bedrooms" type="number" name="bedrooms" min="0" value="{{ request.form.get('bedrooms', '3') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="bedrooms" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label for="bathrooms">Bathrooms</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="bathrooms" data-direction="down">−</button>
+                                        <input id="bathrooms" type="number" name="bathrooms" min="0" value="{{ request.form.get('bathrooms', '2') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="bathrooms" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label for="kitchens">Kitchens</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="kitchens" data-direction="down">−</button>
+                                        <input id="kitchens" type="number" name="kitchens" min="0" value="{{ request.form.get('kitchens', '1') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="kitchens" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label for="living_rooms">Living Rooms</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="living_rooms" data-direction="down">−</button>
+                                        <input id="living_rooms" type="number" name="living_rooms" min="0" value="{{ request.form.get('living_rooms', '1') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="living_rooms" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label for="dining_rooms">Dining Rooms</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="dining_rooms" data-direction="down">−</button>
+                                        <input id="dining_rooms" type="number" name="dining_rooms" min="0" value="{{ request.form.get('dining_rooms', '1') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="dining_rooms" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label for="hallways">Hallways</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="hallways" data-direction="down">−</button>
+                                        <input id="hallways" type="number" name="hallways" min="0" value="{{ request.form.get('hallways', '1') }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="hallways" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Cleaning Service Type</h2>
+                            <p class="card-subtitle">Choose the service level you want highlighted in the quote summary. Backend service math remains exactly the same.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="choice-grid">
+                                <label class="choice-card">
+                                    <input type="radio" name="chosen_service" value="basic" {% if request.form.get('chosen_service', 'first_time') == 'basic' %}checked{% endif %}>
+                                    <span class="choice-card-content">
+                                        <strong>Basic Cleaning</strong>
+                                        <span>Routine maintenance pricing for already-kept homes.</span>
+                                        <small>Fast, consistent, and ideal for standard upkeep.</small>
+                                    </span>
+                                </label>
+                                <label class="choice-card">
+                                    <input type="radio" name="chosen_service" value="first_time" {% if request.form.get('chosen_service', 'first_time') == 'first_time' %}checked{% endif %}>
+                                    <span class="choice-card-content">
+                                        <strong>First-Time Cleaning</strong>
+                                        <span>Designed for homes needing more attention on an initial visit.</span>
+                                        <small>Premium reset option for first-time clients.</small>
+                                    </span>
+                                </label>
+                                <label class="choice-card">
+                                    <input type="radio" name="chosen_service" value="deep" {% if request.form.get('chosen_service', 'first_time') == 'deep' %}checked{% endif %}>
+                                    <span class="choice-card-content">
+                                        <strong>Deep Cleaning</strong>
+                                        <span>Most detailed residential option with higher labor intensity.</span>
+                                        <small>Best for deeper resets and detail-focused jobs.</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="fields-grid" style="margin-top: 16px;">
+                                <div class="field-group">
+                                    <label for="chosen_condition">Condition Adjustment</label>
+                                    <select class="select-input" id="chosen_condition" name="chosen_condition">
+                                        <option value="normal" {% if request.form.get('chosen_condition', 'normal') == 'normal' %}selected{% endif %}>Normal (+0%)</option>
+                                        <option value="dirty" {% if request.form.get('chosen_condition') == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
+                                        <option value="very_dirty" {% if request.form.get('chosen_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recurring Frequency</h2>
+                            <p class="card-subtitle">Choose a viewing frequency for the summary panel. Existing recurring calculations remain server-driven and are displayed after you calculate.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="choice-grid choice-grid-4" id="frequency_cards">
+                                <label class="choice-card">
+                                    <input type="radio" name="display_frequency" value="Weekly" checked>
+                                    <span class="choice-card-content">
+                                        <strong>Weekly</strong>
+                                        <span>Best recurring rate for maintained homes.</span>
+                                        <small class="pill-note">{{ pricing_snapshot.weekly_discount }}% recurring discount</small>
+                                    </span>
+                                </label>
+                                <label class="choice-card">
+                                    <input type="radio" name="display_frequency" value="Every 2 Weeks">
+                                    <span class="choice-card-content">
+                                        <strong>Every 2 Weeks</strong>
+                                        <span>Balanced recurring option with strong value.</span>
+                                        <small class="pill-note">{{ pricing_snapshot.biweekly_discount }}% recurring discount</small>
+                                    </span>
+                                </label>
+                                <label class="choice-card">
+                                    <input type="radio" name="display_frequency" value="Every 4 Weeks">
+                                    <span class="choice-card-content">
+                                        <strong>Every 4 Weeks</strong>
+                                        <span>Monthly maintenance option for lighter upkeep.</span>
+                                        <small class="pill-note">{{ pricing_snapshot.monthly_discount }}% recurring discount</small>
+                                    </span>
+                                </label>
+                                <label class="choice-card">
+                                    <input type="radio" name="display_frequency" value="One-Time">
+                                    <span class="choice-card-content">
+                                        <strong>One-Time</strong>
+                                        <span>Single visit with no recurring discount applied.</span>
+                                        <small class="pill-note">Full quoted rate</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Add-On Services</h2>
+                            <p class="card-subtitle">Keep your optional services organized, easy to scan, and quick to adjust while preserving the current backend pricing for each add-on.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="addon-list">
+                                <div class="addon-row">
+                                    <div class="addon-title">
+                                        <strong>Window Cleaning</strong>
+                                        <span class="addon-meta">Per-window add-on.</span>
+                                    </div>
+                                    <div class="price-badge">$5 each</div>
+                                    <input class="text-input" type="number" name="window_count" min="0" value="{{ request.form.get('window_count', '0') }}">
+                                </div>
+                                <div class="addon-row compact-toggle">
+                                    <div class="addon-title">
+                                        <strong>Inside Oven Cleaning</strong>
+                                        <span class="addon-meta">Flat add-on when selected.</span>
+                                    </div>
+                                    <label class="toggle-wrap">
+                                        <span class="inline-label">$25</span>
+                                        <span>
+                                            <input class="toggle-input" type="checkbox" name="oven" {% if request.form.get('oven') %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="addon-row compact-toggle">
+                                    <div class="addon-title">
+                                        <strong>Inside Refrigerator Cleaning</strong>
+                                        <span class="addon-meta">Flat add-on when selected.</span>
+                                    </div>
+                                    <label class="toggle-wrap">
+                                        <span class="inline-label">$20</span>
+                                        <span>
+                                            <input class="toggle-input" type="checkbox" name="fridge" {% if request.form.get('fridge') %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title">
+                                        <strong>Carpet Cleaning</strong>
+                                        <span class="addon-meta">Charged by carpet square footage.</span>
+                                    </div>
+                                    <div class="price-badge">$0.35 / sq ft</div>
+                                    <input class="text-input" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title">
+                                        <strong>Pressure Washing</strong>
+                                        <span class="addon-meta">Charged by exterior square footage.</span>
+                                    </div>
+                                    <div class="price-badge">$0.37 / sq ft</div>
+                                    <input class="text-input" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title">
+                                        <strong>Trash Bin Cleaning</strong>
+                                        <span class="addon-meta">Backend automatically uses your existing bundled or standalone bin pricing.</span>
+                                    </div>
+                                    <div class="price-badge">$17–$20 each</div>
+                                    <input class="text-input" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     <div>
-                        <label>Chosen Service for Quick Quote</label>
-                        <select name="chosen_service">
-                            <option value="basic">Basic Cleaning</option><option value="first_time" selected>First-Time Cleaning</option><option value="deep">Deep Cleaning</option>
-                        </select>
+                        <button type="submit" class="primary-btn">Calculate Residential Prices</button>
                     </div>
-                    <div>
-                        <label>Chosen Condition for Quick Quote</label>
-                        <select name="chosen_condition">
-                            <option value="normal" selected>Normal (+0%)</option><option value="dirty">Dirty (+10%)</option><option value="very_dirty">Very Dirty (+20%)</option>
-                        </select>
+                </form>
+
+                <aside class="summary-panel">
+                    <div class="summary-head">
+                        <h3>Quote Summary</h3>
+                        <p>Premium estimate view with your selected service, recurring view, pricing breakdown, and quick actions.</p>
                     </div>
-                </div>
-                <button type="submit" class="calculate">Calculate Residential Prices</button>
-            </form>
-
-            {% if residential_result %}
-            <div class="result-wrapper">
-                <div class="card"><div class="card-title">House Details</div><div class="card-body"><div class="house-grid">
-                    <div>• Size: {{ residential_result.square_feet }} sq ft</div><div>• Bedrooms: {{ residential_result.bedrooms }}</div><div>• Bathrooms: {{ residential_result.bathrooms }}</div><div>• Kitchens: {{ residential_result.kitchens }}</div><div>• Living Rooms: {{ residential_result.living_rooms }}</div><div>• Dining Rooms: {{ residential_result.dining_rooms }}</div><div>• Hallways: {{ residential_result.hallways }}</div><div>• Formula Units: {{ residential_result.formula_units }}</div>
-                </div></div></div>
-
-                <div class="card"><div class="card-body"><div class="summary-line">Add-Ons Total: ${{ "%.2f"|format(residential_result.addon_total) }}</div>
-                    <ul>{% if residential_result.addon_details %}{% for item, price in residential_result.addon_details %}<li>{{ item }} — ${{ "%.2f"|format(price) }}</li>{% endfor %}{% else %}<li>None</li>{% endif %}</ul>
-                </div></div>
-
-                <div class="card"><div class="card-title">Service Prices</div><div class="card-body"><div class="table-wrap"><table><thead><tr><th>Service</th><th>Normal</th><th>Dirty</th><th>Very Dirty</th></tr></thead><tbody>
-                    {% for row in residential_result.rows %}<tr><td>{{ row.label }}</td><td>${{ "%.2f"|format(row.normal) }}</td><td>${{ "%.2f"|format(row.dirty) }}</td><td>${{ "%.2f"|format(row.very_dirty) }}</td></tr>{% endfor %}
-                </tbody></table></div></div></div>
-
-                <div class="card"><div class="card-body"><div class="big-label" style="margin-bottom:14px;">Condition Adjustment</div><div class="simple-3-col">
-                    <div class="cell"><div class="big-label">Normal +0%</div></div><div class="cell"><div class="big-label">Dirty +10%</div></div><div class="cell"><div class="big-label">Very Dirty +20%</div></div>
-                </div></div></div>
-
-                <div class="card"><div class="card-title">Recurring Rates</div><div class="card-body"><div class="simple-3-col">
-                    <div class="cell"><div class="big-label">Weekly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.weekly) }}</div></div>
-                    <div class="cell"><div class="big-label">Biweekly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.biweekly) }}</div></div>
-                    <div class="cell"><div class="big-label">Monthly</div><div class="big-price">${{ "%.2f"|format(residential_result.recurring_for_selected.monthly) }}</div></div>
-                </div></div></div>
-
-                <div class="card"><div class="card-body"><div class="big-label" style="margin-bottom:14px;">Quick Quote Summary</div><div class="quick-summary">
-                    Chosen Service: <strong>{{ residential_result.chosen_service_label }}</strong><br>
-                    Condition Applied: <strong>{{ residential_result.chosen_condition_label }}</strong><br>
-                    Add-Ons: <strong>{{ residential_result.addon_summary }}</strong><br>
-                    Final Quote: <strong>${{ "%.2f"|format(residential_result.final_quote) }}</strong>
-                </div></div></div>
-
-                <div class="card">
-                    <div class="card-title">Finalize Chosen Quote</div>
-                    <div class="card-body">
-                        <label>Chosen Service</label>
-                        <select id="finalize_service">
-                            <option value="basic" {% if residential_result.chosen_service == 'basic' %}selected{% endif %}>Basic Cleaning</option>
-                            <option value="first_time" {% if residential_result.chosen_service == 'first_time' %}selected{% endif %}>First-Time Cleaning</option>
-                            <option value="deep" {% if residential_result.chosen_service == 'deep' %}selected{% endif %}>Deep Cleaning</option>
-                        </select>
-
-                        <label>Condition Applied</label>
-                        <select id="finalize_condition">
-                            <option value="normal" {% if residential_result.chosen_condition == 'normal' %}selected{% endif %}>Normal (+0%)</option>
-                            <option value="dirty" {% if residential_result.chosen_condition == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
-                            <option value="very_dirty" {% if residential_result.chosen_condition == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
-                        </select>
-
-                        <label>Selected Add-Ons</label>
-                        <select id="finalize_addons"><option value="{{ residential_result.addon_total }}" selected>{{ residential_result.addon_summary }}</option></select>
-
-                        <label>Travel Fee</label>
-                        <select id="finalize_travel">
-                            <option value="0" selected>None</option>
-                            <option value="10">$10</option>
-                            <option value="20">$20</option>
-                            <option value="30">$30</option>
-                            <option value="custom">Custom</option>
-                        </select>
-
-                        <div id="custom_travel_wrap" style="display:none;">
-                            <label>Custom Travel Fee</label>
-                            <input type="number" id="finalize_travel_custom" min="0" step="0.01" value="0">
+                    {% if residential_result %}
+                    <div class="quote-total">
+                        <div class="quote-total-label">Estimated Quote</div>
+                        <div class="quote-total-amount">${{ '%.2f'|format(residential_result.final_quote) }}</div>
+                    </div>
+                    <div class="summary-body">
+                        <div class="summary-box">
+                            <h4>Selection Overview</h4>
+                            <div class="summary-row"><span>Service Type</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
+                            <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">Weekly</strong></div>
+                            <div class="summary-row"><span>Condition</span><strong>{{ residential_result.chosen_condition_label }}</strong></div>
+                            <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
                         </div>
 
-                        <div class="final-quote-box" id="live_final_quote">FINAL QUOTE: ${{ "%.2f"|format(residential_result.final_quote) }}</div>
-                        <button type="button" class="lock-btn" id="lock_quote_btn">LOCK IN FINAL QUOTE</button>
-                        <div class="locked-note" id="locked_quote_note" style="display:none;"></div>
+                        <div class="summary-box">
+                            <h4>Price Breakdown</h4>
+                            <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
+                            <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong></div>
+                            <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
+                            <div class="price-row"><span>Total</span><strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong></div>
+                        </div>
+
+                        <div class="summary-box">
+                            <h4>Recurring Rates</h4>
+                            <div class="price-row"><span>Weekly</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.weekly) }}</strong></div>
+                            <div class="price-row"><span>Every 2 Weeks</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.biweekly) }}</strong></div>
+                            <div class="price-row"><span>Every 4 Weeks</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.monthly) }}</strong></div>
+                            <div class="summary-muted">One-time pricing continues to use the full quoted amount shown above.</div>
+                        </div>
+
+                        <div class="summary-box">
+                            <h4>Add-On Summary</h4>
+                            <div class="summary-muted">{{ residential_result.addon_summary }}</div>
+                        </div>
+
+                        <div class="summary-box">
+                            <h4>Finalize Chosen Quote</h4>
+                            <div class="split-grid">
+                                <div class="field-group">
+                                    <label for="finalize_service" class="inline-label">Chosen Service</label>
+                                    <select id="finalize_service" class="select-input">
+                                        <option value="basic" {% if residential_result.chosen_service == 'basic' %}selected{% endif %}>Basic Cleaning</option>
+                                        <option value="first_time" {% if residential_result.chosen_service == 'first_time' %}selected{% endif %}>First-Time Cleaning</option>
+                                        <option value="deep" {% if residential_result.chosen_service == 'deep' %}selected{% endif %}>Deep Cleaning</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="finalize_condition" class="inline-label">Condition Applied</label>
+                                    <select id="finalize_condition" class="select-input">
+                                        <option value="normal" {% if residential_result.chosen_condition == 'normal' %}selected{% endif %}>Normal (+0%)</option>
+                                        <option value="dirty" {% if residential_result.chosen_condition == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
+                                        <option value="very_dirty" {% if residential_result.chosen_condition == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="split-grid" style="margin-top: 14px;">
+                                <div class="field-group">
+                                    <label for="finalize_addons" class="inline-label">Selected Add-Ons</label>
+                                    <select id="finalize_addons" class="select-input">
+                                        <option value="{{ residential_result.addon_total }}" selected>{{ residential_result.addon_summary }}</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="finalize_travel" class="inline-label">Travel Fee</label>
+                                    <select id="finalize_travel" class="select-input">
+                                        <option value="0" selected>None</option>
+                                        <option value="10">$10</option>
+                                        <option value="20">$20</option>
+                                        <option value="30">$30</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="custom_travel_wrap" style="display:none; margin-top: 14px;">
+                                <label for="finalize_travel_custom" class="inline-label">Custom Travel Fee</label>
+                                <input class="text-input" type="number" id="finalize_travel_custom" min="0" step="0.01" value="0">
+                            </div>
+                            <div class="quote-total-amount" id="live_final_quote" style="font-size: 2rem; margin-top: 18px;">FINAL QUOTE: ${{ '%.2f'|format(residential_result.final_quote) }}</div>
+                            <button type="button" class="lock-btn" id="lock_quote_btn" style="margin-top: 16px;">Lock In Final Quote</button>
+                            <div class="locked-note" id="locked_quote_note" style="display:none;"></div>
+                        </div>
+
+                        <a href="/" class="reset-btn">Reset Calculator</a>
                     </div>
-                </div>
+                    {% else %}
+                    <div class="summary-body">
+                        <div class="empty-state">
+                            Fill in the property details, choose the service level, and click <strong>Calculate Residential Prices</strong> to populate the premium quote summary panel.
+                        </div>
+                    </div>
+                    {% endif %}
+                </aside>
+            </div>
 
-                {% for row in residential_result.rows %}
-                <details><summary>{{ row.label }} <span>⌄</span></summary><div class="details-body">
-                    <p><strong>Purpose:</strong> {{ row.purpose }}</p>
-                    <p><strong>Includes:</strong></p><ul>{% for item in row.includes %}<li>{{ item }}</li>{% endfor %}</ul>
-                    <p><strong>Does NOT include:</strong></p><ul>{% for item in row.not_included %}<li>{{ item }}</li>{% endfor %}</ul>
-                </div></details>
-                {% endfor %}
+            {% if residential_result %}
+            <div class="stack" style="margin-top: 24px;">
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Property Snapshot & Pricing Matrix</h2>
+                        <p class="card-subtitle">All residential pricing rows below still come directly from your original estimator logic.</p>
+                    </div>
+                    <div class="card-body stack">
+                        <div class="results-grid">
+                            <div class="result-stat"><strong>{{ residential_result.square_feet }} sq ft</strong><span class="muted">Property size</span></div>
+                            <div class="result-stat"><strong>{{ residential_result.formula_units }}</strong><span class="muted">Formula units</span></div>
+                            <div class="result-stat"><strong>{{ residential_result.sqft_adjustment_pct }}%</strong><span class="muted">Square footage adjustment</span></div>
+                            <div class="result-stat"><strong>{{ residential_result.bedrooms }}</strong><span class="muted">Bedrooms</span></div>
+                            <div class="result-stat"><strong>{{ residential_result.bathrooms }}</strong><span class="muted">Bathrooms</span></div>
+                            <div class="result-stat"><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong><span class="muted">Add-ons total</span></div>
+                        </div>
+                        <div class="pricing-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Normal</th>
+                                        <th>Dirty</th>
+                                        <th>Very Dirty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in residential_result.rows %}
+                                    <tr>
+                                        <td><strong>{{ row.label }}</strong></td>
+                                        <td>${{ '%.2f'|format(row.normal) }}</td>
+                                        <td>${{ '%.2f'|format(row.dirty) }}</td>
+                                        <td>${{ '%.2f'|format(row.very_dirty) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
 
-                <a href="/" class="reset-btn">Reset Form</a>
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Service Checklist</h2>
+                        <p class="card-subtitle">Cleaner accordion styling for what is included and excluded with each service level.</p>
+                    </div>
+                    <div class="card-body stack">
+                        {% for row in residential_result.rows %}
+                        <details class="card">
+                            <summary>
+                                <span>{{ row.label }}</span>
+                                <span class="muted">Tap to view checklist</span>
+                            </summary>
+                            <div class="details-body stack">
+                                <div>
+                                    <strong>Purpose</strong>
+                                    <p class="card-subtitle" style="margin-top: 8px;">{{ row.purpose }}</p>
+                                </div>
+                                <div class="two-col-list">
+                                    <div>
+                                        <strong>Included</strong>
+                                        <ul class="clean-list" style="margin-top: 12px;">
+                                            {% for item in row.includes %}
+                                            <li>{{ item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <strong>Not Included</strong>
+                                        <ul class="clean-list not-included" style="margin-top: 12px;">
+                                            {% for item in row.not_included %}
+                                            <li>{{ item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                        {% endfor %}
+                    </div>
+                </section>
             </div>
             {% endif %}
         </div>
-    </div>
 
-    <div id="realtor" class="tab-content {% if active_tab == 'realtor' %}active{% endif %}">
-        <div class="panel">
-            <h2>Realtor Estimate</h2>
-            <form method="POST">
-                <input type="hidden" name="form_type" value="realtor">
-                <div class="grid">
+        <div id="realtor" class="tab-content {% if active_tab == 'realtor' %}active{% endif %}">
+            <div class="estimator-layout">
+                <form method="POST" class="stack">
+                    <input type="hidden" name="form_type" value="realtor">
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Realtor Property Details</h2>
+                            <p class="card-subtitle">Same premium layout, adapted for listing prep, move-out, post-renovation, and open-house quoting.</p>
+                        </div>
+                        <div class="card-body stack">
+                            <div class="fields-grid">
+                                <div class="field-group">
+                                    <label for="realtor_square_feet">Square Footage</label>
+                                    <input class="text-input" id="realtor_square_feet" type="number" name="realtor_square_feet" required value="{{ request.form.get('realtor_square_feet', '') }}">
+                                </div>
+                            </div>
+                            <div class="stepper-grid">
+                                {% for field, label, default in [
+                                    ('realtor_bedrooms', 'Bedrooms', '3'),
+                                    ('realtor_bathrooms', 'Bathrooms', '2'),
+                                    ('realtor_kitchens', 'Kitchens', '1'),
+                                    ('realtor_living_rooms', 'Living Rooms', '1'),
+                                    ('realtor_dining_rooms', 'Dining Rooms', '1'),
+                                    ('realtor_hallways', 'Hallways', '1')
+                                ] %}
+                                <div class="field-group">
+                                    <label for="{{ field }}">{{ label }}</label>
+                                    <div class="stepper-control">
+                                        <button type="button" class="stepper-btn" data-stepper="{{ field }}" data-direction="down">−</button>
+                                        <input id="{{ field }}" type="number" name="{{ field }}" min="0" value="{{ request.form.get(field, default) }}" required>
+                                        <button type="button" class="stepper-btn" data-stepper="{{ field }}" data-direction="up">+</button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Service Configuration</h2>
+                            <p class="card-subtitle">Use the updated selectors to set service type, rush turnaround, and condition before pricing.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="fields-grid">
+                                <div class="field-group">
+                                    <label for="service_type">Service Type</label>
+                                    <select class="select-input" id="service_type" name="service_type">
+                                        <option value="listing_prep" {% if request.form.get('service_type', 'listing_prep') == 'listing_prep' %}selected{% endif %}>Listing Preparation</option>
+                                        <option value="vacant_move_out" {% if request.form.get('service_type') == 'vacant_move_out' %}selected{% endif %}>Vacant / Move-Out</option>
+                                        <option value="post_renovation" {% if request.form.get('service_type') == 'post_renovation' %}selected{% endif %}>Post-Renovation Cleaning</option>
+                                        <option value="open_house_touchup" {% if request.form.get('service_type') == 'open_house_touchup' %}selected{% endif %}>Open House Touch-Up</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="rush_type">Rush Service</label>
+                                    <select class="select-input" id="rush_type" name="rush_type">
+                                        <option value="none" {% if request.form.get('rush_type', 'none') == 'none' %}selected{% endif %}>None</option>
+                                        <option value="next_day" {% if request.form.get('rush_type') == 'next_day' %}selected{% endif %}>Next-Day (+15%)</option>
+                                        <option value="same_day" {% if request.form.get('rush_type') == 'same_day' %}selected{% endif %}>Same-Day (+25%)</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="realtor_condition">Condition</label>
+                                    <select class="select-input" id="realtor_condition" name="realtor_condition">
+                                        <option value="normal" {% if request.form.get('realtor_condition', 'normal') == 'normal' %}selected{% endif %}>Normal</option>
+                                        <option value="dirty" {% if request.form.get('realtor_condition') == 'dirty' %}selected{% endif %}>Dirty</option>
+                                        <option value="very_dirty" {% if request.form.get('realtor_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Realtor Add-On Services</h2>
+                            <p class="card-subtitle">Styled to match the residential calculator while preserving the same add-on pricing logic.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="addon-list">
+                                <div class="addon-row">
+                                    <div class="addon-title"><strong>Window Cleaning</strong><span class="addon-meta">Per-window add-on.</span></div>
+                                    <div class="price-badge">$5 each</div>
+                                    <input class="text-input" type="number" name="realtor_window_count" min="0" value="{{ request.form.get('realtor_window_count', '0') }}">
+                                </div>
+                                <div class="addon-row compact-toggle">
+                                    <div class="addon-title"><strong>Inside Oven Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                    <label class="toggle-wrap"><span class="inline-label">$25</span><span><input class="toggle-input" type="checkbox" name="realtor_oven" {% if request.form.get('realtor_oven') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                </div>
+                                <div class="addon-row compact-toggle">
+                                    <div class="addon-title"><strong>Inside Refrigerator Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                    <label class="toggle-wrap"><span class="inline-label">$20</span><span><input class="toggle-input" type="checkbox" name="realtor_fridge" {% if request.form.get('realtor_fridge') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title"><strong>Carpet Cleaning</strong><span class="addon-meta">Charged by carpet square footage.</span></div>
+                                    <div class="price-badge">$0.35 / sq ft</div>
+                                    <input class="text-input" type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="{{ request.form.get('realtor_carpet_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title"><strong>Pressure Washing</strong><span class="addon-meta">Charged by exterior square footage.</span></div>
+                                    <div class="price-badge">$0.37 / sq ft</div>
+                                    <input class="text-input" type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="{{ request.form.get('realtor_pressure_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Uses the same backend bundled pricing behavior.</span></div>
+                                    <div class="price-badge">$17–$20 each</div>
+                                    <input class="text-input" type="number" name="realtor_bins" min="0" value="{{ request.form.get('realtor_bins', '0') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     <div>
-                        <label>Square Footage</label><input type="number" name="realtor_square_feet" required>
-                        <label>Bedrooms</label><input type="number" name="realtor_bedrooms" min="0" value="3" required>
-                        <label>Bathrooms</label><input type="number" name="realtor_bathrooms" min="0" value="2" required>
-                        <label>Kitchens</label><input type="number" name="realtor_kitchens" min="0" value="1" required>
-                        <label>Living Rooms</label><input type="number" name="realtor_living_rooms" min="0" value="1" required>
-                        <label>Dining Rooms</label><input type="number" name="realtor_dining_rooms" min="0" value="1" required>
+                        <button type="submit" class="primary-btn">Calculate Realtor Estimate</button>
                     </div>
-                    <div>
-                        <label>Hallways</label><input type="number" name="realtor_hallways" min="0" value="1" required>
-                        <label>Service Type</label>
-                        <select name="service_type"><option value="listing_prep">Listing Preparation</option><option value="vacant_move_out">Vacant / Move-Out</option><option value="post_renovation">Post-Renovation Cleaning</option><option value="open_house_touchup">Open House Touch-Up</option></select>
-                        <label>Rush Service</label>
-                        <select name="rush_type"><option value="none">None</option><option value="next_day">Next-Day (+15%)</option><option value="same_day">Same-Day (+25%)</option></select>
-                        <label>Condition</label>
-                        <select name="realtor_condition"><option value="normal">Normal</option><option value="dirty">Dirty</option><option value="very_dirty">Very Dirty</option></select>
-                        <label>Window Count</label><input type="number" name="realtor_window_count" min="0" value="0">
-                        <label>Carpet Cleaning Sqft</label><input type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="0">
-                        <label>Pressure Washing Sqft</label><input type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="0">
+                </form>
+
+                <aside class="summary-panel">
+                    <div class="summary-head">
+                        <h3>Realtor Quote Summary</h3>
+                        <p>Use the same premium summary experience for listing and turnover work.</p>
                     </div>
-                </div>
-                <div class="checkbox-row" style="margin-top:14px;"><label><input type="checkbox" name="realtor_oven"> Inside Oven Cleaning</label><label><input type="checkbox" name="realtor_fridge"> Inside Refrigerator Cleaning</label></div>
-                <label>Trash Bins</label><input type="number" name="realtor_bins" min="0" value="0">
-                <button type="submit" class="calculate">Calculate Realtor Estimate</button>
-            </form>
+                    {% if realtor_result %}
+                    <div class="quote-total">
+                        <div class="quote-total-label">Estimated Quote</div>
+                        <div class="quote-total-amount">${{ '%.2f'|format(realtor_result.total) }}</div>
+                    </div>
+                    <div class="summary-body">
+                        <div class="summary-box">
+                            <h4>Selection Overview</h4>
+                            <div class="summary-row"><span>Service Type</span><strong>{{ realtor_result.service_label }}</strong></div>
+                            <div class="summary-row"><span>Condition</span><strong>{{ realtor_result.condition_label }}</strong></div>
+                            <div class="summary-row"><span>Rush Service</span><strong>{{ realtor_result.rush_label }}</strong></div>
+                            <div class="summary-row"><span>Formula Units</span><strong>{{ realtor_result.formula_units }}</strong></div>
+                        </div>
+                        <div class="summary-box">
+                            <h4>Breakdown</h4>
+                            <div class="price-row"><span>Base Price</span><strong>${{ '%.2f'|format(realtor_result.base_price) }}</strong></div>
+                            <div class="price-row"><span>Sq Ft Adjustment</span><strong>{{ realtor_result.sqft_adjustment_pct }}%</strong></div>
+                            <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(realtor_result.addon_total) }}</strong></div>
+                            <div class="price-row"><span>Rush Fee</span><strong>{{ realtor_result.rush_pct }}%</strong></div>
+                        </div>
+                        <div class="summary-box">
+                            <h4>Scope Notes</h4>
+                            <div class="summary-muted">{{ realtor_result.purpose }}</div>
+                        </div>
+                        <a href="/" class="reset-btn">Reset Calculator</a>
+                    </div>
+                    {% else %}
+                    <div class="summary-body">
+                        <div class="empty-state">Enter the realtor job details to generate the estimate and see the pricing breakdown in this sticky panel.</div>
+                    </div>
+                    {% endif %}
+                </aside>
+            </div>
 
             {% if realtor_result %}
-            <div class="result-wrapper"><div class="card"><div class="card-title">{{ realtor_result.service_label }}</div><div class="card-body"><div class="quick-summary">
-                Purpose: <strong>{{ realtor_result.purpose }}</strong><br>
-                Condition: <strong>{{ realtor_result.condition_label }}</strong><br>
-                Rush: <strong>{{ realtor_result.rush_label }}</strong><br>
-                Add-Ons Total: <strong>${{ "%.2f"|format(realtor_result.addon_total) }}</strong><br>
-                Final Quote: <strong>${{ "%.2f"|format(realtor_result.total) }}</strong>
+            <div class="stack" style="margin-top: 24px;">
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Realtor Scope Checklist</h2>
+                        <p class="card-subtitle">Included and excluded items stay intact, now displayed in a cleaner layout.</p>
+                    </div>
+                    <div class="card-body two-col-list">
+                        <div>
+                            <strong>Included</strong>
+                            <ul class="clean-list" style="margin-top: 12px;">
+                                {% for item in realtor_result.includes %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div>
+                            <strong>Not Included</strong>
+                            <ul class="clean-list not-included" style="margin-top: 12px;">
+                                {% for item in realtor_result.not_included %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
             </div>
-            {% if realtor_result.addon_details %}<ul>{% for item, price in realtor_result.addon_details %}<li>{{ item }} — ${{ "%.2f"|format(price) }}</li>{% endfor %}</ul>{% endif %}
-            <p><strong>Includes:</strong></p><ul>{% for item in realtor_result.includes %}<li>{{ item }}</li>{% endfor %}</ul>
-            <p><strong>Does NOT include:</strong></p><ul>{% for item in realtor_result.not_included %}<li>{{ item }}</li>{% endfor %}</ul>
-            </div></div></div>
             {% endif %}
         </div>
     </div>
@@ -333,6 +1435,28 @@
             note.textContent = `Locked ${live.textContent}`;
         }
 
+        function updateFrequencyLabel() {
+            const checked = document.querySelector('input[name="display_frequency"]:checked');
+            const label = document.getElementById('selected_frequency_label');
+            if (checked && label) {
+                label.textContent = checked.value;
+            }
+        }
+
+        function handleStepper(button) {
+            const targetId = button.getAttribute('data-stepper');
+            const direction = button.getAttribute('data-direction');
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            const current = parseFloat(input.value || '0');
+            const step = parseFloat(input.step || '1') || 1;
+            const min = input.min === '' ? Number.NEGATIVE_INFINITY : parseFloat(input.min);
+            const next = direction === 'up' ? current + step : current - step;
+            input.value = Math.max(min, next);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             ['finalize_service', 'finalize_condition', 'finalize_travel', 'finalize_travel_custom'].forEach(id => {
                 const el = document.getElementById(id);
@@ -340,9 +1464,20 @@
                 if (el) el.addEventListener('change', updateLiveFinalQuote);
             });
 
+            document.querySelectorAll('[data-stepper]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    handleStepper(btn);
+                });
+            });
+
+            document.querySelectorAll('input[name="display_frequency"]').forEach(input => {
+                input.addEventListener('change', updateFrequencyLabel);
+            });
+
             const lockBtn = document.getElementById('lock_quote_btn');
             if (lockBtn) lockBtn.addEventListener('click', lockFinalQuote);
             updateLiveFinalQuote();
+            updateFrequencyLabel();
         });
     </script>
 </body>

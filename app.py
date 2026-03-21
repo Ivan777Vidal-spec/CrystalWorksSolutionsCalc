@@ -512,11 +512,20 @@ def index():
                 bins=safe_int(request.form.get("realtor_bins")),
             )
 
+    pricing_snapshot = {
+        "rate_per_hour": RATE_PER_HOUR,
+        "minimum_service_price": MINIMUM_SERVICE_PRICE,
+        "weekly_discount": int(RECURRING_DISCOUNTS["weekly"] * 100),
+        "biweekly_discount": int(RECURRING_DISCOUNTS["biweekly"] * 100),
+        "monthly_discount": int(RECURRING_DISCOUNTS["monthly"] * 100),
+    }
+
     return render_template(
         "index.html",
         active_tab=active_tab,
         residential_result=residential_result,
         realtor_result=realtor_result,
+        pricing_snapshot=pricing_snapshot,
     )
 
 
