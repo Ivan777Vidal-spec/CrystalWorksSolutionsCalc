@@ -526,6 +526,8 @@ def index():
         residential_result=residential_result,
         realtor_result=realtor_result,
         pricing_snapshot=pricing_snapshot,
+        residential_service_details=RESIDENTIAL_SERVICE_DETAILS,
+        realtor_service_details=REALTOR_SERVICE_DETAILS,
     )
 
 
