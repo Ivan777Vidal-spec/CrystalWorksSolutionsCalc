@@ -10,6 +10,22 @@ RATE_PER_HOUR = 70
 MINIMUM_SERVICE_PRICE = 150
 OPEN_HOUSE_MINIMUM = 150
 
+NON_RESIDENTIAL_RATES = {
+    "carpet_residential": 0.37,
+    "carpet_commercial": 0.30,
+    "pressure_standard": 0.40,
+    "pressure_dirty": 0.50,
+    "commercial_janitorial_hourly": 63.00,
+}
+PRESSURE_WASHING_MINIMUM = 130.00
+PRESSURE_STAIN_ADDONS = {
+    "none": ("None", 0.00),
+    "oil_rust_small": ("Small oil/rust stain", 50.00),
+    "oil_rust_medium": ("Medium oil/rust stain", 90.00),
+    "oil_rust_heavy": ("Heavy oil/rust stain", 120.00),
+    "organic_heavy": ("Heavy organic stain", 40.00),
+}
+
 RECURRING_DISCOUNTS = {
     "weekly": 0.20,
     "biweekly": 0.15,
@@ -459,6 +475,64 @@ def calculate_realtor(
     }
 
 
+def calculate_non_residential(service, sqft, hours, pressure_condition, pressure_stain_addon):
+    summary_inputs = []
+    addon_details = []
+    service_label = ""
+    base_quote = 0.0
+    final_total = 0.0
+
+    if service == "carpet_residential":
+        rate = NON_RESIDENTIAL_RATES["carpet_residential"]
+        service_label = "Carpet Cleaning (Residential)"
+        base_quote = sqft * rate
+        final_total = base_quote
+        summary_inputs.append(f'{money(sqft)} sqft × ${rate:.2f}')
+
+    elif service == "carpet_commercial":
+        rate = NON_RESIDENTIAL_RATES["carpet_commercial"]
+        service_label = "Carpet Cleaning (Commercial)"
+        base_quote = sqft * rate
+        final_total = base_quote
+        summary_inputs.append(f'{money(sqft)} sqft × ${rate:.2f}')
+
+    elif service == "pressure_washing":
+        is_dirty = pressure_condition == "dirty"
+        rate = NON_RESIDENTIAL_RATES["pressure_dirty"] if is_dirty else NON_RESIDENTIAL_RATES["pressure_standard"]
+        condition_label = "Dirty" if is_dirty else "Standard"
+        service_label = f"Pressure Washing ({condition_label})"
+        raw_base = sqft * rate
+        base_quote = max(raw_base, PRESSURE_WASHING_MINIMUM)
+        addon_label, addon_amount = PRESSURE_STAIN_ADDONS.get(pressure_stain_addon, PRESSURE_STAIN_ADDONS["none"])
+        final_total = base_quote + addon_amount
+        summary_inputs.append(f'{money(sqft)} sqft × ${rate:.2f} = ${money(raw_base):.2f}')
+        if raw_base < PRESSURE_WASHING_MINIMUM:
+            summary_inputs.append(f'Pressure washing minimum applied: ${PRESSURE_WASHING_MINIMUM:.2f}')
+        if addon_amount > 0:
+            addon_details.append((addon_label, money(addon_amount)))
+
+    else:
+        service_label = "Commercial Janitorial"
+        rate = NON_RESIDENTIAL_RATES["commercial_janitorial_hourly"]
+        base_quote = hours * rate
+        final_total = base_quote
+        summary_inputs.append(f'{money(hours)} labor hours × ${rate:.2f}/hr')
+
+    return {
+        "service": service,
+        "service_label": service_label,
+        "sqft": money(sqft),
+        "hours": money(hours),
+        "pressure_condition": pressure_condition,
+        "pressure_stain_addon": pressure_stain_addon,
+        "input_lines": summary_inputs,
+        "base_quote": money(base_quote),
+        "addon_details": addon_details,
+        "addon_total": money(sum(amount for _, amount in addon_details)),
+        "final_total": money(final_total),
+    }
+
+
 # ----------------------------
 # ROUTE
 # ----------------------------
@@ -468,6 +542,7 @@ def index():
     active_tab = "residential"
     residential_result = None
     realtor_result = None
+    non_residential_result = None
 
     if request.method == "POST":
         form_type = request.form.get("form_type", "residential")
@@ -511,12 +586,21 @@ def index():
                 pressure_sqft=safe_float(request.form.get("realtor_pressure_sqft")),
                 bins=safe_int(request.form.get("realtor_bins")),
             )
+        elif form_type == "non_residential":
+            non_residential_result = calculate_non_residential(
+                service=request.form.get("service", "carpet_residential"),
+                sqft=safe_float(request.form.get("service_sqft")),
+                hours=safe_float(request.form.get("labor_hours")),
+                pressure_condition=request.form.get("pressure_condition", "standard"),
+                pressure_stain_addon=request.form.get("pressure_stain_addon", "none"),
+            )
 
     return render_template(
         "index.html",
         active_tab=active_tab,
         residential_result=residential_result,
         realtor_result=realtor_result,
+        non_residential_result=non_residential_result,
     )
 
 
