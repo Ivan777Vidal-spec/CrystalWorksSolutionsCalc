@@ -15,6 +15,17 @@
         }
         h1 { text-align: center; margin-bottom: 6px; }
         .sub { text-align: center; color: #5e6b83; margin-bottom: 20px; }
+        .brand-header {
+            text-align: center;
+            background: linear-gradient(180deg, #f8f9fc, #eff2f8);
+            border: 1px solid #d8dce6;
+            border-radius: 16px;
+            padding: 22px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        .brand-title { margin: 0; font-size: 34px; letter-spacing: 0.5px; }
+        .brand-sub { margin-top: 7px; color: #50627f; font-size: 16px; }
         .tabs { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
         .tab-btn { border:none; border-radius:10px; padding:12px 18px; background:#d1d5df; color:#1d2d50; font-weight:bold; cursor:pointer; }
         .tab-btn.active { background:#3f73b7; color:white; }
@@ -104,12 +115,15 @@
     </style>
 </head>
 <body>
-    <h1>Crystal Works Solutions</h1>
-    <div class="sub">Private Estimator</div>
+    <div class="brand-header">
+        <h1 class="brand-title">Crystal Works Solutions</h1>
+        <div class="brand-sub">Professional Cleaning &amp; Surface Care Estimator</div>
+    </div>
 
     <div class="tabs">
         <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential</button>
         <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
+        <button class="tab-btn {% if active_tab == 'non_residential' %}active{% endif %}" onclick="showTab('non_residential')">Surface Care</button>
     </div>
 
     <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
@@ -288,6 +302,80 @@
         </div>
     </div>
 
+    <div id="non_residential" class="tab-content {% if active_tab == 'non_residential' %}active{% endif %}">
+        <div class="panel">
+            <h2>Surface Care & Commercial Estimator</h2>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="non_residential">
+                <label>Selected Service</label>
+                <select name="service" id="service_select" onchange="toggleServiceInputs()">
+                    <option value="carpet_residential" {% if non_residential_result and non_residential_result.service == 'carpet_residential' %}selected{% endif %}>Residential Carpet Cleaning ($0.37/sqft)</option>
+                    <option value="carpet_commercial" {% if non_residential_result and non_residential_result.service == 'carpet_commercial' %}selected{% endif %}>Commercial Carpet Cleaning ($0.30/sqft)</option>
+                    <option value="pressure_washing" {% if non_residential_result and non_residential_result.service == 'pressure_washing' %}selected{% endif %}>Pressure Washing (Standard/Dirty + stain add-ons)</option>
+                    <option value="commercial_janitorial" {% if non_residential_result and non_residential_result.service == 'commercial_janitorial' %}selected{% endif %}>Commercial Janitorial ($63/hr)</option>
+                </select>
+
+                <div id="sqft_wrap">
+                    <label>Square Footage</label>
+                    <input type="number" step="0.01" name="service_sqft" min="0" value="{{ non_residential_result.sqft if non_residential_result else 0 }}">
+                </div>
+
+                <div id="hours_wrap" style="display:none;">
+                    <label>Labor Hours</label>
+                    <input type="number" step="0.01" name="labor_hours" min="0" value="{{ non_residential_result.hours if non_residential_result else 0 }}">
+                </div>
+
+                <div id="pressure_options" style="display:none;">
+                    <label>Pressure Condition</label>
+                    <select name="pressure_condition">
+                        <option value="standard" {% if non_residential_result and non_residential_result.pressure_condition == 'standard' %}selected{% endif %}>Standard ($0.40/sqft)</option>
+                        <option value="dirty" {% if non_residential_result and non_residential_result.pressure_condition == 'dirty' %}selected{% endif %}>Dirty ($0.50/sqft)</option>
+                    </select>
+
+                    <label>Optional Stain Add-On</label>
+                    <select name="pressure_stain_addon">
+                        <option value="none" {% if non_residential_result and non_residential_result.pressure_stain_addon == 'none' %}selected{% endif %}>None</option>
+                        <option value="oil_rust_small" {% if non_residential_result and non_residential_result.pressure_stain_addon == 'oil_rust_small' %}selected{% endif %}>Small oil/rust stain (+$50)</option>
+                        <option value="oil_rust_medium" {% if non_residential_result and non_residential_result.pressure_stain_addon == 'oil_rust_medium' %}selected{% endif %}>Medium oil/rust stain (+$90)</option>
+                        <option value="oil_rust_heavy" {% if non_residential_result and non_residential_result.pressure_stain_addon == 'oil_rust_heavy' %}selected{% endif %}>Heavy oil/rust stain (+$120)</option>
+                        <option value="organic_heavy" {% if non_residential_result and non_residential_result.pressure_stain_addon == 'organic_heavy' %}selected{% endif %}>Heavy organic stain (+$40)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="calculate">Calculate Estimate</button>
+            </form>
+
+            {% if non_residential_result %}
+            <div class="result-wrapper">
+                <div class="card">
+                    <div class="card-title">Quote Summary</div>
+                    <div class="card-body quick-summary">
+                        Selected Service: <strong>{{ non_residential_result.service_label }}</strong><br>
+                        Inputs Used:
+                        <ul>
+                            {% for line in non_residential_result.input_lines %}
+                            <li>{{ line }}</li>
+                            {% endfor %}
+                        </ul>
+                        Base Quote: <strong>${{ "%.2f"|format(non_residential_result.base_quote) }}</strong><br>
+                        Add-Ons:
+                        <ul>
+                            {% if non_residential_result.addon_details %}
+                                {% for item, amount in non_residential_result.addon_details %}
+                                <li>{{ item }} = ${{ "%.2f"|format(amount) }}</li>
+                                {% endfor %}
+                            {% else %}
+                                <li>None</li>
+                            {% endif %}
+                        </ul>
+                        Final Estimated Total: <strong>${{ "%.2f"|format(non_residential_result.final_total) }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
     <script>
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -296,6 +384,26 @@
             const buttons = document.querySelectorAll('.tab-btn');
             if (tabId === 'residential') buttons[0].classList.add('active');
             if (tabId === 'realtor') buttons[1].classList.add('active');
+            if (tabId === 'non_residential') buttons[2].classList.add('active');
+        }
+
+        function toggleServiceInputs() {
+            const service = document.getElementById('service_select');
+            const sqftWrap = document.getElementById('sqft_wrap');
+            const hoursWrap = document.getElementById('hours_wrap');
+            const pressureOptions = document.getElementById('pressure_options');
+            if (!service || !sqftWrap || !hoursWrap || !pressureOptions) return;
+
+            if (service.value === 'commercial_janitorial') {
+                sqftWrap.style.display = 'none';
+                pressureOptions.style.display = 'none';
+                hoursWrap.style.display = 'block';
+                return;
+            }
+
+            sqftWrap.style.display = 'block';
+            hoursWrap.style.display = 'none';
+            pressureOptions.style.display = service.value === 'pressure_washing' ? 'block' : 'none';
         }
 
         const residentialPrices = {{ residential_result.service_price_lookup|tojson if residential_result else '{}' }};
@@ -343,6 +451,7 @@
             const lockBtn = document.getElementById('lock_quote_btn');
             if (lockBtn) lockBtn.addEventListener('click', lockFinalQuote);
             updateLiveFinalQuote();
+            toggleServiceInputs();
         });
     </script>
 </body>
