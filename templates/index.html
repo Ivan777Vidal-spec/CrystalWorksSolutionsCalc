@@ -50,15 +50,12 @@
         }
 
         .hero {
-            display: flex;
-            justify-content: space-between;
-            gap: 18px;
-            align-items: center;
+            display: block;
             background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(235,244,255,0.96));
             border: 1px solid var(--border-strong);
             border-radius: 28px;
             box-shadow: var(--shadow);
-            padding: 18px 22px;
+            padding: 24px 26px;
             margin-bottom: 16px;
         }
 
@@ -66,22 +63,6 @@
             display: grid;
             gap: 8px;
             min-width: 0;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            width: fit-content;
-            align-items: center;
-            gap: 8px;
-            border-radius: 999px;
-            padding: 7px 12px;
-            background: rgba(23, 48, 116, 0.08);
-            color: var(--primary);
-            border: 1px solid rgba(23, 48, 116, 0.14);
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
         }
 
         .hero h1 {
@@ -97,35 +78,6 @@
             line-height: 1.5;
             max-width: 760px;
             font-size: 0.96rem;
-        }
-
-        .hero-meta {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            min-width: min(100%, 380px);
-        }
-
-        .meta-pill {
-            padding: 12px 14px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.92);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-soft);
-        }
-
-        .meta-pill strong {
-            display: block;
-            color: var(--primary);
-            font-size: 0.92rem;
-            margin-bottom: 2px;
-        }
-
-        .meta-pill span {
-            display: block;
-            color: var(--muted);
-            font-size: 0.78rem;
-            line-height: 1.35;
         }
 
         .tabs {
@@ -533,6 +485,12 @@
         .addon-meta {
             font-size: 0.8rem;
         }
+        .addon-breakdown {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
 
         .price-badge {
             display: inline-flex;
@@ -793,19 +751,15 @@
         }
 
         @media (max-width: 1120px) {
-            .hero,
             .estimator-layout,
             .inline-summary-grid,
             .choice-grid.choice-grid-4 { grid-template-columns: 1fr; }
-            .hero { display: grid; }
-            .hero-meta { min-width: 0; }
             .summary-panel { position: static; }
         }
 
         @media (max-width: 860px) {
             .page-shell { padding: 14px 12px 86px; }
             .hero { padding: 16px; margin-bottom: 12px; }
-            .hero-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .tabs { width: 100%; justify-content: stretch; }
             .tab-btn { flex: 1 1 0; }
             .fields-grid,
@@ -815,7 +769,8 @@
             .two-col-list,
             .compact-stats,
             .addon-row,
-            .inline-summary-grid {
+            .inline-summary-grid,
+            .addon-breakdown {
                 grid-template-columns: 1fr;
             }
             .card-header,
@@ -860,23 +815,8 @@
     <div class="page-shell">
         <section class="hero">
             <div class="hero-brand">
-                <div class="hero-badge">Crystal Works Solutions</div>
-                <h1>Pricing Calculator</h1>
-                <p>Compact field-ready quote builder with the same pricing logic, faster navigation, and service scope shown right when you select it.</p>
-            </div>
-            <div class="hero-meta">
-                <div class="meta-pill">
-                    <strong>${{ '%.0f'|format(pricing_snapshot.rate_per_hour) }}/hr</strong>
-                    <span>Base rate stays unchanged.</span>
-                </div>
-                <div class="meta-pill">
-                    <strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }} min</strong>
-                    <span>Existing minimum remains enforced.</span>
-                </div>
-                <div class="meta-pill">
-                    <strong>{{ pricing_snapshot.weekly_discount }} / {{ pricing_snapshot.biweekly_discount }} / {{ pricing_snapshot.monthly_discount }}%</strong>
-                    <span>Weekly, biweekly, and monthly discounts preserved.</span>
-                </div>
+                <h1>Crystal Works Solutions</h1>
+                <p>Professional Cleaning &amp; Surface Care Estimator</p>
             </div>
         </section>
 
@@ -1071,15 +1011,34 @@
                                         <strong>Carpet Cleaning</strong>
                                         <span class="addon-meta">Charged by carpet square footage.</span>
                                     </div>
-                                    <div class="price-badge">$0.35 / sq ft</div>
+                                    <div class="price-badge">$0.37 / sq ft</div>
                                     <input class="text-input" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
                                         <strong>Pressure Washing</strong>
-                                        <span class="addon-meta">Charged by exterior square footage.</span>
+                                        <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
+                                        <div class="addon-breakdown">
+                                            <div class="field-group">
+                                                <label for="pressure_condition">Condition</label>
+                                                <select class="select-input" id="pressure_condition" name="pressure_condition">
+                                                    <option value="standard" {% if request.form.get('pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
+                                                    <option value="dirty" {% if request.form.get('pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.50 / sq ft)</option>
+                                                </select>
+                                            </div>
+                                            <div class="field-group">
+                                                <label for="pressure_stain_addon">Stain Add-On</label>
+                                                <select class="select-input" id="pressure_stain_addon" name="pressure_stain_addon">
+                                                    <option value="none" {% if request.form.get('pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
+                                                    <option value="small_oil_rust" {% if request.form.get('pressure_stain_addon') == 'small_oil_rust' %}selected{% endif %}>Small oil/rust (+$50)</option>
+                                                    <option value="medium_oil_rust" {% if request.form.get('pressure_stain_addon') == 'medium_oil_rust' %}selected{% endif %}>Medium oil/rust (+$90)</option>
+                                                    <option value="heavy_oil_rust" {% if request.form.get('pressure_stain_addon') == 'heavy_oil_rust' %}selected{% endif %}>Heavy oil/rust (+$120)</option>
+                                                    <option value="heavy_organic" {% if request.form.get('pressure_stain_addon') == 'heavy_organic' %}selected{% endif %}>Heavy organic (+$40)</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="price-badge">$0.37 / sq ft</div>
+                                    <div class="price-badge">$0.40 / $0.50 + $130 min</div>
                                     <input class="text-input" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
@@ -1133,7 +1092,13 @@
                         </div>
                         <div class="summary-box">
                             <h4>Add-On Summary</h4>
+                            {% if residential_result.addon_details %}
+                                {% for item, amount in residential_result.addon_details %}
+                                <div class="price-row"><span>{{ item }}</span><strong>${{ '%.2f'|format(amount) }}</strong></div>
+                                {% endfor %}
+                            {% else %}
                             <p class="summary-muted">{{ residential_result.addon_summary }}</p>
+                            {% endif %}
                         </div>
                         <a href="/" class="reset-btn">Reset Calculator</a>
                     </div>
@@ -1333,12 +1298,34 @@
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title"><strong>Carpet Cleaning</strong><span class="addon-meta">Charged by carpet square footage.</span></div>
-                                    <div class="price-badge">$0.35 / sq ft</div>
+                                    <div class="price-badge">$0.30 / sq ft</div>
                                     <input class="text-input" type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="{{ request.form.get('realtor_carpet_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
-                                    <div class="addon-title"><strong>Pressure Washing</strong><span class="addon-meta">Charged by exterior square footage.</span></div>
-                                    <div class="price-badge">$0.37 / sq ft</div>
+                                    <div class="addon-title">
+                                        <strong>Pressure Washing</strong>
+                                        <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
+                                        <div class="addon-breakdown">
+                                            <div class="field-group">
+                                                <label for="realtor_pressure_condition">Condition</label>
+                                                <select class="select-input" id="realtor_pressure_condition" name="realtor_pressure_condition">
+                                                    <option value="standard" {% if request.form.get('realtor_pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
+                                                    <option value="dirty" {% if request.form.get('realtor_pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.50 / sq ft)</option>
+                                                </select>
+                                            </div>
+                                            <div class="field-group">
+                                                <label for="realtor_pressure_stain_addon">Stain Add-On</label>
+                                                <select class="select-input" id="realtor_pressure_stain_addon" name="realtor_pressure_stain_addon">
+                                                    <option value="none" {% if request.form.get('realtor_pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
+                                                    <option value="small_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'small_oil_rust' %}selected{% endif %}>Small oil/rust (+$50)</option>
+                                                    <option value="medium_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'medium_oil_rust' %}selected{% endif %}>Medium oil/rust (+$90)</option>
+                                                    <option value="heavy_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_oil_rust' %}selected{% endif %}>Heavy oil/rust (+$120)</option>
+                                                    <option value="heavy_organic" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_organic' %}selected{% endif %}>Heavy organic (+$40)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="price-badge">$0.40 / $0.50 + $130 min</div>
                                     <input class="text-input" type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="{{ request.form.get('realtor_pressure_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
@@ -1379,6 +1366,17 @@
                             <div class="price-row"><span>Sq Ft Adjustment</span><strong>{{ realtor_result.sqft_adjustment_pct }}%</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(realtor_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Rush Fee</span><strong>{{ realtor_result.rush_pct }}%</strong></div>
+                            <div class="price-row"><span>Final Total</span><strong>${{ '%.2f'|format(realtor_result.total) }}</strong></div>
+                        </div>
+                        <div class="summary-box">
+                            <h4>Add-On Details</h4>
+                            {% if realtor_result.addon_details %}
+                                {% for item, amount in realtor_result.addon_details %}
+                                <div class="price-row"><span>{{ item }}</span><strong>${{ '%.2f'|format(amount) }}</strong></div>
+                                {% endfor %}
+                            {% else %}
+                            <p class="summary-muted">No add-ons selected.</p>
+                            {% endif %}
                         </div>
                         <div class="summary-box">
                             <h4>Scope Notes</h4>
