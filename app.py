@@ -6,9 +6,28 @@ app = Flask(__name__)
 # SETTINGS
 # ----------------------------
 
-RATE_PER_HOUR = 70
+RESIDENTIAL_RATE_PER_HOUR = 70
+COMMERCIAL_JANITORIAL_RATE_PER_HOUR = 63
 MINIMUM_SERVICE_PRICE = 150
 OPEN_HOUSE_MINIMUM = 150
+
+CARPET_RATES = {
+    "residential": 0.37,
+    "commercial": 0.30,
+}
+
+PRESSURE_WASHING_RATES = {
+    "standard": 0.40,
+    "dirty": 0.50,
+}
+PRESSURE_WASHING_MINIMUM = 130
+PRESSURE_WASHING_STAIN_ADDONS = {
+    "none": ("No stain add-on", 0),
+    "small_oil_rust": ("Small oil/rust stain add-on", 50),
+    "medium_oil_rust": ("Medium oil/rust stain add-on", 90),
+    "heavy_oil_rust": ("Heavy oil/rust stain add-on", 120),
+    "heavy_organic": ("Heavy organic stain add-on", 40),
+}
 
 RECURRING_DISCOUNTS = {
     "weekly": 0.20,
@@ -222,7 +241,17 @@ def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_ro
     )
 
 
-def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins):
+def calculate_addons(
+    window_count,
+    oven,
+    fridge,
+    carpet_sqft,
+    pressure_sqft,
+    bins,
+    service_context="residential",
+    pressure_condition="standard",
+    pressure_stain_addon="none",
+):
     addon_details = []
     addon_total = 0.0
 
@@ -240,14 +269,36 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
         addon_details.append(("Inside Refrigerator Cleaning", 20))
 
     if carpet_sqft > 0:
-        total = carpet_sqft * 0.35
+        carpet_rate = CARPET_RATES["residential"] if service_context == "residential" else CARPET_RATES["commercial"]
+        total = carpet_sqft * carpet_rate
         addon_total += total
-        addon_details.append(("Carpet Cleaning", money(total)))
+        addon_details.append((f"Carpet Cleaning ({carpet_sqft:g} sq ft × ${carpet_rate:.2f})", money(total)))
 
     if pressure_sqft > 0:
-        total = pressure_sqft * 0.37
-        addon_total += total
-        addon_details.append(("Pressure Washing", money(total)))
+        pressure_rate = PRESSURE_WASHING_RATES.get(pressure_condition, PRESSURE_WASHING_RATES["standard"])
+        base_total = pressure_sqft * pressure_rate
+        pressure_base_after_minimum = max(base_total, PRESSURE_WASHING_MINIMUM)
+        addon_total += pressure_base_after_minimum
+        addon_details.append(
+            (
+                f"Pressure Washing ({pressure_condition.title()}) ({pressure_sqft:g} sq ft × ${pressure_rate:.2f})",
+                money(base_total),
+            )
+        )
+        if base_total < PRESSURE_WASHING_MINIMUM:
+            addon_details.append(
+                (
+                    "Pressure Washing Minimum Applied",
+                    money(PRESSURE_WASHING_MINIMUM - base_total),
+                )
+            )
+
+        stain_label, stain_amount = PRESSURE_WASHING_STAIN_ADDONS.get(
+            pressure_stain_addon, PRESSURE_WASHING_STAIN_ADDONS["none"]
+        )
+        if stain_amount > 0:
+            addon_total += stain_amount
+            addon_details.append((stain_label, stain_amount))
 
     if bins > 0:
         has_other_service = (
@@ -306,6 +357,8 @@ def calculate_residential(
     carpet_sqft,
     pressure_sqft,
     bins,
+    pressure_condition="standard",
+    pressure_stain_addon="none",
     chosen_service="first_time",
     chosen_condition="normal",
 ):
@@ -313,12 +366,20 @@ def calculate_residential(
         bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways
     )
 
-    base_price = formula_units * RATE_PER_HOUR
+    base_price = formula_units * RESIDENTIAL_RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
     base_subtotal = base_price * (1 + sqft_adjustment)
 
     addon_total, addon_details = calculate_addons(
-        window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
+        window_count,
+        oven,
+        fridge,
+        carpet_sqft,
+        pressure_sqft,
+        bins,
+        service_context="residential",
+        pressure_condition=pressure_condition,
+        pressure_stain_addon=pressure_stain_addon,
     )
 
     rows = build_residential_rows(base_subtotal, addon_total)
@@ -395,12 +456,14 @@ def calculate_realtor(
     carpet_sqft,
     pressure_sqft,
     bins,
+    pressure_condition="standard",
+    pressure_stain_addon="none",
 ):
     formula_units = realtor_formula_units(
         bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways
     )
 
-    base_price = formula_units * RATE_PER_HOUR
+    base_price = formula_units * COMMERCIAL_JANITORIAL_RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
     subtotal = base_price * (1 + sqft_adjustment)
 
@@ -411,7 +474,15 @@ def calculate_realtor(
     subtotal *= service_multiplier
 
     addon_total, addon_details = calculate_addons(
-        window_count, oven, fridge, carpet_sqft, pressure_sqft, bins
+        window_count,
+        oven,
+        fridge,
+        carpet_sqft,
+        pressure_sqft,
+        bins,
+        service_context="commercial",
+        pressure_condition=pressure_condition,
+        pressure_stain_addon=pressure_stain_addon,
     )
 
     subtotal += addon_total
@@ -488,6 +559,8 @@ def index():
                 carpet_sqft=safe_float(request.form.get("carpet_sqft")),
                 pressure_sqft=safe_float(request.form.get("pressure_sqft")),
                 bins=safe_int(request.form.get("bins")),
+                pressure_condition=request.form.get("pressure_condition", "standard"),
+                pressure_stain_addon=request.form.get("pressure_stain_addon", "none"),
                 chosen_service=request.form.get("chosen_service", "first_time"),
                 chosen_condition=request.form.get("chosen_condition", "normal"),
             )
@@ -510,10 +583,13 @@ def index():
                 carpet_sqft=safe_float(request.form.get("realtor_carpet_sqft")),
                 pressure_sqft=safe_float(request.form.get("realtor_pressure_sqft")),
                 bins=safe_int(request.form.get("realtor_bins")),
+                pressure_condition=request.form.get("realtor_pressure_condition", "standard"),
+                pressure_stain_addon=request.form.get("realtor_pressure_stain_addon", "none"),
             )
 
     pricing_snapshot = {
-        "rate_per_hour": RATE_PER_HOUR,
+        "rate_per_hour": RESIDENTIAL_RATE_PER_HOUR,
+        "commercial_janitorial_rate_per_hour": COMMERCIAL_JANITORIAL_RATE_PER_HOUR,
         "minimum_service_price": MINIMUM_SERVICE_PRICE,
         "weekly_discount": int(RECURRING_DISCOUNTS["weekly"] * 100),
         "biweekly_discount": int(RECURRING_DISCOUNTS["biweekly"] * 100),
