@@ -821,14 +821,37 @@
         </section>
 
         <div class="tabs">
-            <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential</button>
-            <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor</button>
+            <button class="tab-btn {% if active_tab == 'residential' %}active{% endif %}" onclick="showTab('residential')">Residential Cleaning</button>
+            <button class="tab-btn {% if active_tab == 'realtor' %}active{% endif %}" onclick="showTab('realtor')">Realtor Services</button>
         </div>
 
         <div id="residential" class="tab-content {% if active_tab == 'residential' %}active{% endif %}">
             <div class="estimator-layout">
                 <form method="POST" class="stack">
                     <input type="hidden" name="form_type" value="residential">
+
+                    <section class="card">
+                        <div class="card-header inline-header">
+                            <div>
+                                <h2 class="card-title">Main Service Category</h2>
+                                <p class="card-subtitle">Choose your main service first, then build your estimate below.</p>
+                            </div>
+                            <span class="section-chip">Step 1 of 5</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="choice-grid choice-grid-4">
+                                {% for category in ['Residential Cleaning', 'Realtor Services', 'Carpet Cleaning', 'Pressure Washing', 'Floor Care', 'Trash Bin Cleaning'] %}
+                                <label class="choice-card {% if category == 'Residential Cleaning' %}is-selected{% endif %}">
+                                    <input type="radio" name="main_category" value="{{ category }}" {% if category == 'Residential Cleaning' %}checked{% endif %} {% if category != 'Residential Cleaning' %}disabled{% endif %}>
+                                    <span class="choice-card-content">
+                                        <strong>{{ category }}</strong>
+                                        <small>{% if category == 'Residential Cleaning' %}Selected for this estimate.{% elif category == 'Realtor Services' %}Use the Realtor Services tab above.{% else %}Add as service extras or bundles below.{% endif %}</small>
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
 
                     <section class="card">
                         <div class="card-header inline-header">
@@ -870,13 +893,13 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Service Type</h2>
-                                <p class="card-subtitle">Select a service and review included scope immediately below.</p>
+                                <h2 class="card-title">Choose Your Cleaning Package</h2>
+                                <p class="card-subtitle">Select a residential package to match the level of detail you need.</p>
                             </div>
-                            <span class="section-chip">Inline checklist reveal</span>
+                            <span class="section-chip">Step 2 of 5</span>
                         </div>
                         <div class="card-body compact-grid">
-                            <div class="choice-grid" data-selection-group="residential-service">
+                            <div class="choice-grid choice-grid-4" data-selection-group="residential-service">
                                 {% for key, detail in residential_service_details.items() %}
                                 <label class="choice-card {% if selected_residential_service == key %}is-selected{% endif %}">
                                     <input
@@ -887,9 +910,10 @@
                                         {% if selected_residential_service == key %}checked{% endif %}
                                     >
                                     <span class="choice-card-content">
+                                        {% if key == 'first_time' %}<span class="section-chip" style="width:max-content;">Most Popular</span>{% endif %}
                                         <strong>{{ detail.label }}</strong>
                                         <span>{{ detail.purpose }}</span>
-                                        <small>{% if key == 'basic' %}Routine upkeep.{% elif key == 'first_time' %}Stronger first-visit reset.{% else %}Most detailed residential option.{% endif %}</small>
+                                        <small>{% if key == 'basic' %}Kitchen wipe-down • Bathroom cleaning • Dusting • Vacuum • Mop • Trash{% elif key == 'first_time' %}Everything in Basic • Cabinet exteriors • Baseboards spot cleaned{% elif key == 'deep' %}Everything in Plus • Full baseboards • Doors and frames{% else %}Full surface wipe-down • Cabinets and drawers • Move-out detail{% endif %}</small>
                                     </span>
                                 </label>
                                 {% endfor %}
@@ -1071,6 +1095,41 @@
                         </div>
                     </section>
 
+                    <section class="card">
+                        <div class="card-header inline-header">
+                            <div>
+                                <h2 class="card-title">Bundle Packages</h2>
+                                <p class="card-subtitle">Optional bundled package pricing is calculated after your service and extras are selected.</p>
+                            </div>
+                            <span class="section-chip">Step 4 of 5</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="choice-grid choice-grid-4">
+                                <div class="choice-card">
+                                    <span class="choice-card-content">
+                                        <strong>Home Refresh</strong>
+                                        <span>Includes: Full Reset / Deep Cleaning + Carpet Cleaning</span>
+                                        <small>Bundle discount: 9% off</small>
+                                    </span>
+                                </div>
+                                <div class="choice-card">
+                                    <span class="choice-card-content">
+                                        <strong>Move-Out Reset</strong>
+                                        <span>Includes: Vacant / Move-Out Cleaning + Carpet Cleaning</span>
+                                        <small>Bundle discount: 10% off</small>
+                                    </span>
+                                </div>
+                                <div class="choice-card">
+                                    <span class="choice-card-content">
+                                        <strong>Full Property Reset</strong>
+                                        <span>Includes: Full Reset / Deep Cleaning + Carpet Cleaning + Floor Cleaning &amp; Shine + Pressure Washing</span>
+                                        <small>Bundle discount: 12% off</small>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     <div class="action-row">
                         <button type="submit" class="primary-btn">Calculate Residential Quote</button>
                     </div>
@@ -1089,7 +1148,8 @@
                     <div class="summary-body">
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
-                            <div class="summary-row"><span>Service Type</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
+                            <div class="summary-row"><span>Main Category</span><strong>{{ residential_result.selected_category_label }}</strong></div>
+                            <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
                             <div class="summary-row"><span>Condition</span><strong>{{ residential_result.chosen_condition_label }}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
@@ -1101,7 +1161,9 @@
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
                             <div class="price-row"><span>Individual Service Total</span><strong>${{ '%.2f'|format(residential_result.individual_service_total) }}</strong></div>
                             {% if residential_result.bundle_offer %}
-                            <div class="price-row"><span>Bundle Price ({{ residential_result.bundle_offer.name }})</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.bundle_price) }}</strong></div>
+                            <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.bundle_offer.name }}</strong></div>
+                            <div class="price-row"><span>Original Combined Price</span><strong>${{ '%.2f'|format(residential_result.individual_service_total) }}</strong></div>
+                            <div class="price-row"><span>Discounted Bundle Price</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.bundle_price) }}</strong></div>
                             <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.savings) }}</strong></div>
                             {% endif %}
                         </div>
@@ -1127,7 +1189,7 @@
                     {% else %}
                     <div class="summary-body">
                         <div class="empty-state">
-                            Enter the property details, choose a service, and calculate to populate the quote summary.
+                            Enter property details, choose a cleaning package, and calculate to populate the quote summary.
                         </div>
                     </div>
                     {% endif %}
