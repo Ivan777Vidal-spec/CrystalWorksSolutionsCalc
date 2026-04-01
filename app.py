@@ -382,31 +382,53 @@ def build_residential_rows(base_subtotal, addon_total):
     return rows
 
 
-def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", chosen_service="first_time", chosen_condition="normal", selected_bundle=""):
+def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", chosen_service="", chosen_condition="normal", selected_bundle="", selected_frequency="one_time"):
     formula_units = residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
     base_price = formula_units * RESIDENTIAL_RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
     base_subtotal = base_price * (1 + sqft_adjustment)
+    valid_service = chosen_service if chosen_service in RESIDENTIAL_MULTIPLIERS else ""
+    if selected_bundle in BUNDLE_DEFINITIONS:
+        valid_service = BUNDLE_DEFINITIONS[selected_bundle]["service"]
+
     addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon)
     rows = build_residential_rows(base_subtotal, addon_total)
-    chosen_row = next((row for row in rows if row["key"] == chosen_service), rows[1])
-    final_quote = chosen_row["normal"]
-    if chosen_condition == "dirty":
-        final_quote = chosen_row["dirty"]
-    elif chosen_condition == "very_dirty":
-        final_quote = chosen_row["very_dirty"]
-    recurring_lookup = {"weekly": chosen_row["weekly"], "biweekly": chosen_row["biweekly"], "monthly": chosen_row["monthly"]}
+    chosen_row = next((row for row in rows if row["key"] == valid_service), None)
+    package_total = 0
+    recurring_lookup = {"weekly": 0, "biweekly": 0, "monthly": 0}
+    if chosen_row:
+        package_total = chosen_row["normal"]
+        if chosen_condition == "dirty":
+            package_total = chosen_row["dirty"]
+        elif chosen_condition == "very_dirty":
+            package_total = chosen_row["very_dirty"]
+        recurring_lookup = {"weekly": round_to_clean_price(chosen_row["weekly"]), "biweekly": round_to_clean_price(chosen_row["biweekly"]), "monthly": round_to_clean_price(chosen_row["monthly"])}
     addon_summary = ", ".join(item for item, _ in addon_details) if addon_details else "None"
-    individual_total = round_to_clean_price(final_quote)
-    recurring_lookup = {key: round_to_clean_price(val) for key, val in recurring_lookup.items()}
-    bundle_selection = {"deep_cleaning": chosen_service == "deep", "vacant_cleaning": chosen_service == "vacant", "carpet_cleaning": carpet_sqft > 0, "floor_care": floor_care_sqft > 0, "pressure_washing": pressure_sqft > 0}
+    individual_total = round_to_clean_price(package_total if chosen_row else addon_total)
+    bundle_selection = {"deep_cleaning": valid_service == "deep", "vacant_cleaning": valid_service == "vacant", "carpet_cleaning": carpet_sqft > 0, "floor_care": floor_care_sqft > 0, "pressure_washing": pressure_sqft > 0}
     best_bundle = select_best_bundle(individual_total, bundle_selection)
     chosen_bundle = None
     if selected_bundle and selected_bundle in BUNDLE_DEFINITIONS:
         definition = BUNDLE_DEFINITIONS[selected_bundle]
-        discounted_total = round_to_clean_price(individual_total * (1 - definition["discount"]))
-        savings = round_to_clean_price(max(individual_total - discounted_total, 0))
-        chosen_bundle = {"name": definition["name"], "discount_pct": int(definition["discount"] * 100), "bundle_price": discounted_total, "savings": savings}
+        meets_bundle_requirements = (
+            (definition["service"] == "deep" and bundle_selection["deep_cleaning"]) or
+            (definition["service"] == "vacant" and bundle_selection["vacant_cleaning"])
+        ) and bundle_selection["carpet_cleaning"]
+        if selected_bundle == "full_property_reset":
+            meets_bundle_requirements = meets_bundle_requirements and bundle_selection["floor_care"] and bundle_selection["pressure_washing"]
+        if meets_bundle_requirements:
+            savings = round_to_clean_price(individual_total * definition["discount"])
+            discounted_total = round_to_clean_price(max(individual_total - savings, 0))
+            chosen_bundle = {"name": definition["name"], "discount_pct": int(definition["discount"] * 100), "original_price": individual_total, "bundle_price": discounted_total, "savings": savings}
+
+    subtotal_before_bundle = individual_total
+    bundle_discount_amount = chosen_bundle["savings"] if chosen_bundle else 0
+    total_after_bundle = chosen_bundle["bundle_price"] if chosen_bundle else subtotal_before_bundle
+
+    recurring_map = {"weekly": RECURRING_DISCOUNTS["weekly"], "biweekly": RECURRING_DISCOUNTS["biweekly"], "monthly": RECURRING_DISCOUNTS["monthly"], "one_time": 0}
+    recurring_pct = recurring_map.get(selected_frequency, 0)
+    recurring_discount_amount = round_to_clean_price(total_after_bundle * recurring_pct)
+    final_quote = round_to_clean_price(total_after_bundle - recurring_discount_amount)
 
     return {
         "square_feet": square_feet,
@@ -416,17 +438,22 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "addon_total": addon_total,
         "addon_details": addon_details,
         "rows": rows,
-        "chosen_service": chosen_service,
-        "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[chosen_service]["label"],
-        "selected_category_label": "Residential Cleaning",
+        "chosen_service": valid_service,
+        "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[valid_service]["label"] if valid_service else "No package selected",
         "chosen_condition": chosen_condition,
         "chosen_condition_label": {"normal": "Normal (+0%)", "dirty": "Dirty (+10%)", "very_dirty": "Very Dirty (+20%)"}[chosen_condition],
-        "final_quote": individual_total,
         "recurring_for_selected": recurring_lookup,
         "bundle_offer": chosen_bundle or best_bundle,
         "selected_bundle": chosen_bundle,
         "individual_service_total": individual_total,
         "addon_summary": addon_summary,
+        "subtotal_before_bundle": subtotal_before_bundle,
+        "bundle_discount_amount": bundle_discount_amount,
+        "total_after_bundle": total_after_bundle,
+        "selected_frequency": selected_frequency,
+        "recurring_discount_pct": int(recurring_pct * 100),
+        "recurring_discount_amount": recurring_discount_amount,
+        "final_quote": final_quote,
     }
 
 
@@ -490,6 +517,19 @@ def index():
         form_type = request.form.get('form_type', 'residential')
         active_tab = form_type
         if form_type == 'residential':
+            carpet_selected = request.form.get('include_carpet') == 'on'
+            pressure_selected = request.form.get('include_pressure') == 'on'
+            floor_selected = request.form.get('include_floor_care') == 'on'
+            bin_selected = request.form.get('include_bins') == 'on'
+            selected_bundle = request.form.get('selected_bundle', '')
+
+            if selected_bundle in {"home_refresh", "move_out_reset"}:
+                carpet_selected = True
+            elif selected_bundle == "full_property_reset":
+                carpet_selected = True
+                pressure_selected = True
+                floor_selected = True
+
             residential_result = calculate_residential(
                 square_feet=safe_int(request.form.get('square_feet')),
                 bedrooms=safe_int(request.form.get('bedrooms')),
@@ -501,16 +541,17 @@ def index():
                 window_count=safe_int(request.form.get('window_count')),
                 oven=('oven' in request.form),
                 fridge=('fridge' in request.form),
-                carpet_sqft=safe_float(request.form.get('carpet_sqft')),
-                pressure_sqft=safe_float(request.form.get('pressure_sqft')),
-                bins=safe_int(request.form.get('bins')),
-                floor_care_sqft=safe_float(request.form.get('floor_care_sqft')),
+                carpet_sqft=safe_float(request.form.get('carpet_sqft')) if carpet_selected else 0,
+                pressure_sqft=safe_float(request.form.get('pressure_sqft')) if pressure_selected else 0,
+                bins=safe_int(request.form.get('bins')) if bin_selected else 0,
+                floor_care_sqft=safe_float(request.form.get('floor_care_sqft')) if floor_selected else 0,
                 floor_care_condition=request.form.get('floor_care_condition', 'standard'),
                 pressure_condition=request.form.get('pressure_condition', 'standard'),
                 pressure_stain_addon=request.form.get('pressure_stain_addon', 'none'),
-                chosen_service=request.form.get('chosen_service', 'first_time'),
+                chosen_service=request.form.get('chosen_service', ''),
                 chosen_condition=request.form.get('chosen_condition', 'normal'),
-                selected_bundle=request.form.get('selected_bundle', ''),
+                selected_bundle=selected_bundle,
+                selected_frequency=request.form.get('display_frequency', 'one_time'),
             )
         elif form_type == 'realtor':
             realtor_result = calculate_realtor(

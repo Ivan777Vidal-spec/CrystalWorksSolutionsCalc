@@ -464,7 +464,7 @@
 
         .addon-row {
             display: grid;
-            grid-template-columns: minmax(0, 1.5fr) auto minmax(96px, 112px);
+            grid-template-columns: minmax(0, 1.5fr) auto auto minmax(96px, 112px);
             gap: 12px;
             align-items: center;
             padding: 12px 14px;
@@ -808,9 +808,9 @@
     </style>
 </head>
 <body>
-    {% set selected_residential_service = request.form.get('chosen_service', 'first_time') %}
+    {% set selected_residential_service = request.form.get('chosen_service', '') %}
     {% set selected_realtor_service = request.form.get('service_type', 'listing_prep') %}
-    {% set selected_display_frequency = request.form.get('display_frequency', 'Weekly') %}
+    {% set selected_display_frequency = request.form.get('display_frequency', 'one_time') %}
 
     <div class="page-shell">
         <section class="hero">
@@ -830,29 +830,6 @@
             <div class="estimator-layout">
                 <form method="POST" class="stack">
                     <input type="hidden" name="form_type" value="residential">
-
-                    <section class="card">
-                        <div class="card-header inline-header">
-                            <div>
-                                <h2 class="card-title">Main Service Category</h2>
-                                <p class="card-subtitle">Choose your main service first, then build your estimate below.</p>
-                            </div>
-                            <span class="section-chip">Step 1 of 5</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="choice-grid choice-grid-4">
-                                {% for category in ['Residential Cleaning', 'Carpet Cleaning', 'Pressure Washing', 'Floor Care', 'Trash Bin Cleaning'] %}
-                                <label class="choice-card {% if category == 'Residential Cleaning' %}is-selected{% endif %}">
-                                    <input type="radio" name="main_category" value="{{ category }}" {% if category == 'Residential Cleaning' %}checked{% endif %} {% if category != 'Residential Cleaning' %}disabled{% endif %}>
-                                    <span class="choice-card-content">
-                                        <strong>{{ category }}</strong>
-                                        <small>{% if category == 'Residential Cleaning' %}Selected for this estimate.{% else %}Add as service extras or bundles below.{% endif %}</small>
-                                    </span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </section>
 
                     <section class="card">
                         <div class="card-header inline-header">
@@ -897,7 +874,7 @@
                                 <h2 class="card-title">Choose Your Cleaning Package</h2>
                                 <p class="card-subtitle">Select a residential package to match the level of detail you need.</p>
                             </div>
-                            <span class="section-chip">Step 2 of 5</span>
+                            <span class="section-chip">Step 1 of 4</span>
                         </div>
                         <div class="card-body compact-grid">
                             <div class="choice-grid choice-grid-4" data-selection-group="residential-service">
@@ -970,10 +947,10 @@
                         <div class="card-body">
                             <div class="frequency-grid" id="frequency_cards">
                                 {% for value, title, detail in [
-                                    ('Weekly', 'Weekly', pricing_snapshot.weekly_discount ~ '% discount'),
-                                    ('Every 2 Weeks', 'Every 2 Weeks', pricing_snapshot.biweekly_discount ~ '% discount'),
-                                    ('Every 4 Weeks', 'Every 4 Weeks', pricing_snapshot.monthly_discount ~ '% discount'),
-                                    ('One-Time', 'One-Time', 'Full quoted rate')
+                                    ('weekly', 'Weekly', pricing_snapshot.weekly_discount ~ '% discount'),
+                                    ('biweekly', 'Biweekly', pricing_snapshot.biweekly_discount ~ '% discount'),
+                                    ('monthly', 'Monthly', pricing_snapshot.monthly_discount ~ '% discount'),
+                                    ('one_time', 'One-Time', 'Full quoted rate')
                                 ] %}
                                 <label class="choice-card frequency-card">
                                     <input type="radio" name="display_frequency" value="{{ value }}" {% if selected_display_frequency == value %}checked{% endif %}>
@@ -990,10 +967,10 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Add-Ons</h2>
-                                <p class="card-subtitle">Compact rows for flat-fee, per-unit, and square-foot extras.</p>
+                                <h2 class="card-title">Additional Services</h2>
+                                <p class="card-subtitle">Select optional services to add to your cleaning package.</p>
                             </div>
-                            <span class="section-chip">Pricing logic unchanged</span>
+                            <span class="section-chip">Step 2 of 4</span>
                         </div>
                         <div class="card-body">
                             <div class="addon-list">
@@ -1037,12 +1014,18 @@
                                         <span class="addon-meta">Charged by carpet square footage.</span>
                                     </div>
                                     <div class="price-badge">$0.37 / sq ft</div>
-                                    <input class="text-input" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
+                                    <div class="toggle-wrap">
+                                        <span>
+                                            <input class="toggle-input service-toggle" type="checkbox" name="include_carpet" data-target-input="carpet_sqft" {% if request.form.get('include_carpet') == 'on' %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </div>
+                                    <input class="text-input service-amount" id="carpet_sqft" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
                                         <strong>Floor Cleaning & Shine</strong>
-                                        <span class="addon-meta">Deep cleaning for hard floors with buildup removal and shine improvement.</span>
+                                        <span class="addon-meta">Broad hard-floor cleaning and shine service.</span>
                                         <div class="addon-breakdown">
                                             <div class="field-group">
                                                 <label for="floor_care_condition">Condition</label>
@@ -1054,7 +1037,13 @@
                                         </div>
                                     </div>
                                     <div class="price-badge">$0.28 / $0.35 + $120 min</div>
-                                    <input class="text-input" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
+                                    <div class="toggle-wrap">
+                                        <span>
+                                            <input class="toggle-input service-toggle" type="checkbox" name="include_floor_care" data-target-input="floor_care_sqft" {% if request.form.get('include_floor_care') == 'on' %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </div>
+                                    <input class="text-input service-amount" id="floor_care_sqft" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
@@ -1082,7 +1071,13 @@
                                         </div>
                                     </div>
                                     <div class="price-badge">$0.40 / $0.45 + $130 min</div>
-                                    <input class="text-input" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
+                                    <div class="toggle-wrap">
+                                        <span>
+                                            <input class="toggle-input service-toggle" type="checkbox" name="include_pressure" data-target-input="pressure_sqft" {% if request.form.get('include_pressure') == 'on' %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </div>
+                                    <input class="text-input service-amount" id="pressure_sqft" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
@@ -1090,7 +1085,13 @@
                                         <span class="addon-meta">Bundled and standalone bin pricing still comes from the backend.</span>
                                     </div>
                                     <div class="price-badge">$17–$20 each</div>
-                                    <input class="text-input" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
+                                    <div class="toggle-wrap">
+                                        <span>
+                                            <input class="toggle-input service-toggle" type="checkbox" name="include_bins" data-target-input="bins" {% if request.form.get('include_bins') == 'on' %}checked{% endif %}>
+                                            <span class="toggle-track"></span>
+                                        </span>
+                                    </div>
+                                    <input class="text-input service-amount" id="bins" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
                                 </div>
                             </div>
                         </div>
@@ -1102,7 +1103,7 @@
                                 <h2 class="card-title">Bundle Packages</h2>
                                 <p class="card-subtitle">Optional bundled package pricing is calculated after your service and extras are selected.</p>
                             </div>
-                            <span class="section-chip">Step 4 of 5</span>
+                            <span class="section-chip">Step 3 of 4</span>
                         </div>
                         <div class="card-body">
                             <input type="hidden" name="selected_bundle" id="selected_bundle" value="{{ request.form.get('selected_bundle', '') }}">
@@ -1143,8 +1144,8 @@
 
                 <aside class="summary-panel" id="residential-summary">
                     <div class="summary-head">
-                        <h3>Quote Summary</h3>
-                        <p>Single summary panel with selected service, condition, recurring view, and pricing breakdown.</p>
+                        <h3>Final Quote</h3>
+                        <p>Review package, additional services, bundle savings, and your final total.</p>
                     </div>
                     {% if residential_result %}
                     <div class="quote-total">
@@ -1154,7 +1155,6 @@
                     <div class="summary-body">
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
-                            <div class="summary-row"><span>Main Category</span><strong>{{ residential_result.selected_category_label }}</strong></div>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
                             <div class="summary-row"><span>Condition</span><strong>{{ residential_result.chosen_condition_label }}</strong></div>
@@ -1165,13 +1165,17 @@
                             <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Individual Service Total</span><strong>${{ '%.2f'|format(residential_result.individual_service_total) }}</strong></div>
+                            <div class="price-row"><span>Original Subtotal</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
                             {% if residential_result.selected_bundle %}
-                            <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.bundle_offer.name }}</strong></div>
-                            <div class="price-row"><span>Original Combined Price</span><strong>${{ '%.2f'|format(residential_result.individual_service_total) }}</strong></div>
-                            <div class="price-row"><span>Bundle Price</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.bundle_price) }}</strong></div>
-                            <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.savings) }}</strong></div>
+                            <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.selected_bundle.name }}</strong></div>
+                            <div class="price-row"><span>Original Price</span><strong>${{ '%.2f'|format(residential_result.selected_bundle.original_price) }}</strong></div>
+                            <div class="price-row"><span>Bundle Discount</span><strong>{{ residential_result.selected_bundle.discount_pct }}%</strong></div>
+                            <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
+                            <div class="price-row"><span>Final Bundle Price</span><strong>${{ '%.2f'|format(residential_result.total_after_bundle) }}</strong></div>
                             {% endif %}
+                            <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
+                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
+                            <div class="price-row"><span>Final Rounded Quote</span><strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Recurring Rates</h4>
@@ -1636,9 +1640,18 @@
 
         function updateServicePreview(config) {
             const checked = document.querySelector(`input[name="${config.inputName}"]:checked`);
-            const selectedKey = checked ? checked.value : config.defaultKey;
+            const selectedKey = checked ? checked.value : '';
             const details = config.lookup[selectedKey];
-            if (!details) return;
+            if (!details) {
+                const title = document.getElementById(config.titleId);
+                const purpose = document.getElementById(config.purposeId);
+                if (title) title.textContent = 'No package selected';
+                if (purpose) purpose.textContent = 'Select a cleaning package to preview included and not-included scope.';
+                renderChecklist(config.includesId, []);
+                renderChecklist(config.excludesId, []);
+                document.querySelectorAll(`[data-selection-group="${config.selectionGroup}"] .choice-card`).forEach(card => card.classList.remove('is-selected'));
+                return;
+            }
 
             const title = document.getElementById(config.titleId);
             const purpose = document.getElementById(config.purposeId);
@@ -1670,9 +1683,12 @@
 
             if (!bundleKey) return;
             const sqft = parseFloat(document.getElementById('square_feet')?.value || '0');
-            const carpetInput = document.querySelector('input[name="carpet_sqft"]');
-            const floorInput = document.querySelector('input[name="floor_care_sqft"]');
-            const pressureInput = document.querySelector('input[name="pressure_sqft"]');
+            const carpetInput = document.getElementById('carpet_sqft');
+            const floorInput = document.getElementById('floor_care_sqft');
+            const pressureInput = document.getElementById('pressure_sqft');
+            const carpetToggle = document.querySelector('input[name="include_carpet"]');
+            const floorToggle = document.querySelector('input[name="include_floor_care"]');
+            const pressureToggle = document.querySelector('input[name="include_pressure"]');
             const map = {
                 home_refresh: {service: 'deep', carpet: true},
                 move_out_reset: {service: 'vacant', carpet: true},
@@ -1686,17 +1702,52 @@
                 packageInput.checked = true;
                 packageInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
+            if (config.carpet && carpetToggle) carpetToggle.checked = true;
+            if (config.floor && floorToggle) floorToggle.checked = true;
+            if (config.pressure && pressureToggle) pressureToggle.checked = true;
             if (config.carpet && carpetInput && parseFloat(carpetInput.value || '0') <= 0 && sqft > 0) carpetInput.value = sqft;
             if (config.floor && floorInput && parseFloat(floorInput.value || '0') <= 0 && sqft > 0) floorInput.value = sqft;
             if (config.pressure && pressureInput && parseFloat(pressureInput.value || '0') <= 0 && sqft > 0) pressureInput.value = sqft;
+            syncServiceInputs();
         }
 
         function updateFrequencyLabel() {
             const checked = document.querySelector('input[name="display_frequency"]:checked');
             const label = document.getElementById('selected_frequency_label');
             if (checked && label) {
-                label.textContent = checked.value;
+                const labels = { weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly', one_time: 'One-Time' };
+                label.textContent = labels[checked.value] || checked.value;
             }
+        }
+
+        function syncServiceInputs() {
+            document.querySelectorAll('.service-toggle').forEach(toggle => {
+                const target = document.getElementById(toggle.getAttribute('data-target-input'));
+                if (!target) return;
+                target.disabled = !toggle.checked;
+                if (!toggle.checked) target.value = 0;
+            });
+        }
+
+        function setupToggleableRadio(name, onChange) {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+                input.addEventListener('click', function (event) {
+                    if (input.dataset.wasChecked === 'true') {
+                        input.checked = false;
+                        input.dataset.wasChecked = 'false';
+                        if (typeof onChange === 'function') onChange('');
+                        event.preventDefault();
+                    } else {
+                        document.querySelectorAll(`input[name="${name}"]`).forEach(other => { other.dataset.wasChecked = 'false'; });
+                        input.dataset.wasChecked = 'true';
+                    }
+                });
+                input.addEventListener('change', function () {
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(other => { other.dataset.wasChecked = 'false'; });
+                    if (input.checked) input.dataset.wasChecked = 'true';
+                    if (typeof onChange === 'function') onChange(input.checked ? input.value : '');
+                });
+            });
         }
 
         function handleStepper(button) {
@@ -1724,11 +1775,10 @@
                 input.addEventListener('change', updateFrequencyLabel);
             });
 
-            document.querySelectorAll('input[name="chosen_service"]').forEach(input => {
-                input.addEventListener('change', function () {
-                    updateServicePreview({
+            setupToggleableRadio('chosen_service', function () {
+                updateServicePreview({
                         inputName: 'chosen_service',
-                        defaultKey: 'first_time',
+                        defaultKey: 'basic',
                         lookup: residentialServiceDetails,
                         titleId: 'residential-service-title',
                         purposeId: 'residential-service-purpose',
@@ -1736,18 +1786,26 @@
                         excludesId: 'residential-service-excludes',
                         selectionGroup: 'residential-service'
                     });
-                });
+                applyBundleSelection('');
             });
 
-            document.querySelectorAll('input[name="bundle_choice"]').forEach(input => {
-                input.addEventListener('change', function () {
-                    applyBundleSelection(input.checked ? input.value : '');
-                });
+            setupToggleableRadio('bundle_choice', function (value) {
+                applyBundleSelection(value);
             });
 
-            document.querySelectorAll('input[name="chosen_service"]').forEach(input => {
-                input.addEventListener('change', function () {
-                    applyBundleSelection('');
+            document.querySelectorAll('.service-toggle').forEach(toggle => {
+                toggle.addEventListener('change', function () {
+                    syncServiceInputs();
+                    const bundleKey = document.getElementById('selected_bundle')?.value || '';
+                    if (!bundleKey) return;
+                    const requirements = {
+                        home_refresh: ['include_carpet'],
+                        move_out_reset: ['include_carpet'],
+                        full_property_reset: ['include_carpet', 'include_floor_care', 'include_pressure']
+                    };
+                    const required = requirements[bundleKey] || [];
+                    const isComplete = required.every(name => document.querySelector(`input[name="${name}"]`)?.checked);
+                    if (!isComplete) applyBundleSelection('');
                 });
             });
 
@@ -1768,7 +1826,7 @@
 
             updateServicePreview({
                 inputName: 'chosen_service',
-                defaultKey: 'first_time',
+                defaultKey: 'basic',
                 lookup: residentialServiceDetails,
                 titleId: 'residential-service-title',
                 purposeId: 'residential-service-purpose',
@@ -1789,6 +1847,7 @@
             });
 
             applyBundleSelection(document.getElementById('selected_bundle')?.value || '');
+            syncServiceInputs();
             updateFrequencyLabel();
         });
     </script>
