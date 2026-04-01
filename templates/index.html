@@ -1016,6 +1016,23 @@
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
+                                        <strong>Floor Cleaning & Shine</strong>
+                                        <span class="addon-meta">Deep cleaning for hard floors with buildup removal and shine improvement.</span>
+                                        <div class="addon-breakdown">
+                                            <div class="field-group">
+                                                <label for="floor_care_condition">Condition</label>
+                                                <select class="select-input" id="floor_care_condition" name="floor_care_condition">
+                                                    <option value="standard" {% if request.form.get('floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
+                                                    <option value="heavy" {% if request.form.get('floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="price-badge">$0.28 / $0.35 + $120 min</div>
+                                    <input class="text-input" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title">
                                         <strong>Pressure Washing</strong>
                                         <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
                                         <div class="addon-breakdown">
@@ -1023,22 +1040,23 @@
                                                 <label for="pressure_condition">Condition</label>
                                                 <select class="select-input" id="pressure_condition" name="pressure_condition">
                                                     <option value="standard" {% if request.form.get('pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
-                                                    <option value="dirty" {% if request.form.get('pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.50 / sq ft)</option>
+                                                    <option value="dirty" {% if request.form.get('pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
                                                 </select>
                                             </div>
                                             <div class="field-group">
                                                 <label for="pressure_stain_addon">Stain Add-On</label>
                                                 <select class="select-input" id="pressure_stain_addon" name="pressure_stain_addon">
                                                     <option value="none" {% if request.form.get('pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
-                                                    <option value="small_oil_rust" {% if request.form.get('pressure_stain_addon') == 'small_oil_rust' %}selected{% endif %}>Small oil/rust (+$50)</option>
-                                                    <option value="medium_oil_rust" {% if request.form.get('pressure_stain_addon') == 'medium_oil_rust' %}selected{% endif %}>Medium oil/rust (+$90)</option>
-                                                    <option value="heavy_oil_rust" {% if request.form.get('pressure_stain_addon') == 'heavy_oil_rust' %}selected{% endif %}>Heavy oil/rust (+$120)</option>
-                                                    <option value="heavy_organic" {% if request.form.get('pressure_stain_addon') == 'heavy_organic' %}selected{% endif %}>Heavy organic (+$40)</option>
+                                                    <option value="oil_stain_light" {% if request.form.get('pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
+                                                    <option value="oil_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
+                                                    <option value="rust_stain_light" {% if request.form.get('pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
+                                                    <option value="rust_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
+                                                    <option value="heavy_buildup" {% if request.form.get('pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="price-badge">$0.40 / $0.50 + $130 min</div>
+                                    <div class="price-badge">$0.40 / $0.45 + $130 min</div>
                                     <input class="text-input" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
@@ -1081,7 +1099,11 @@
                             <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Total</span><strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong></div>
+                            <div class="price-row"><span>Individual Service Total</span><strong>${{ '%.2f'|format(residential_result.individual_service_total) }}</strong></div>
+                            {% if residential_result.bundle_offer %}
+                            <div class="price-row"><span>Bundle Price ({{ residential_result.bundle_offer.name }})</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.bundle_price) }}</strong></div>
+                            <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_offer.savings) }}</strong></div>
+                            {% endif %}
                         </div>
                         <div class="summary-box">
                             <h4>Recurring Rates</h4>
@@ -1303,6 +1325,23 @@
                                 </div>
                                 <div class="addon-row">
                                     <div class="addon-title">
+                                        <strong>Floor Cleaning & Shine</strong>
+                                        <span class="addon-meta">Deep cleaning for hard floors with buildup removal and shine improvement.</span>
+                                        <div class="addon-breakdown">
+                                            <div class="field-group">
+                                                <label for="realtor_floor_care_condition">Condition</label>
+                                                <select class="select-input" id="realtor_floor_care_condition" name="realtor_floor_care_condition">
+                                                    <option value="standard" {% if request.form.get('realtor_floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
+                                                    <option value="heavy" {% if request.form.get('realtor_floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="price-badge">$0.28 / $0.35 + $120 min</div>
+                                    <input class="text-input" type="number" step="0.01" name="realtor_floor_care_sqft" min="0" value="{{ request.form.get('realtor_floor_care_sqft', '0') }}">
+                                </div>
+                                <div class="addon-row">
+                                    <div class="addon-title">
                                         <strong>Pressure Washing</strong>
                                         <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
                                         <div class="addon-breakdown">
@@ -1310,22 +1349,23 @@
                                                 <label for="realtor_pressure_condition">Condition</label>
                                                 <select class="select-input" id="realtor_pressure_condition" name="realtor_pressure_condition">
                                                     <option value="standard" {% if request.form.get('realtor_pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
-                                                    <option value="dirty" {% if request.form.get('realtor_pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.50 / sq ft)</option>
+                                                    <option value="dirty" {% if request.form.get('realtor_pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
                                                 </select>
                                             </div>
                                             <div class="field-group">
                                                 <label for="realtor_pressure_stain_addon">Stain Add-On</label>
                                                 <select class="select-input" id="realtor_pressure_stain_addon" name="realtor_pressure_stain_addon">
                                                     <option value="none" {% if request.form.get('realtor_pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
-                                                    <option value="small_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'small_oil_rust' %}selected{% endif %}>Small oil/rust (+$50)</option>
-                                                    <option value="medium_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'medium_oil_rust' %}selected{% endif %}>Medium oil/rust (+$90)</option>
-                                                    <option value="heavy_oil_rust" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_oil_rust' %}selected{% endif %}>Heavy oil/rust (+$120)</option>
-                                                    <option value="heavy_organic" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_organic' %}selected{% endif %}>Heavy organic (+$40)</option>
+                                                    <option value="oil_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
+                                                    <option value="oil_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
+                                                    <option value="rust_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
+                                                    <option value="rust_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
+                                                    <option value="heavy_buildup" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="price-badge">$0.40 / $0.50 + $130 min</div>
+                                    <div class="price-badge">$0.40 / $0.45 + $130 min</div>
                                     <input class="text-input" type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="{{ request.form.get('realtor_pressure_sqft', '0') }}">
                                 </div>
                                 <div class="addon-row">
@@ -1366,7 +1406,11 @@
                             <div class="price-row"><span>Sq Ft Adjustment</span><strong>{{ realtor_result.sqft_adjustment_pct }}%</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(realtor_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Rush Fee</span><strong>{{ realtor_result.rush_pct }}%</strong></div>
-                            <div class="price-row"><span>Final Total</span><strong>${{ '%.2f'|format(realtor_result.total) }}</strong></div>
+                            <div class="price-row"><span>Individual Service Total</span><strong>${{ '%.2f'|format(realtor_result.individual_service_total) }}</strong></div>
+                            {% if realtor_result.bundle_offer %}
+                            <div class="price-row"><span>Bundle Price ({{ realtor_result.bundle_offer.name }})</span><strong>${{ '%.2f'|format(realtor_result.bundle_offer.bundle_price) }}</strong></div>
+                            <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(realtor_result.bundle_offer.savings) }}</strong></div>
+                            {% endif %}
                         </div>
                         <div class="summary-box">
                             <h4>Add-On Details</h4>
