@@ -46,6 +46,7 @@ RESIDENTIAL_MULTIPLIERS = {
     "basic": 1.00,
     "first_time": 1.18,
     "deep": 1.30,
+    "vacant": 1.15,
 }
 
 REALTOR_MULTIPLIERS = {
@@ -70,14 +71,14 @@ CONDITION_ADJUSTMENTS = {
 RESIDENTIAL_SERVICE_DETAILS = {
     "basic": {
         "label": "Basic Cleaning",
-        "purpose": "Routine cleaning for homes that are already maintained.",
+        "purpose": "Maintenance cleaning for already-kept homes.",
         "includes": [
-            "Kitchen counters wiped",
-            "Sink and faucet cleaned",
-            "Bathrooms cleaned",
-            "Floors vacuumed and mopped",
-            "Dusting accessible surfaces",
-            "Trash removal",
+            "Kitchen wipe-down",
+            "Bathroom cleaning",
+            "Dusting",
+            "Vacuum",
+            "Mop",
+            "Trash",
         ],
         "not_included": [
             "Inside oven",
@@ -88,14 +89,15 @@ RESIDENTIAL_SERVICE_DETAILS = {
         ],
     },
     "first_time": {
-        "label": "First-Time Cleaning",
-        "purpose": "For first visits when the home usually needs more work than a maintenance clean.",
+        "label": "Plus Cleaning",
+        "purpose": "A more detailed clean and the best value option.",
         "includes": [
-            "Everything in Basic Cleaning",
-            "Extra dust removal",
-            "More detailed bathroom cleaning",
-            "Extra kitchen attention",
-            "More buildup removal than basic",
+            "Everything in Basic",
+            "Cabinet exteriors",
+            "Baseboards spot cleaned",
+            "Doors and switches wiped",
+            "Deeper bathroom cleaning",
+            "Deeper kitchen cleaning",
         ],
         "not_included": [
             "Inside oven unless added",
@@ -105,15 +107,32 @@ RESIDENTIAL_SERVICE_DETAILS = {
         ],
     },
     "deep": {
-        "label": "Deep Cleaning",
-        "purpose": "More detailed reset cleaning for homes that need heavier work.",
+        "label": "Full Reset / Deep Cleaning",
+        "purpose": "Top-to-bottom interior detail cleaning.",
         "includes": [
-            "Everything in Basic Cleaning",
-            "Baseboards wiped",
-            "Door frames wiped",
-            "Light switch plates wiped",
-            "More detailed bathroom scrubbing",
-            "More detailed kitchen cleaning",
+            "Everything in Plus",
+            "Full baseboards",
+            "Doors and frames",
+            "Blinds / detail areas",
+            "Heavy buildup removal",
+            "Deep kitchen and bathroom detail",
+        ],
+        "not_included": [
+            "Inside oven unless added",
+            "Inside refrigerator unless added",
+            "Carpet cleaning unless added",
+            "Pressure washing unless added",
+        ],
+    },
+    "vacant": {
+        "label": "Vacant / Move-Out Cleaning",
+        "purpose": "Detailed cleaning for empty homes, rentals, and move-outs.",
+        "includes": [
+            "Full surface wipe-down",
+            "Cabinets and drawers",
+            "Kitchen reset",
+            "Bathroom reset",
+            "Move-out ready detail cleaning",
         ],
         "not_included": [
             "Inside oven unless added",
@@ -487,7 +506,7 @@ def calculate_residential(
 
     bundle_selection = {
         "deep_cleaning": chosen_service == "deep",
-        "vacant_cleaning": False,
+        "vacant_cleaning": chosen_service == "vacant",
         "carpet_cleaning": carpet_sqft > 0,
         "floor_care": floor_care_sqft > 0,
         "pressure_washing": pressure_sqft > 0,
@@ -510,6 +529,7 @@ def calculate_residential(
         "rows": rows,
         "chosen_service": chosen_service,
         "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[chosen_service]["label"],
+        "selected_category_label": "Residential Cleaning",
         "chosen_condition": chosen_condition,
         "chosen_condition_label": {
             "normal": "Normal (+0%)",
