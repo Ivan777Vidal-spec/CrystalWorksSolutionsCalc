@@ -18,16 +18,23 @@ CARPET_RATES = {
 
 PRESSURE_WASHING_RATES = {
     "standard": 0.40,
-    "dirty": 0.50,
+    "dirty": 0.45,
 }
 PRESSURE_WASHING_MINIMUM = 130
 PRESSURE_WASHING_STAIN_ADDONS = {
     "none": ("No stain add-on", 0),
-    "small_oil_rust": ("Small oil/rust stain add-on", 50),
-    "medium_oil_rust": ("Medium oil/rust stain add-on", 90),
-    "heavy_oil_rust": ("Heavy oil/rust stain add-on", 120),
-    "heavy_organic": ("Heavy organic stain add-on", 40),
+    "oil_stain_light": ("Oil stain treatment (light)", 40),
+    "oil_stain_heavy": ("Oil stain treatment (heavy)", 80),
+    "rust_stain_light": ("Rust stain removal (light)", 50),
+    "rust_stain_heavy": ("Rust stain removal (heavy)", 120),
+    "heavy_buildup": ("Heavy buildup treatment", 60),
 }
+
+FLOOR_CARE_RATES = {
+    "standard": 0.28,
+    "heavy": 0.35,
+}
+FLOOR_CARE_MINIMUM = 120
 
 RECURRING_DISCOUNTS = {
     "weekly": 0.20,
@@ -207,6 +214,59 @@ def money(value):
     return round(float(value), 2)
 
 
+def round_to_clean_price(value, increment=5):
+    if value <= 0:
+        return 0
+    return int(round(float(value) / increment) * increment)
+
+
+def calculate_floor_care_total(floor_care_sqft, floor_care_condition):
+    if floor_care_sqft <= 0:
+        return 0.0, []
+
+    floor_rate = FLOOR_CARE_RATES.get(floor_care_condition, FLOOR_CARE_RATES["standard"])
+    base_total = floor_care_sqft * floor_rate
+    floor_total = max(base_total, FLOOR_CARE_MINIMUM)
+
+    details = [(f"Floor Cleaning & Shine ({floor_care_condition.title()}) ({floor_care_sqft:g} sq ft × ${floor_rate:.2f})", money(base_total))]
+
+    if base_total < FLOOR_CARE_MINIMUM:
+        details.append(("Floor Care Minimum Applied", money(FLOOR_CARE_MINIMUM - base_total)))
+
+    return money(floor_total), details
+
+
+def select_best_bundle(base_total, selections):
+    bundle_candidates = []
+
+    if selections.get("deep_cleaning") and selections.get("carpet_cleaning"):
+        bundle_candidates.append(("Home Refresh", 0.09))
+
+    if selections.get("vacant_cleaning") and selections.get("carpet_cleaning"):
+        bundle_candidates.append(("Move-Out Reset", 0.10))
+
+    if all(selections.get(key) for key in ["deep_cleaning", "carpet_cleaning", "floor_care", "pressure_washing"]):
+        bundle_candidates.append(("Full Property Reset", 0.12))
+
+    if not bundle_candidates:
+        return None
+
+    best_bundle = None
+    for bundle_name, discount_pct in bundle_candidates:
+        discounted_total = round_to_clean_price(base_total * (1 - discount_pct))
+        savings = round_to_clean_price(max(base_total - discounted_total, 0))
+        bundle_data = {
+            "name": bundle_name,
+            "discount_pct": int(discount_pct * 100),
+            "bundle_price": discounted_total,
+            "savings": savings,
+        }
+        if best_bundle is None or bundle_data["savings"] > best_bundle["savings"]:
+            best_bundle = bundle_data
+
+    return best_bundle
+
+
 def get_sqft_adjustment(square_feet: int) -> float:
     if square_feet > 5000:
         return 0.30
@@ -248,6 +308,8 @@ def calculate_addons(
     carpet_sqft,
     pressure_sqft,
     bins,
+    floor_care_sqft=0,
+    floor_care_condition="standard",
     service_context="residential",
     pressure_condition="standard",
     pressure_stain_addon="none",
@@ -300,9 +362,15 @@ def calculate_addons(
             addon_total += stain_amount
             addon_details.append((stain_label, stain_amount))
 
+
+    floor_care_total, floor_care_details = calculate_floor_care_total(floor_care_sqft, floor_care_condition)
+    if floor_care_total > 0:
+        addon_total += floor_care_total
+        addon_details.extend(floor_care_details)
+
     if bins > 0:
         has_other_service = (
-            window_count > 0 or oven or fridge or carpet_sqft > 0 or pressure_sqft > 0
+            window_count > 0 or oven or fridge or carpet_sqft > 0 or pressure_sqft > 0 or floor_care_sqft > 0
         )
         bin_rate = 17 if has_other_service else 20
         total = bins * bin_rate
@@ -357,6 +425,8 @@ def calculate_residential(
     carpet_sqft,
     pressure_sqft,
     bins,
+    floor_care_sqft,
+    floor_care_condition="standard",
     pressure_condition="standard",
     pressure_stain_addon="none",
     chosen_service="first_time",
@@ -377,6 +447,8 @@ def calculate_residential(
         carpet_sqft,
         pressure_sqft,
         bins,
+        floor_care_sqft=floor_care_sqft,
+        floor_care_condition=floor_care_condition,
         service_context="residential",
         pressure_condition=pressure_condition,
         pressure_stain_addon=pressure_stain_addon,
@@ -410,6 +482,18 @@ def calculate_residential(
 
     addon_summary = ", ".join(item for item, _ in addon_details) if addon_details else "None"
 
+    individual_total = round_to_clean_price(final_quote)
+    recurring_lookup = {key: round_to_clean_price(val) for key, val in recurring_lookup.items()}
+
+    bundle_selection = {
+        "deep_cleaning": chosen_service == "deep",
+        "vacant_cleaning": False,
+        "carpet_cleaning": carpet_sqft > 0,
+        "floor_care": floor_care_sqft > 0,
+        "pressure_washing": pressure_sqft > 0,
+    }
+    best_bundle = select_best_bundle(individual_total, bundle_selection)
+
     return {
         "square_feet": square_feet,
         "bedrooms": bedrooms,
@@ -432,8 +516,10 @@ def calculate_residential(
             "dirty": "Dirty (+10%)",
             "very_dirty": "Very Dirty (+20%)",
         }[chosen_condition],
-        "final_quote": money(final_quote),
+        "final_quote": individual_total,
         "recurring_for_selected": recurring_lookup,
+        "bundle_offer": best_bundle,
+        "individual_service_total": individual_total,
         "service_price_lookup": service_price_lookup,
         "addon_summary": addon_summary,
     }
@@ -456,6 +542,8 @@ def calculate_realtor(
     carpet_sqft,
     pressure_sqft,
     bins,
+    floor_care_sqft,
+    floor_care_condition="standard",
     pressure_condition="standard",
     pressure_stain_addon="none",
 ):
@@ -480,6 +568,8 @@ def calculate_realtor(
         carpet_sqft,
         pressure_sqft,
         bins,
+        floor_care_sqft=floor_care_sqft,
+        floor_care_condition=floor_care_condition,
         service_context="commercial",
         pressure_condition=pressure_condition,
         pressure_stain_addon=pressure_stain_addon,
@@ -496,6 +586,16 @@ def calculate_realtor(
         total = max(total, MINIMUM_SERVICE_PRICE)
 
     details = REALTOR_SERVICE_DETAILS[service_type]
+
+    individual_total = round_to_clean_price(total)
+    bundle_selection = {
+        "deep_cleaning": service_type == "post_renovation",
+        "vacant_cleaning": service_type == "vacant_move_out",
+        "carpet_cleaning": carpet_sqft > 0,
+        "floor_care": floor_care_sqft > 0,
+        "pressure_washing": pressure_sqft > 0,
+    }
+    best_bundle = select_best_bundle(individual_total, bundle_selection)
 
     return {
         "square_feet": square_feet,
@@ -526,7 +626,9 @@ def calculate_realtor(
         "addon_details": addon_details,
         "service_multiplier": service_multiplier,
         "rush_pct": int(rush_pct * 100),
-        "total": money(total),
+        "total": individual_total,
+        "bundle_offer": best_bundle,
+        "individual_service_total": individual_total,
     }
 
 
@@ -559,6 +661,8 @@ def index():
                 carpet_sqft=safe_float(request.form.get("carpet_sqft")),
                 pressure_sqft=safe_float(request.form.get("pressure_sqft")),
                 bins=safe_int(request.form.get("bins")),
+                floor_care_sqft=safe_float(request.form.get("floor_care_sqft")),
+                floor_care_condition=request.form.get("floor_care_condition", "standard"),
                 pressure_condition=request.form.get("pressure_condition", "standard"),
                 pressure_stain_addon=request.form.get("pressure_stain_addon", "none"),
                 chosen_service=request.form.get("chosen_service", "first_time"),
@@ -583,6 +687,8 @@ def index():
                 carpet_sqft=safe_float(request.form.get("realtor_carpet_sqft")),
                 pressure_sqft=safe_float(request.form.get("realtor_pressure_sqft")),
                 bins=safe_int(request.form.get("realtor_bins")),
+                floor_care_sqft=safe_float(request.form.get("realtor_floor_care_sqft")),
+                floor_care_condition=request.form.get("realtor_floor_care_condition", "standard"),
                 pressure_condition=request.form.get("realtor_pressure_condition", "standard"),
                 pressure_stain_addon=request.form.get("realtor_pressure_stain_addon", "none"),
             )
