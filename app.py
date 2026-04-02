@@ -42,11 +42,36 @@ RECURRING_DISCOUNTS = {
     "monthly": 0.10,
 }
 
-RESIDENTIAL_MULTIPLIERS = {
-    "basic": 1.00,
-    "first_time": 1.18,
-    "deep": 1.30,
-    "vacant": 1.15,
+RESIDENTIAL_PACKAGE_MINUTES = {
+    "basic": {
+        "bedroom": 13,
+        "bathroom": 35,
+        "kitchen": 45,
+        "living_room": 30,
+        "hallway": 15,
+    },
+    "first_time": {
+        "bedroom": 21,
+        "bathroom": 45,
+        "kitchen": 65,
+        "living_room": 40,
+        "hallway": 23,
+    },
+    "deep": {
+        "bedroom": 26,
+        "bathroom": 55,
+        "kitchen": 75,
+        "living_room": 48,
+        "hallway": 38,
+    },
+    # Keep move-out available without changing the existing UX structure.
+    "vacant": {
+        "bedroom": 26,
+        "bathroom": 55,
+        "kitchen": 75,
+        "living_room": 48,
+        "hallway": 38,
+    },
 }
 
 REALTOR_MULTIPLIERS = {
@@ -317,8 +342,15 @@ def get_sqft_adjustment(square_feet: int) -> float:
     return 0.00
 
 
-def residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
-    return ((bedrooms * 0.75) + (bathrooms * 1.0) + (kitchens * 1.0) + (living_rooms * 0.5) + (dining_rooms * 0.5) + (hallways * 0.25))
+def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways):
+    package_minutes = RESIDENTIAL_PACKAGE_MINUTES.get(service_key, RESIDENTIAL_PACKAGE_MINUTES["basic"])
+    return (
+        (bedrooms * package_minutes["bedroom"]) +
+        (bathrooms * package_minutes["bathroom"]) +
+        (kitchens * package_minutes["kitchen"]) +
+        (living_rooms * package_minutes["living_room"]) +
+        (hallways * package_minutes["hallway"])
+    )
 
 
 def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
@@ -368,32 +400,60 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return money(addon_total), addon_details
 
 
-def build_residential_rows(base_subtotal, addon_total):
+def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total):
     rows = []
-    for key, multiplier in RESIDENTIAL_MULTIPLIERS.items():
+    sqft_adjustment = get_sqft_adjustment(square_feet)
+    for key in RESIDENTIAL_PACKAGE_MINUTES:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        normal_price = max((base_subtotal * multiplier) + addon_total, MINIMUM_SERVICE_PRICE)
-        dirty_price = max((base_subtotal * multiplier * 1.10) + addon_total, MINIMUM_SERVICE_PRICE)
-        very_dirty_price = max((base_subtotal * multiplier * 1.20) + addon_total, MINIMUM_SERVICE_PRICE)
+        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
+        labor_hours = base_minutes / 60
+        base_price = labor_hours * RESIDENTIAL_RATE_PER_HOUR
+        base_subtotal = base_price * (1 + sqft_adjustment)
+        normal_price = max(base_subtotal + addon_total, MINIMUM_SERVICE_PRICE)
+        dirty_price = max((base_subtotal * 1.10) + addon_total, MINIMUM_SERVICE_PRICE)
+        very_dirty_price = max((base_subtotal * 1.20) + addon_total, MINIMUM_SERVICE_PRICE)
         weekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
         biweekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
         monthly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
-        rows.append({"key": key, "label": label, "normal": money(normal_price), "dirty": money(dirty_price), "very_dirty": money(very_dirty_price), "weekly": money(weekly_price), "biweekly": money(biweekly_price), "monthly": money(monthly_price), "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"], "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"], "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"]})
+        rows.append({
+            "key": key,
+            "label": label,
+            "minutes": base_minutes,
+            "hours": money(labor_hours),
+            "base_price": money(base_price),
+            "normal": money(normal_price),
+            "dirty": money(dirty_price),
+            "very_dirty": money(very_dirty_price),
+            "weekly": money(weekly_price),
+            "biweekly": money(biweekly_price),
+            "monthly": money(monthly_price),
+            "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
+            "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
+            "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
+        })
     return rows
 
 
 def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", chosen_service="", chosen_condition="normal", selected_bundle="", selected_frequency="one_time"):
-    formula_units = residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
-    base_price = formula_units * RESIDENTIAL_RATE_PER_HOUR
-    sqft_adjustment = get_sqft_adjustment(square_feet)
-    base_subtotal = base_price * (1 + sqft_adjustment)
-    valid_service = chosen_service if chosen_service in RESIDENTIAL_MULTIPLIERS else ""
+    valid_service = chosen_service if chosen_service in RESIDENTIAL_PACKAGE_MINUTES else ""
     if selected_bundle in BUNDLE_DEFINITIONS:
         valid_service = BUNDLE_DEFINITIONS[selected_bundle]["service"]
 
     addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon)
-    rows = build_residential_rows(base_subtotal, addon_total)
+    rows = build_residential_rows(
+        square_feet=square_feet,
+        bedrooms=bedrooms,
+        bathrooms=bathrooms,
+        kitchens=kitchens,
+        living_rooms=living_rooms,
+        hallways=hallways,
+        addon_total=addon_total,
+    )
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
+    selected_minutes = chosen_row["minutes"] if chosen_row else 0
+    selected_hours = money(selected_minutes / 60) if chosen_row else 0
+    selected_base_price = chosen_row["base_price"] if chosen_row else 0
+    sqft_adjustment = get_sqft_adjustment(square_feet)
     package_total = 0
     recurring_lookup = {"weekly": 0, "biweekly": 0, "monthly": 0}
     if chosen_row:
@@ -432,8 +492,10 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
 
     return {
         "square_feet": square_feet,
-        "formula_units": money(formula_units),
-        "base_price": money(base_price),
+        "formula_units": selected_hours,
+        "base_minutes": selected_minutes,
+        "base_hours": selected_hours,
+        "base_price": selected_base_price,
         "sqft_adjustment_pct": int(sqft_adjustment * 100),
         "addon_total": addon_total,
         "addon_details": addon_details,
