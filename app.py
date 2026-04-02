@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 app = Flask(__name__)
 
@@ -74,6 +74,17 @@ RESIDENTIAL_PACKAGE_MINUTES = {
         "hallway": 38,
     },
 }
+
+RESIDENTIAL_PACKAGE_MULTIPLIERS = {
+    "basic": Decimal("1.00"),
+    "first_time": Decimal("1.20"),
+    "deep": Decimal("1.30"),
+    "vacant": Decimal("1.00"),
+}
+
+# Keep package time formulas enabled by default. When these are enabled,
+# package multipliers are intentionally not applied.
+USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS = True
 
 REALTOR_MULTIPLIERS = {
     "listing_prep": 1.00,
@@ -289,6 +300,10 @@ def money(value):
     return round(float(value), 2)
 
 
+def round_to_one_decimal(value):
+    return float(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+
+
 def round_to_clean_price(value, increment=5):
     if value <= 0:
         return 0
@@ -407,17 +422,21 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
-def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total):
+def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total, use_package_time_formulas=True):
     rows = []
     sqft_adjustment = to_decimal(get_sqft_adjustment(square_feet))
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
     addon_total_dec = to_decimal(addon_total)
     for key in RESIDENTIAL_PACKAGE_MINUTES:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
+        formula_service_key = key if use_package_time_formulas else "basic"
+        base_minutes = residential_formula_minutes(formula_service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
         labor_hours = Decimal(base_minutes) / Decimal(60)
         base_price = labor_hours * hourly_rate
-        base_subtotal = base_price * (Decimal(1) + sqft_adjustment)
+        package_multiplier = Decimal(1)
+        if not use_package_time_formulas:
+            package_multiplier = RESIDENTIAL_PACKAGE_MULTIPLIERS.get(key, Decimal("1.00"))
+        base_subtotal = (base_price * (Decimal(1) + sqft_adjustment)) * package_multiplier
         normal_price = max(base_subtotal + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
         dirty_price = max((base_subtotal * Decimal("1.10")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
         very_dirty_price = max((base_subtotal * Decimal("1.20")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
@@ -430,6 +449,8 @@ def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_ro
             "minutes": base_minutes,
             "hours": labor_hours,
             "base_price": base_price,
+            "package_multiplier": package_multiplier,
+            "uses_package_time_formulas": use_package_time_formulas,
             "normal": normal_price,
             "dirty": dirty_price,
             "very_dirty": very_dirty_price,
@@ -457,11 +478,13 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         living_rooms=living_rooms,
         hallways=hallways,
         addon_total=addon_total,
+        use_package_time_formulas=USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS,
     )
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
     selected_minutes = chosen_row["minutes"] if chosen_row else 0
     selected_hours = (Decimal(selected_minutes) / Decimal(60)) if chosen_row else Decimal(0)
     selected_base_price = chosen_row["base_price"] if chosen_row else Decimal(0)
+    selected_package_multiplier = chosen_row["package_multiplier"] if chosen_row else Decimal(1)
     sqft_adjustment = get_sqft_adjustment(square_feet)
     package_total = Decimal(0)
     recurring_lookup = {"weekly": Decimal(0), "biweekly": Decimal(0), "monthly": Decimal(0)}
@@ -513,6 +536,8 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[valid_service]["label"] if valid_service else "No package selected",
         "chosen_condition": chosen_condition,
         "chosen_condition_label": {"normal": "Normal (+0%)", "dirty": "Dirty (+10%)", "very_dirty": "Very Dirty (+20%)"}[chosen_condition],
+        "package_multiplier": selected_package_multiplier,
+        "uses_package_time_formulas": USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS,
         "recurring_for_selected": recurring_lookup,
         "bundle_offer": chosen_bundle or best_bundle,
         "selected_bundle": chosen_bundle,
@@ -525,6 +550,7 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "recurring_discount_pct": int(recurring_pct * 100),
         "recurring_discount_amount": recurring_discount_amount,
         "final_quote": final_quote,
+        "final_quote_display": round_to_one_decimal(final_quote),
     }
 
 
