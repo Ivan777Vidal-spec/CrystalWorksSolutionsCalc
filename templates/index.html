@@ -1150,7 +1150,7 @@
                     {% if residential_result %}
                     <div class="quote-total">
                         <div class="quote-total-label">Estimated Quote</div>
-                        <div class="quote-total-amount">${{ '%.2f'|format(residential_result.final_quote) }}</div>
+                        <div class="quote-total-amount">${{ residential_result.final_quote }}</div>
                     </div>
                     <div class="summary-body">
                         <div class="summary-box">
@@ -1163,32 +1163,32 @@
                         <div class="summary-box">
                             <h4>Price Breakdown</h4>
                             <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
-                            <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong></div>
+                            <div class="price-row"><span>Add-Ons</span><strong>${{ residential_result.addon_total }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Original Subtotal</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            <div class="price-row"><span>Original Subtotal</span><strong>${{ residential_result.subtotal_before_bundle }}</strong></div>
                             {% if residential_result.selected_bundle %}
                             <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.selected_bundle.name }}</strong></div>
-                            <div class="price-row"><span>Original Price</span><strong>${{ '%.2f'|format(residential_result.selected_bundle.original_price) }}</strong></div>
+                            <div class="price-row"><span>Original Price</span><strong>${{ residential_result.selected_bundle.original_price }}</strong></div>
                             <div class="price-row"><span>Bundle Discount</span><strong>{{ residential_result.selected_bundle.discount_pct }}%</strong></div>
-                            <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
-                            <div class="price-row"><span>Final Bundle Price</span><strong>${{ '%.2f'|format(residential_result.total_after_bundle) }}</strong></div>
+                            <div class="price-row"><span>You Save</span><strong>${{ residential_result.bundle_discount_amount }}</strong></div>
+                            <div class="price-row"><span>Final Bundle Price</span><strong>${{ residential_result.total_after_bundle }}</strong></div>
                             {% endif %}
                             <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
-                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
-                            <div class="price-row"><span>Final Rounded Quote</span><strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong></div>
+                            <div class="price-row"><span>Recurring Savings</span><strong>${{ residential_result.recurring_discount_amount }}</strong></div>
+                            <div class="price-row"><span>Final Quote</span><strong>${{ residential_result.final_quote }}</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Recurring Rates</h4>
-                            <div class="price-row"><span>Weekly</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.weekly) }}</strong></div>
-                            <div class="price-row"><span>Every 2 Weeks</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.biweekly) }}</strong></div>
-                            <div class="price-row"><span>Every 4 Weeks</span><strong>${{ '%.2f'|format(residential_result.recurring_for_selected.monthly) }}</strong></div>
+                            <div class="price-row"><span>Weekly</span><strong>${{ residential_result.recurring_for_selected.weekly }}</strong></div>
+                            <div class="price-row"><span>Every 2 Weeks</span><strong>${{ residential_result.recurring_for_selected.biweekly }}</strong></div>
+                            <div class="price-row"><span>Every 4 Weeks</span><strong>${{ residential_result.recurring_for_selected.monthly }}</strong></div>
                             <p class="summary-muted">One-time pricing continues to use the full quoted amount.</p>
                         </div>
                         <div class="summary-box">
                             <h4>Add-On Summary</h4>
                             {% if residential_result.addon_details %}
                                 {% for item, amount in residential_result.addon_details %}
-                                <div class="price-row"><span>{{ item }}</span><strong>${{ '%.2f'|format(amount) }}</strong></div>
+                                <div class="price-row"><span>{{ item }}</span><strong>${{ amount }}</strong></div>
                                 {% endfor %}
                             {% else %}
                             <p class="summary-muted">{{ residential_result.addon_summary }}</p>
@@ -1218,7 +1218,7 @@
                             <div class="compact-stat"><strong>{{ residential_result.square_feet }} sq ft</strong><span>Property size</span></div>
                             <div class="compact-stat"><strong>{{ residential_result.formula_units }}</strong><span>Formula units</span></div>
                             <div class="compact-stat"><strong>{{ residential_result.sqft_adjustment_pct }}%</strong><span>Sq ft adjustment</span></div>
-                            <div class="compact-stat"><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong><span>Add-ons total</span></div>
+                            <div class="compact-stat"><strong>${{ residential_result.addon_total }}</strong><span>Add-ons total</span></div>
                         </div>
                         <div class="pricing-table">
                             <table>
@@ -1234,9 +1234,9 @@
                                     {% for row in residential_result.rows %}
                                     <tr>
                                         <td><strong>{{ row.label }}</strong></td>
-                                        <td>${{ '%.2f'|format(row.normal) }}</td>
-                                        <td>${{ '%.2f'|format(row.dirty) }}</td>
-                                        <td>${{ '%.2f'|format(row.very_dirty) }}</td>
+                                        <td>${{ row.normal }}</td>
+                                        <td>${{ row.dirty }}</td>
+                                        <td>${{ row.very_dirty }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1591,7 +1591,7 @@
         <div class="mobile-summary-bar">
             <div>
                 <span>Residential quote</span>
-                <strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong>
+                <strong>${{ residential_result.final_quote }}</strong>
             </div>
             <a class="summary-link" href="#residential-summary">View summary</a>
         </div>

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+from decimal import Decimal
 
 app = Flask(__name__)
 
@@ -294,7 +295,7 @@ def round_to_clean_price(value, increment=5):
     return int(round(float(value) / increment) * increment)
 
 
-def calculate_floor_care_total(floor_care_sqft, floor_care_condition):
+def calculate_floor_care_total(floor_care_sqft, floor_care_condition, apply_rounding=True):
     if floor_care_sqft <= 0:
         return 0.0, []
 
@@ -302,12 +303,14 @@ def calculate_floor_care_total(floor_care_sqft, floor_care_condition):
     base_total = floor_care_sqft * floor_rate
     floor_total = max(base_total, FLOOR_CARE_MINIMUM)
 
-    details = [(f"Floor Cleaning & Shine ({floor_care_condition.title()}) ({floor_care_sqft:g} sq ft × ${floor_rate:.2f})", money(base_total))]
+    value = money(base_total) if apply_rounding else base_total
+    details = [(f"Floor Cleaning & Shine ({floor_care_condition.title()}) ({floor_care_sqft:g} sq ft × ${floor_rate:.2f})", value)]
 
     if base_total < FLOOR_CARE_MINIMUM:
-        details.append(("Floor Care Minimum Applied", money(FLOOR_CARE_MINIMUM - base_total)))
+        minimum_delta = money(FLOOR_CARE_MINIMUM - base_total) if apply_rounding else (FLOOR_CARE_MINIMUM - base_total)
+        details.append(("Floor Care Minimum Applied", minimum_delta))
 
-    return money(floor_total), details
+    return money(floor_total) if apply_rounding else floor_total, details
 
 
 def select_best_bundle(base_total, selections):
@@ -342,6 +345,10 @@ def get_sqft_adjustment(square_feet: int) -> float:
     return 0.00
 
 
+def to_decimal(value) -> Decimal:
+    return Decimal(str(value))
+
+
 def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways):
     package_minutes = RESIDENTIAL_PACKAGE_MINUTES.get(service_key, RESIDENTIAL_PACKAGE_MINUTES["basic"])
     return (
@@ -357,13 +364,13 @@ def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_ro
     return ((bedrooms * 0.6) + (bathrooms * 1.0) + (kitchens * 1.25) + (living_rooms * 0.5) + (dining_rooms * 0.5) + (hallways * 0.25))
 
 
-def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=0, floor_care_condition="standard", service_context="residential", pressure_condition="standard", pressure_stain_addon="none"):
+def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=0, floor_care_condition="standard", service_context="residential", pressure_condition="standard", pressure_stain_addon="none", apply_rounding=True):
     addon_details = []
     addon_total = 0.0
     if window_count > 0:
         total = window_count * 5
         addon_total += total
-        addon_details.append(("Window Cleaning", money(total)))
+        addon_details.append(("Window Cleaning", money(total) if apply_rounding else total))
     if oven:
         addon_total += 25
         addon_details.append(("Inside Oven Cleaning", 25))
@@ -374,20 +381,20 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
         carpet_rate = CARPET_RATES["residential"] if service_context == "residential" else CARPET_RATES["commercial"]
         total = carpet_sqft * carpet_rate
         addon_total += total
-        addon_details.append((f"Carpet Cleaning ({carpet_sqft:g} sq ft × ${carpet_rate:.2f})", money(total)))
+        addon_details.append((f"Carpet Cleaning ({carpet_sqft:g} sq ft × ${carpet_rate:.2f})", money(total) if apply_rounding else total))
     if pressure_sqft > 0:
         pressure_rate = PRESSURE_WASHING_RATES.get(pressure_condition, PRESSURE_WASHING_RATES["standard"])
         base_total = pressure_sqft * pressure_rate
         pressure_base_after_minimum = max(base_total, PRESSURE_WASHING_MINIMUM)
         addon_total += pressure_base_after_minimum
-        addon_details.append((f"Pressure Washing ({pressure_condition.title()}) ({pressure_sqft:g} sq ft × ${pressure_rate:.2f})", money(base_total)))
+        addon_details.append((f"Pressure Washing ({pressure_condition.title()}) ({pressure_sqft:g} sq ft × ${pressure_rate:.2f})", money(base_total) if apply_rounding else base_total))
         if base_total < PRESSURE_WASHING_MINIMUM:
-            addon_details.append(("Pressure Washing Minimum Applied", money(PRESSURE_WASHING_MINIMUM - base_total)))
+            addon_details.append(("Pressure Washing Minimum Applied", money(PRESSURE_WASHING_MINIMUM - base_total) if apply_rounding else (PRESSURE_WASHING_MINIMUM - base_total)))
         stain_label, stain_amount = PRESSURE_WASHING_STAIN_ADDONS.get(pressure_stain_addon, PRESSURE_WASHING_STAIN_ADDONS["none"])
         if stain_amount > 0:
             addon_total += stain_amount
             addon_details.append((stain_label, stain_amount))
-    floor_care_total, floor_care_details = calculate_floor_care_total(floor_care_sqft, floor_care_condition)
+    floor_care_total, floor_care_details = calculate_floor_care_total(floor_care_sqft, floor_care_condition, apply_rounding=apply_rounding)
     if floor_care_total > 0:
         addon_total += floor_care_total
         addon_details.extend(floor_care_details)
@@ -396,37 +403,39 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
         bin_rate = 17 if has_other_service else 20
         total = bins * bin_rate
         addon_total += total
-        addon_details.append(("Trash Bin Cleaning", money(total)))
-    return money(addon_total), addon_details
+        addon_details.append(("Trash Bin Cleaning", money(total) if apply_rounding else total))
+    return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
 def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total):
     rows = []
-    sqft_adjustment = get_sqft_adjustment(square_feet)
+    sqft_adjustment = to_decimal(get_sqft_adjustment(square_feet))
+    hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
+    addon_total_dec = to_decimal(addon_total)
     for key in RESIDENTIAL_PACKAGE_MINUTES:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
         base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
-        labor_hours = base_minutes / 60
-        base_price = labor_hours * RESIDENTIAL_RATE_PER_HOUR
-        base_subtotal = base_price * (1 + sqft_adjustment)
-        normal_price = max(base_subtotal + addon_total, MINIMUM_SERVICE_PRICE)
-        dirty_price = max((base_subtotal * 1.10) + addon_total, MINIMUM_SERVICE_PRICE)
-        very_dirty_price = max((base_subtotal * 1.20) + addon_total, MINIMUM_SERVICE_PRICE)
-        weekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
-        biweekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
-        monthly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
+        labor_hours = Decimal(base_minutes) / Decimal(60)
+        base_price = labor_hours * hourly_rate
+        base_subtotal = base_price * (Decimal(1) + sqft_adjustment)
+        normal_price = max(base_subtotal + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
+        dirty_price = max((base_subtotal * Decimal("1.10")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
+        very_dirty_price = max((base_subtotal * Decimal("1.20")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
+        weekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["weekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+        biweekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["biweekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+        monthly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["monthly"])), to_decimal(MINIMUM_SERVICE_PRICE))
         rows.append({
             "key": key,
             "label": label,
             "minutes": base_minutes,
-            "hours": money(labor_hours),
-            "base_price": money(base_price),
-            "normal": money(normal_price),
-            "dirty": money(dirty_price),
-            "very_dirty": money(very_dirty_price),
-            "weekly": money(weekly_price),
-            "biweekly": money(biweekly_price),
-            "monthly": money(monthly_price),
+            "hours": labor_hours,
+            "base_price": base_price,
+            "normal": normal_price,
+            "dirty": dirty_price,
+            "very_dirty": very_dirty_price,
+            "weekly": weekly_price,
+            "biweekly": biweekly_price,
+            "monthly": monthly_price,
             "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
             "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
             "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
@@ -439,7 +448,7 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
     if selected_bundle in BUNDLE_DEFINITIONS:
         valid_service = BUNDLE_DEFINITIONS[selected_bundle]["service"]
 
-    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon)
+    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon, apply_rounding=False)
     rows = build_residential_rows(
         square_feet=square_feet,
         bedrooms=bedrooms,
@@ -451,22 +460,22 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
     )
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
     selected_minutes = chosen_row["minutes"] if chosen_row else 0
-    selected_hours = money(selected_minutes / 60) if chosen_row else 0
-    selected_base_price = chosen_row["base_price"] if chosen_row else 0
+    selected_hours = (Decimal(selected_minutes) / Decimal(60)) if chosen_row else Decimal(0)
+    selected_base_price = chosen_row["base_price"] if chosen_row else Decimal(0)
     sqft_adjustment = get_sqft_adjustment(square_feet)
-    package_total = 0
-    recurring_lookup = {"weekly": 0, "biweekly": 0, "monthly": 0}
+    package_total = Decimal(0)
+    recurring_lookup = {"weekly": Decimal(0), "biweekly": Decimal(0), "monthly": Decimal(0)}
     if chosen_row:
         package_total = chosen_row["normal"]
         if chosen_condition == "dirty":
             package_total = chosen_row["dirty"]
         elif chosen_condition == "very_dirty":
             package_total = chosen_row["very_dirty"]
-        recurring_lookup = {"weekly": round_to_clean_price(chosen_row["weekly"]), "biweekly": round_to_clean_price(chosen_row["biweekly"]), "monthly": round_to_clean_price(chosen_row["monthly"])}
+        recurring_lookup = {"weekly": chosen_row["weekly"], "biweekly": chosen_row["biweekly"], "monthly": chosen_row["monthly"]}
     addon_summary = ", ".join(item for item, _ in addon_details) if addon_details else "None"
-    individual_total = round_to_clean_price(package_total if chosen_row else addon_total)
+    individual_total = package_total if chosen_row else to_decimal(addon_total)
     bundle_selection = {"deep_cleaning": valid_service == "deep", "vacant_cleaning": valid_service == "vacant", "carpet_cleaning": carpet_sqft > 0, "floor_care": floor_care_sqft > 0, "pressure_washing": pressure_sqft > 0}
-    best_bundle = select_best_bundle(individual_total, bundle_selection)
+    best_bundle = None
     chosen_bundle = None
     if selected_bundle and selected_bundle in BUNDLE_DEFINITIONS:
         definition = BUNDLE_DEFINITIONS[selected_bundle]
@@ -477,8 +486,8 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         if selected_bundle == "full_property_reset":
             meets_bundle_requirements = meets_bundle_requirements and bundle_selection["floor_care"] and bundle_selection["pressure_washing"]
         if meets_bundle_requirements:
-            savings = round_to_clean_price(individual_total * definition["discount"])
-            discounted_total = round_to_clean_price(max(individual_total - savings, 0))
+            savings = individual_total * to_decimal(definition["discount"])
+            discounted_total = max(individual_total - savings, Decimal(0))
             chosen_bundle = {"name": definition["name"], "discount_pct": int(definition["discount"] * 100), "original_price": individual_total, "bundle_price": discounted_total, "savings": savings}
 
     subtotal_before_bundle = individual_total
@@ -486,9 +495,9 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
     total_after_bundle = chosen_bundle["bundle_price"] if chosen_bundle else subtotal_before_bundle
 
     recurring_map = {"weekly": RECURRING_DISCOUNTS["weekly"], "biweekly": RECURRING_DISCOUNTS["biweekly"], "monthly": RECURRING_DISCOUNTS["monthly"], "one_time": 0}
-    recurring_pct = recurring_map.get(selected_frequency, 0)
-    recurring_discount_amount = round_to_clean_price(total_after_bundle * recurring_pct)
-    final_quote = round_to_clean_price(total_after_bundle - recurring_discount_amount)
+    recurring_pct = to_decimal(recurring_map.get(selected_frequency, 0))
+    recurring_discount_amount = total_after_bundle * recurring_pct
+    final_quote = total_after_bundle - recurring_discount_amount
 
     return {
         "square_feet": square_feet,
