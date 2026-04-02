@@ -44,9 +44,16 @@ RECURRING_DISCOUNTS = {
 
 RESIDENTIAL_MULTIPLIERS = {
     "basic": 1.00,
-    "first_time": 1.18,
+    "first_time": 1.20,
     "deep": 1.30,
     "vacant": 1.15,
+}
+
+RESIDENTIAL_BASELINE_HOURS = {
+    "basic": 3.5,
+    "first_time": 5.0,
+    "deep": 6.25,
+    "vacant": 5.0,
 }
 
 REALTOR_MULTIPLIERS = {
@@ -89,7 +96,7 @@ BUNDLE_DEFINITIONS = {
 RESIDENTIAL_SERVICE_DETAILS = {
     "basic": {
         "label": "Basic Cleaning",
-        "purpose": "Maintenance cleaning for already-kept homes.",
+        "purpose": "Maintenance cleaning for already-kept homes and recurring upkeep.",
         "includes": [
             "Kitchen wipe-down",
             "Bathroom cleaning",
@@ -108,7 +115,7 @@ RESIDENTIAL_SERVICE_DETAILS = {
     },
     "first_time": {
         "label": "Plus Cleaning",
-        "purpose": "A more detailed clean and the best value option.",
+        "purpose": "A more detailed clean and the best value option. Recommended for most first-time visits.",
         "includes": [
             "Everything in Basic",
             "Cabinet exteriors",
@@ -126,7 +133,7 @@ RESIDENTIAL_SERVICE_DETAILS = {
     },
     "deep": {
         "label": "Full Reset / Deep Cleaning",
-        "purpose": "Top-to-bottom interior detail cleaning.",
+        "purpose": "Top-to-bottom interior detail cleaning for heavier buildup and reset-level service.",
         "includes": [
             "Everything in Plus",
             "Full baseboards",
@@ -372,13 +379,28 @@ def build_residential_rows(base_subtotal, addon_total):
     rows = []
     for key, multiplier in RESIDENTIAL_MULTIPLIERS.items():
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        normal_price = max((base_subtotal * multiplier) + addon_total, MINIMUM_SERVICE_PRICE)
-        dirty_price = max((base_subtotal * multiplier * 1.10) + addon_total, MINIMUM_SERVICE_PRICE)
-        very_dirty_price = max((base_subtotal * multiplier * 1.20) + addon_total, MINIMUM_SERVICE_PRICE)
+        baseline_hours = RESIDENTIAL_BASELINE_HOURS.get(key, 0)
+        package_baseline = baseline_hours * RESIDENTIAL_RATE_PER_HOUR * multiplier
+        with_sqft = package_baseline * (1 + base_subtotal)
+        normal_price = max(with_sqft + addon_total, MINIMUM_SERVICE_PRICE)
         weekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["weekly"]), MINIMUM_SERVICE_PRICE)
         biweekly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["biweekly"]), MINIMUM_SERVICE_PRICE)
         monthly_price = max(normal_price * (1 - RECURRING_DISCOUNTS["monthly"]), MINIMUM_SERVICE_PRICE)
-        rows.append({"key": key, "label": label, "normal": money(normal_price), "dirty": money(dirty_price), "very_dirty": money(very_dirty_price), "weekly": money(weekly_price), "biweekly": money(biweekly_price), "monthly": money(monthly_price), "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"], "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"], "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"]})
+        rows.append({
+            "key": key,
+            "label": label,
+            "hours": money(baseline_hours),
+            "multiplier": multiplier,
+            "baseline_price": money(package_baseline),
+            "with_sqft": money(with_sqft),
+            "normal": money(normal_price),
+            "weekly": money(weekly_price),
+            "biweekly": money(biweekly_price),
+            "monthly": money(monthly_price),
+            "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
+            "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
+            "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
+        })
     return rows
 
 
@@ -386,22 +408,22 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
     formula_units = residential_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
     base_price = formula_units * RESIDENTIAL_RATE_PER_HOUR
     sqft_adjustment = get_sqft_adjustment(square_feet)
-    base_subtotal = base_price * (1 + sqft_adjustment)
+    sqft_multiplier = (1 + sqft_adjustment)
     valid_service = chosen_service if chosen_service in RESIDENTIAL_MULTIPLIERS else ""
     if selected_bundle in BUNDLE_DEFINITIONS:
         valid_service = BUNDLE_DEFINITIONS[selected_bundle]["service"]
 
     addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon)
-    rows = build_residential_rows(base_subtotal, addon_total)
+    rows = build_residential_rows(sqft_adjustment, addon_total)
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
-    package_total = 0
+    package_total = 0.0
+    package_baseline_price = 0.0
+    sqft_adjustment_amount = 0.0
     recurring_lookup = {"weekly": 0, "biweekly": 0, "monthly": 0}
     if chosen_row:
         package_total = chosen_row["normal"]
-        if chosen_condition == "dirty":
-            package_total = chosen_row["dirty"]
-        elif chosen_condition == "very_dirty":
-            package_total = chosen_row["very_dirty"]
+        package_baseline_price = chosen_row["baseline_price"]
+        sqft_adjustment_amount = chosen_row["with_sqft"] - chosen_row["baseline_price"]
         recurring_lookup = {"weekly": round_to_clean_price(chosen_row["weekly"]), "biweekly": round_to_clean_price(chosen_row["biweekly"]), "monthly": round_to_clean_price(chosen_row["monthly"])}
     addon_summary = ", ".join(item for item, _ in addon_details) if addon_details else "None"
     individual_total = round_to_clean_price(package_total if chosen_row else addon_total)
@@ -427,21 +449,26 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
 
     recurring_map = {"weekly": RECURRING_DISCOUNTS["weekly"], "biweekly": RECURRING_DISCOUNTS["biweekly"], "monthly": RECURRING_DISCOUNTS["monthly"], "one_time": 0}
     recurring_pct = recurring_map.get(selected_frequency, 0)
-    recurring_discount_amount = round_to_clean_price(total_after_bundle * recurring_pct)
-    final_quote = round_to_clean_price(total_after_bundle - recurring_discount_amount)
+    recurring_discount_amount_raw = total_after_bundle * recurring_pct
+    final_quote_raw = max(total_after_bundle - recurring_discount_amount_raw, MINIMUM_SERVICE_PRICE)
+    recurring_discount_amount = round_to_clean_price(recurring_discount_amount_raw)
+    final_quote = round_to_clean_price(final_quote_raw)
 
     return {
         "square_feet": square_feet,
         "formula_units": money(formula_units),
         "base_price": money(base_price),
         "sqft_adjustment_pct": int(sqft_adjustment * 100),
+        "sqft_multiplier": money(sqft_multiplier),
+        "package_baseline_price": money(package_baseline_price),
+        "sqft_adjustment_amount": money(sqft_adjustment_amount),
         "addon_total": addon_total,
         "addon_details": addon_details,
         "rows": rows,
         "chosen_service": valid_service,
         "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[valid_service]["label"] if valid_service else "No package selected",
         "chosen_condition": chosen_condition,
-        "chosen_condition_label": {"normal": "Normal (+0%)", "dirty": "Dirty (+10%)", "very_dirty": "Very Dirty (+20%)"}[chosen_condition],
+        "chosen_condition_label": "Included in package pricing",
         "recurring_for_selected": recurring_lookup,
         "bundle_offer": chosen_bundle or best_bundle,
         "selected_bundle": chosen_bundle,
@@ -452,7 +479,9 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "total_after_bundle": total_after_bundle,
         "selected_frequency": selected_frequency,
         "recurring_discount_pct": int(recurring_pct * 100),
+        "recurring_discount_amount_raw": money(recurring_discount_amount_raw),
         "recurring_discount_amount": recurring_discount_amount,
+        "final_quote_raw": money(final_quote_raw),
         "final_quote": final_quote,
     }
 

@@ -872,7 +872,7 @@
                         <div class="card-header inline-header">
                             <div>
                                 <h2 class="card-title">Choose Your Cleaning Package</h2>
-                                <p class="card-subtitle">Select a residential package to match the level of detail you need.</p>
+                                <p class="card-subtitle">Select your package: Basic for maintenance, Plus as the most popular first-time option, Deep for reset-level detail.</p>
                             </div>
                             <span class="section-chip">Step 1 of 4</span>
                         </div>
@@ -920,16 +920,9 @@
 
                                 <div class="compact-grid">
                                     <div class="checklist-card">
-                                        <h4>Condition Adjustment</h4>
-                                        <div class="field-group">
-                                            <label for="chosen_condition">Applied Condition</label>
-                                            <select class="select-input" id="chosen_condition" name="chosen_condition">
-                                                <option value="normal" {% if request.form.get('chosen_condition', 'normal') == 'normal' %}selected{% endif %}>Normal (+0%)</option>
-                                                <option value="dirty" {% if request.form.get('chosen_condition') == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
-                                                <option value="very_dirty" {% if request.form.get('chosen_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
-                                            </select>
-                                        </div>
-                                        <p class="helper-inline">Condition percentages and pricing remain server-driven.</p>
+                                        <h4>Pricing Method</h4>
+                                        <p class="helper-inline">Residential package pricing uses baseline hours × $70/hr, then applies the package multiplier and any square footage adjustment.</p>
+                                        <input type="hidden" name="chosen_condition" value="normal">
                                     </div>
                                 </div>
                             </div>
@@ -940,9 +933,9 @@
                         <div class="card-header inline-header">
                             <div>
                                 <h2 class="card-title">Recurring Frequency</h2>
-                                <p class="card-subtitle">More compact recurring selector with the same discount labels.</p>
+                                <p class="card-subtitle">Choose one-time or recurring service. Recurring discounts apply to the package total after package math.</p>
                             </div>
-                            <span class="section-chip">Display mode only</span>
+                            <span class="section-chip">Step 2 of 4</span>
                         </div>
                         <div class="card-body">
                             <div class="frequency-grid" id="frequency_cards">
@@ -970,7 +963,7 @@
                                 <h2 class="card-title">Additional Services</h2>
                                 <p class="card-subtitle">Select optional services to add to your cleaning package.</p>
                             </div>
-                            <span class="section-chip">Step 2 of 4</span>
+                            <span class="section-chip">Step 3 of 4</span>
                         </div>
                         <div class="card-body">
                             <div class="addon-list">
@@ -1103,7 +1096,7 @@
                                 <h2 class="card-title">Bundle Packages</h2>
                                 <p class="card-subtitle">Optional bundled package pricing is calculated after your service and extras are selected.</p>
                             </div>
-                            <span class="section-chip">Step 3 of 4</span>
+                            <span class="section-chip">Step 4 of 4</span>
                         </div>
                         <div class="card-body">
                             <input type="hidden" name="selected_bundle" id="selected_bundle" value="{{ request.form.get('selected_bundle', '') }}">
@@ -1156,16 +1149,17 @@
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
-                            <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
-                            <div class="summary-row"><span>Condition</span><strong>{{ residential_result.chosen_condition_label }}</strong></div>
+                            <div class="summary-row"><span>Recurring Frequency</span><strong>{{ selected_display_frequency }}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Price Breakdown</h4>
-                            <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
+                            <div class="price-row"><span>Selected Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
+                            <div class="price-row"><span>Baseline Package Price</span><strong>${{ '%.2f'|format(residential_result.package_baseline_price) }}</strong></div>
+                            <div class="price-row"><span>Sq Ft Adjustment ({{ residential_result.sqft_adjustment_pct }}%)</span><strong>${{ '%.2f'|format(residential_result.sqft_adjustment_amount) }}</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Original Subtotal</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
                             {% if residential_result.selected_bundle %}
                             <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.selected_bundle.name }}</strong></div>
                             <div class="price-row"><span>Original Price</span><strong>${{ '%.2f'|format(residential_result.selected_bundle.original_price) }}</strong></div>
@@ -1173,8 +1167,9 @@
                             <div class="price-row"><span>You Save</span><strong>${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
                             <div class="price-row"><span>Final Bundle Price</span><strong>${{ '%.2f'|format(residential_result.total_after_bundle) }}</strong></div>
                             {% endif %}
+                            <div class="price-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
                             <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
-                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
+                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount_raw) }}</strong></div>
                             <div class="price-row"><span>Final Rounded Quote</span><strong>${{ '%.2f'|format(residential_result.final_quote) }}</strong></div>
                         </div>
                         <div class="summary-box">
@@ -1225,18 +1220,20 @@
                                 <thead>
                                     <tr>
                                         <th>Service</th>
-                                        <th>Normal</th>
-                                        <th>Dirty</th>
-                                        <th>Very Dirty</th>
+                                        <th>Hours</th>
+                                        <th>Baseline</th>
+                                        <th>With Sq Ft</th>
+                                        <th>Current Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for row in residential_result.rows %}
                                     <tr>
                                         <td><strong>{{ row.label }}</strong></td>
+                                        <td>{{ row.hours }}</td>
+                                        <td>${{ '%.2f'|format(row.baseline_price) }}</td>
+                                        <td>${{ '%.2f'|format(row.with_sqft) }}</td>
                                         <td>${{ '%.2f'|format(row.normal) }}</td>
-                                        <td>${{ '%.2f'|format(row.dirty) }}</td>
-                                        <td>${{ '%.2f'|format(row.very_dirty) }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
