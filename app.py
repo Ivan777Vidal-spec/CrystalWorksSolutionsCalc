@@ -82,8 +82,6 @@ RESIDENTIAL_PACKAGE_MULTIPLIERS = {
     "vacant": Decimal("1.00"),
 }
 
-# Keep package time formulas enabled by default. When these are enabled,
-# package multipliers are intentionally not applied.
 USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS = True
 
 REALTOR_MULTIPLIERS = {
@@ -375,6 +373,32 @@ def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, livi
     )
 
 
+def calculate_residential_package_totals(base_price, service_key, square_feet, addon_total):
+    package_multiplier = RESIDENTIAL_PACKAGE_MULTIPLIERS.get(service_key, Decimal("1.00"))
+    adjusted_subtotal = base_price * package_multiplier
+    sqft_adjustment = to_decimal(get_sqft_adjustment(square_feet))
+    adjusted_subtotal *= (Decimal(1) + sqft_adjustment)
+
+    normal_price = max(adjusted_subtotal + addon_total, to_decimal(MINIMUM_SERVICE_PRICE))
+    dirty_price = max((adjusted_subtotal * Decimal("1.10")) + addon_total, to_decimal(MINIMUM_SERVICE_PRICE))
+    very_dirty_price = max((adjusted_subtotal * Decimal("1.20")) + addon_total, to_decimal(MINIMUM_SERVICE_PRICE))
+
+    weekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["weekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+    biweekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["biweekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+    monthly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["monthly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+
+    return {
+        "package_multiplier": package_multiplier,
+        "sqft_adjustment": sqft_adjustment,
+        "normal": normal_price,
+        "dirty": dirty_price,
+        "very_dirty": very_dirty_price,
+        "weekly": weekly_price,
+        "biweekly": biweekly_price,
+        "monthly": monthly_price,
+    }
+
+
 def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
     return ((bedrooms * 0.6) + (bathrooms * 1.0) + (kitchens * 1.25) + (living_rooms * 0.5) + (dining_rooms * 0.5) + (hallways * 0.25))
 
@@ -424,7 +448,6 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
 
 def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total, use_package_time_formulas=True):
     rows = []
-    sqft_adjustment = to_decimal(get_sqft_adjustment(square_feet))
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
     addon_total_dec = to_decimal(addon_total)
     for key in RESIDENTIAL_PACKAGE_MINUTES:
@@ -433,30 +456,26 @@ def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_ro
         base_minutes = residential_formula_minutes(formula_service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
         labor_hours = Decimal(base_minutes) / Decimal(60)
         base_price = labor_hours * hourly_rate
-        package_multiplier = Decimal(1)
-        if not use_package_time_formulas:
-            package_multiplier = RESIDENTIAL_PACKAGE_MULTIPLIERS.get(key, Decimal("1.00"))
-        base_subtotal = (base_price * (Decimal(1) + sqft_adjustment)) * package_multiplier
-        normal_price = max(base_subtotal + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
-        dirty_price = max((base_subtotal * Decimal("1.10")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
-        very_dirty_price = max((base_subtotal * Decimal("1.20")) + addon_total_dec, to_decimal(MINIMUM_SERVICE_PRICE))
-        weekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["weekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
-        biweekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["biweekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
-        monthly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["monthly"])), to_decimal(MINIMUM_SERVICE_PRICE))
+        package_totals = calculate_residential_package_totals(
+            base_price=base_price,
+            service_key=key,
+            square_feet=square_feet,
+            addon_total=addon_total_dec,
+        )
         rows.append({
             "key": key,
             "label": label,
             "minutes": base_minutes,
             "hours": labor_hours,
             "base_price": base_price,
-            "package_multiplier": package_multiplier,
+            "package_multiplier": package_totals["package_multiplier"],
             "uses_package_time_formulas": use_package_time_formulas,
-            "normal": normal_price,
-            "dirty": dirty_price,
-            "very_dirty": very_dirty_price,
-            "weekly": weekly_price,
-            "biweekly": biweekly_price,
-            "monthly": monthly_price,
+            "normal": package_totals["normal"],
+            "dirty": package_totals["dirty"],
+            "very_dirty": package_totals["very_dirty"],
+            "weekly": package_totals["weekly"],
+            "biweekly": package_totals["biweekly"],
+            "monthly": package_totals["monthly"],
             "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
             "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
             "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
