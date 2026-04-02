@@ -1150,7 +1150,7 @@
                     {% if residential_result %}
                     <div class="quote-total">
                         <div class="quote-total-label">Estimated Quote</div>
-                        <div class="quote-total-amount">${{ residential_result.final_quote }}</div>
+                        <div class="quote-total-amount">${{ '%.1f'|format(residential_result.final_quote_display) }}</div>
                     </div>
                     <div class="summary-body">
                         <div class="summary-box">
@@ -1175,7 +1175,7 @@
                             {% endif %}
                             <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
                             <div class="price-row"><span>Recurring Savings</span><strong>${{ residential_result.recurring_discount_amount }}</strong></div>
-                            <div class="price-row"><span>Final Quote</span><strong>${{ residential_result.final_quote }}</strong></div>
+                            <div class="price-row"><span>Final Quote</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Recurring Rates</h4>
@@ -1591,7 +1591,7 @@
         <div class="mobile-summary-bar">
             <div>
                 <span>Residential quote</span>
-                <strong>${{ residential_result.final_quote }}</strong>
+                <strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong>
             </div>
             <a class="summary-link" href="#residential-summary">View summary</a>
         </div>
