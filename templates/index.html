@@ -877,7 +877,7 @@
                             <span class="section-chip">Step 1 of 4</span>
                         </div>
                         <div class="card-body compact-grid">
-                            <div class="choice-grid choice-grid-4" data-selection-group="residential-service">
+                            <div class="choice-grid" data-selection-group="residential-service">
                                 {% for key, detail in residential_service_details.items() %}
                                 <label class="choice-card {% if selected_residential_service == key %}is-selected{% endif %}">
                                     <input
@@ -888,10 +888,10 @@
                                         {% if selected_residential_service == key %}checked{% endif %}
                                     >
                                     <span class="choice-card-content">
-                                        {% if key == 'first_time' %}<span class="section-chip" style="width:max-content;">Most Popular</span>{% endif %}
+                                        {% if key == 'plus' %}<span class="section-chip" style="width:max-content;">Most Popular • Best Value</span>{% endif %}
                                         <strong>{{ detail.label }}</strong>
                                         <span>{{ detail.purpose }}</span>
-                                        <small>{% if key == 'basic' %}Kitchen wipe-down • Bathroom cleaning • Dusting • Vacuum • Mop • Trash{% elif key == 'first_time' %}Everything in Basic • Cabinet exteriors • Baseboards spot cleaned{% elif key == 'deep' %}Everything in Plus • Full baseboards • Doors and frames{% else %}Full surface wipe-down • Cabinets and drawers • Move-out detail{% endif %}</small>
+                                        <small>{% if key == 'basic' %}Maintenance • Light wipe-down • Upkeep cleaning{% elif key == 'plus' %}Detailed maintenance • Premium reset • Best balance{% elif key == 'deep' %}Full reset • First-time clean • Heavy attention{% endif %}</small>
                                     </span>
                                 </label>
                                 {% endfor %}
@@ -920,16 +920,18 @@
 
                                 <div class="compact-grid">
                                     <div class="checklist-card">
-                                        <h4>Condition Adjustment</h4>
+                                        <h4>Eco Option</h4>
                                         <div class="field-group">
-                                            <label for="chosen_condition">Applied Condition</label>
-                                            <select class="select-input" id="chosen_condition" name="chosen_condition">
-                                                <option value="normal" {% if request.form.get('chosen_condition', 'normal') == 'normal' %}selected{% endif %}>Normal (+0%)</option>
-                                                <option value="dirty" {% if request.form.get('chosen_condition') == 'dirty' %}selected{% endif %}>Dirty (+10%)</option>
-                                                <option value="very_dirty" {% if request.form.get('chosen_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty (+20%)</option>
-                                            </select>
+                                            <label for="eco_friendly">Eco-friendly cleaning supplies</label>
+                                            <label class="toggle-wrap" style="justify-self:start;">
+                                                <span class="inline-label">+10% residential package only</span>
+                                                <span>
+                                                    <input class="toggle-input" id="eco_friendly" type="checkbox" name="eco_friendly" {% if request.form.get('eco_friendly') %}checked{% endif %}>
+                                                    <span class="toggle-track"></span>
+                                                </span>
+                                            </label>
                                         </div>
-                                        <p class="helper-inline">Condition percentages and pricing remain server-driven.</p>
+                                        <p class="helper-inline">Eco option is applied after package labor pricing and does not affect non-residential services.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1157,12 +1159,18 @@
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
-                            <div class="summary-row"><span>Condition</span><strong>{{ residential_result.chosen_condition_label }}</strong></div>
+                            <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% labor){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Price Breakdown</h4>
-                            <div class="price-row"><span>Base Formula Units</span><strong>{{ residential_result.formula_units }}</strong></div>
+                            <div class="price-row"><span>Base Room Time</span><strong>{{ '%.2f'|format(residential_result.room_time_hours) }} hrs</strong></div>
+                            <div class="price-row"><span>Package Detail Load</span><strong>{{ '%.2f'|format(residential_result.detail_load_hours) }} hrs</strong></div>
+                            <div class="price-row"><span>Total Labor Time</span><strong>{{ '%.2f'|format(residential_result.base_hours) }} hrs</strong></div>
+                            <div class="price-row"><span>Labor Price @ ${{ pricing_snapshot.rate_per_hour }}/hr</span><strong>${{ '%.2f'|format(residential_result.base_price) }}</strong></div>
+                            {% if residential_result.eco_selected %}
+                            <div class="price-row"><span>Eco Adjustment (+10%)</span><strong>${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
+                            {% endif %}
                             <div class="price-row"><span>Add-Ons</span><strong>${{ residential_result.addon_total }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
                             <div class="price-row"><span>Original Subtotal</span><strong>${{ residential_result.subtotal_before_bundle }}</strong></div>
@@ -1183,6 +1191,7 @@
                             <div class="price-row"><span>Every 2 Weeks</span><strong>${{ residential_result.recurring_for_selected.biweekly }}</strong></div>
                             <div class="price-row"><span>Every 4 Weeks</span><strong>${{ residential_result.recurring_for_selected.monthly }}</strong></div>
                             <p class="summary-muted">One-time pricing continues to use the full quoted amount.</p>
+                            <p class="summary-muted">Deep cleaning includes inside oven/fridge in standard condition only. Extreme buildup may require additional time and pricing. Reachable vent covers only.</p>
                         </div>
                         <div class="summary-box">
                             <h4>Add-On Summary</h4>
@@ -1216,8 +1225,8 @@
                     <div class="details-body stack">
                         <div class="compact-stats">
                             <div class="compact-stat"><strong>{{ residential_result.square_feet }} sq ft</strong><span>Property size</span></div>
-                            <div class="compact-stat"><strong>{{ residential_result.formula_units }}</strong><span>Formula units</span></div>
-                            <div class="compact-stat"><strong>{{ residential_result.sqft_adjustment_pct }}%</strong><span>Sq ft adjustment</span></div>
+                            <div class="compact-stat"><strong>{{ '%.2f'|format(residential_result.room_time_hours) }} hrs</strong><span>Base room time</span></div>
+                            <div class="compact-stat"><strong>{{ '%.2f'|format(residential_result.detail_load_hours) }} hrs</strong><span>Detail load</span></div>
                             <div class="compact-stat"><strong>${{ residential_result.addon_total }}</strong><span>Add-ons total</span></div>
                         </div>
                         <div class="pricing-table">
@@ -1225,18 +1234,18 @@
                                 <thead>
                                     <tr>
                                         <th>Service</th>
-                                        <th>Normal</th>
-                                        <th>Dirty</th>
-                                        <th>Very Dirty</th>
+                                        <th>Base Time</th>
+                                        <th>Detail Load</th>
+                                        <th>One-Time</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for row in residential_result.rows %}
                                     <tr>
                                         <td><strong>{{ row.label }}</strong></td>
+                                        <td>{{ '%.2f'|format(row.base_hours) }} hrs</td>
+                                        <td>{{ '%.2f'|format(row.detail_load_hours) }} hrs</td>
                                         <td>${{ row.normal }}</td>
-                                        <td>${{ row.dirty }}</td>
-                                        <td>${{ row.very_dirty }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1691,7 +1700,7 @@
             const pressureToggle = document.querySelector('input[name="include_pressure"]');
             const map = {
                 home_refresh: {service: 'deep', carpet: true},
-                move_out_reset: {service: 'vacant', carpet: true},
+                move_out_reset: {service: 'deep', carpet: true},
                 full_property_reset: {service: 'deep', carpet: true, floor: true, pressure: true}
             };
             const config = map[bundleKey];
