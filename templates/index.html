@@ -694,6 +694,61 @@
 
         details.card summary::-webkit-details-marker { display: none; }
         details.card[open] summary { border-bottom: 1px solid var(--border); }
+        .service-accordion-group {
+            display: grid;
+            gap: 12px;
+        }
+        .service-accordion {
+            border: 1px solid rgba(148, 163, 184, 0.26);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(248,250,252,0.86), #fff);
+            overflow: hidden;
+        }
+        .service-accordion-header {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            color: var(--text);
+            font-weight: 800;
+        }
+        .service-accordion-title {
+            display: grid;
+            gap: 4px;
+            text-align: left;
+        }
+        .service-accordion-title span {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .accordion-chevron {
+            width: 12px;
+            height: 12px;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            margin-right: 4px;
+        }
+        .service-accordion.open .accordion-chevron {
+            transform: rotate(225deg);
+            margin-top: 4px;
+        }
+        .service-accordion-content {
+            display: none;
+            padding: 0 16px 16px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .service-accordion.open .service-accordion-content {
+            display: block;
+        }
 
         .compact-stats {
             display: grid;
@@ -969,173 +1024,150 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Additional Services</h2>
-                                <p class="card-subtitle">Select optional services to add to your cleaning package.</p>
+                                <h2 class="card-title">Optional Services</h2>
+                                <p class="card-subtitle">Expand only what you need. Pricing changes only when a service is explicitly selected.</p>
                             </div>
                             <span class="section-chip">Step 2 of 4</span>
                         </div>
                         <div class="card-body">
-                            <div class="addon-list">
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Window Cleaning</strong>
-                                        <span class="addon-meta">Per-window add-on.</span>
-                                    </div>
-                                    <div class="price-badge">$5 each</div>
-                                    <input class="text-input" type="number" name="window_count" min="0" value="{{ request.form.get('window_count', '0') }}">
-                                </div>
-                                <div class="addon-row compact-toggle">
-                                    <div class="addon-title">
-                                        <strong>Inside Oven Cleaning</strong>
-                                        <span class="addon-meta">Flat add-on when selected.</span>
-                                    </div>
-                                    <label class="toggle-wrap">
-                                        <span class="inline-label">$25</span>
-                                        <span>
-                                            <input class="toggle-input" type="checkbox" name="oven" {% if request.form.get('oven') %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="addon-row compact-toggle">
-                                    <div class="addon-title">
-                                        <strong>Inside Refrigerator Cleaning</strong>
-                                        <span class="addon-meta">Flat add-on when selected.</span>
-                                    </div>
-                                    <label class="toggle-wrap">
-                                        <span class="inline-label">$20</span>
-                                        <span>
-                                            <input class="toggle-input" type="checkbox" name="fridge" {% if request.form.get('fridge') %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Carpet Cleaning</strong>
-                                        <span class="addon-meta">Charged by carpet square footage.</span>
-                                    </div>
-                                    <div class="price-badge">$0.37 / sq ft</div>
-                                    <div class="toggle-wrap">
-                                        <span>
-                                            <input class="toggle-input service-toggle" type="checkbox" name="include_carpet" data-target-input="carpet_sqft" {% if request.form.get('include_carpet') == 'on' %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </div>
-                                    <input class="text-input service-amount" id="carpet_sqft" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Floor Cleaning & Shine</strong>
-                                        <span class="addon-meta">Broad hard-floor cleaning and shine service.</span>
-                                        <div class="addon-breakdown">
-                                            <div class="field-group">
-                                                <label for="floor_care_condition">Condition</label>
-                                                <select class="select-input" id="floor_care_condition" name="floor_care_condition">
-                                                    <option value="standard" {% if request.form.get('floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
-                                                    <option value="heavy" {% if request.form.get('floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="price-badge">$0.28 / $0.35 + $120 min</div>
-                                    <div class="toggle-wrap">
-                                        <span>
-                                            <input class="toggle-input service-toggle" type="checkbox" name="include_floor_care" data-target-input="floor_care_sqft" {% if request.form.get('include_floor_care') == 'on' %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </div>
-                                    <input class="text-input service-amount" id="floor_care_sqft" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Pressure Washing</strong>
-                                        <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
-                                        <div class="addon-breakdown">
-                                            <div class="field-group">
-                                                <label for="pressure_condition">Condition</label>
-                                                <select class="select-input" id="pressure_condition" name="pressure_condition">
-                                                    <option value="standard" {% if request.form.get('pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
-                                                    <option value="dirty" {% if request.form.get('pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
-                                                </select>
-                                            </div>
-                                            <div class="field-group">
-                                                <label for="pressure_stain_addon">Stain Add-On</label>
-                                                <select class="select-input" id="pressure_stain_addon" name="pressure_stain_addon">
-                                                    <option value="none" {% if request.form.get('pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
-                                                    <option value="oil_stain_light" {% if request.form.get('pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
-                                                    <option value="oil_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
-                                                    <option value="rust_stain_light" {% if request.form.get('pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
-                                                    <option value="rust_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
-                                                    <option value="heavy_buildup" {% if request.form.get('pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="price-badge">$0.40 / $0.45 + $130 min</div>
-                                    <div class="toggle-wrap">
-                                        <span>
-                                            <input class="toggle-input service-toggle" type="checkbox" name="include_pressure" data-target-input="pressure_sqft" {% if request.form.get('include_pressure') == 'on' %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </div>
-                                    <input class="text-input service-amount" id="pressure_sqft" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Trash Bin Cleaning</strong>
-                                        <span class="addon-meta">Bundled and standalone bin pricing still comes from the backend.</span>
-                                    </div>
-                                    <div class="price-badge">$17–$20 each</div>
-                                    <div class="toggle-wrap">
-                                        <span>
-                                            <input class="toggle-input service-toggle" type="checkbox" name="include_bins" data-target-input="bins" {% if request.form.get('include_bins') == 'on' %}checked{% endif %}>
-                                            <span class="toggle-track"></span>
-                                        </span>
-                                    </div>
-                                    <input class="text-input service-amount" id="bins" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card">
-                        <div class="card-header inline-header">
-                            <div>
-                                <h2 class="card-title">Bundle Packages</h2>
-                                <p class="card-subtitle">Optional bundled package pricing is calculated after your service and extras are selected.</p>
-                            </div>
-                            <span class="section-chip">Step 3 of 4</span>
-                        </div>
-                        <div class="card-body">
                             <input type="hidden" name="selected_bundle" id="selected_bundle" value="{{ request.form.get('selected_bundle', '') }}">
-                            <div class="choice-grid choice-grid-4" data-selection-group="bundle-selection">
-                                <label class="choice-card {% if request.form.get('selected_bundle') == 'home_refresh' %}is-selected{% endif %}">
-                                    <input type="radio" name="bundle_choice" value="home_refresh" data-bundle-key="home_refresh" {% if request.form.get('selected_bundle') == 'home_refresh' %}checked{% endif %}>
-                                    <span class="choice-card-content">
-                                        <strong>Home Refresh</strong>
-                                        <span>Includes: Full Reset / Deep Cleaning + Carpet Cleaning</span>
-                                        <small>Bundle discount: 9% off</small>
-                                    </span>
-                                </label>
-                                <label class="choice-card {% if request.form.get('selected_bundle') == 'move_out_reset' %}is-selected{% endif %}">
-                                    <input type="radio" name="bundle_choice" value="move_out_reset" data-bundle-key="move_out_reset" {% if request.form.get('selected_bundle') == 'move_out_reset' %}checked{% endif %}>
-                                    <span class="choice-card-content">
-                                        <strong>Move-Out Reset</strong>
-                                        <span>Includes: Vacant / Move-Out Cleaning + Carpet Cleaning</span>
-                                        <small>Bundle discount: 10% off</small>
-                                    </span>
-                                </label>
-                                <label class="choice-card {% if request.form.get('selected_bundle') == 'full_property_reset' %}is-selected{% endif %}">
-                                    <input type="radio" name="bundle_choice" value="full_property_reset" data-bundle-key="full_property_reset" {% if request.form.get('selected_bundle') == 'full_property_reset' %}checked{% endif %}>
-                                    <span class="choice-card-content">
-                                        <strong>Full Property Reset</strong>
-                                        <span>Includes: Full Reset / Deep Cleaning + Carpet Cleaning + Floor Cleaning &amp; Shine + Pressure Washing</span>
-                                        <small>Bundle discount: 12% off</small>
-                                    </span>
-                                </label>
+                            <div class="service-accordion-group">
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Carpet Cleaning</strong><span>Optional service charged by square footage.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-row">
+                                            <div class="addon-title"><strong>Add Carpet Cleaning</strong><span class="addon-meta">$0.37 / sq ft</span></div>
+                                            <div class="toggle-wrap">
+                                                <span>
+                                                    <input class="toggle-input service-toggle" type="checkbox" name="include_carpet" data-target-input="carpet_sqft" {% if request.form.get('include_carpet') == 'on' %}checked{% endif %}>
+                                                    <span class="toggle-track"></span>
+                                                </span>
+                                            </div>
+                                            <input class="text-input service-amount" id="carpet_sqft" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Pressure Washing</strong><span>Optional service with condition rate + minimum + stain add-on.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-row">
+                                            <div class="addon-title">
+                                                <strong>Add Pressure Washing</strong>
+                                                <div class="addon-breakdown">
+                                                    <div class="field-group">
+                                                        <label for="pressure_condition">Condition</label>
+                                                        <select class="select-input" id="pressure_condition" name="pressure_condition">
+                                                            <option value="standard" {% if request.form.get('pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
+                                                            <option value="dirty" {% if request.form.get('pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="field-group">
+                                                        <label for="pressure_stain_addon">Stain Add-On</label>
+                                                        <select class="select-input" id="pressure_stain_addon" name="pressure_stain_addon">
+                                                            <option value="none" {% if request.form.get('pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
+                                                            <option value="oil_stain_light" {% if request.form.get('pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
+                                                            <option value="oil_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
+                                                            <option value="rust_stain_light" {% if request.form.get('pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
+                                                            <option value="rust_stain_heavy" {% if request.form.get('pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
+                                                            <option value="heavy_buildup" {% if request.form.get('pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="toggle-wrap">
+                                                <span>
+                                                    <input class="toggle-input service-toggle" type="checkbox" name="include_pressure" data-target-input="pressure_sqft" {% if request.form.get('include_pressure') == 'on' %}checked{% endif %}>
+                                                    <span class="toggle-track"></span>
+                                                </span>
+                                            </div>
+                                            <input class="text-input service-amount" id="pressure_sqft" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Add-ons &amp; Bundles</strong><span>General add-ons plus optional bundle discounts in one place.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-list">
+                                            <div class="addon-row">
+                                                <div class="addon-title"><strong>Window Cleaning</strong><span class="addon-meta">Per-window add-on.</span></div>
+                                                <div class="price-badge">$5 each</div>
+                                                <input class="text-input" type="number" name="window_count" min="0" value="{{ request.form.get('window_count', '0') }}">
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Inside Oven Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">$25</span><span><input class="toggle-input" type="checkbox" name="oven" {% if request.form.get('oven') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Inside Refrigerator Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">$20</span><span><input class="toggle-input" type="checkbox" name="fridge" {% if request.form.get('fridge') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Couch Cleaning</strong><span class="addon-meta">Placeholder flat-price add-on.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">${{ pricing_snapshot.couch_cleaning_price }}</span><span><input class="toggle-input" type="checkbox" name="include_couch_cleaning" {% if request.form.get('include_couch_cleaning') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row">
+                                                <div class="addon-title">
+                                                    <strong>Floor Cleaning & Shine</strong>
+                                                    <span class="addon-meta">Broad hard-floor cleaning and shine service.</span>
+                                                    <div class="addon-breakdown">
+                                                        <div class="field-group">
+                                                            <label for="floor_care_condition">Condition</label>
+                                                            <select class="select-input" id="floor_care_condition" name="floor_care_condition">
+                                                                <option value="standard" {% if request.form.get('floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
+                                                                <option value="heavy" {% if request.form.get('floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-wrap">
+                                                    <span>
+                                                        <input class="toggle-input service-toggle" type="checkbox" name="include_floor_care" data-target-input="floor_care_sqft" {% if request.form.get('include_floor_care') == 'on' %}checked{% endif %}>
+                                                        <span class="toggle-track"></span>
+                                                    </span>
+                                                </div>
+                                                <input class="text-input service-amount" id="floor_care_sqft" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
+                                            </div>
+                                            <div class="addon-row">
+                                                <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Bundled and standalone bin pricing still comes from the backend.</span></div>
+                                                <div class="toggle-wrap">
+                                                    <span>
+                                                        <input class="toggle-input service-toggle" type="checkbox" name="include_bins" data-target-input="bins" {% if request.form.get('include_bins') == 'on' %}checked{% endif %}>
+                                                        <span class="toggle-track"></span>
+                                                    </span>
+                                                </div>
+                                                <input class="text-input service-amount" id="bins" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 14px;">
+                                            <h4 style="margin:0 0 10px;">Bundle Packages</h4>
+                                            <div class="choice-grid choice-grid-4" data-selection-group="bundle-selection">
+                                                {% for key, bundle in residential_bundle_options.items() %}
+                                                <label class="choice-card {% if request.form.get('selected_bundle') == key %}is-selected{% endif %}">
+                                                    <input type="radio" name="bundle_choice" value="{{ key }}" data-bundle-key="{{ key }}" {% if request.form.get('selected_bundle') == key %}checked{% endif %}>
+                                                    <span class="choice-card-content">
+                                                        <strong>{{ bundle.name }}</strong>
+                                                        <span>{{ bundle.description }}</span>
+                                                        <small>Bundle discount: {{ bundle.discount_pct }}% off</small>
+                                                    </span>
+                                                </label>
+                                                {% endfor %}
+                                            </div>
+                                            <p class="helper-inline">Bundle logic now lives in the main service flow. Select bundle + required services for savings.</p>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
-                            <p class="helper-inline">Bundles stay optional. Manual service building still works without selecting one.</p>
                         </div>
                     </section>
 
@@ -1159,8 +1191,27 @@
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
-                            <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% labor){% else %}Not selected{% endif %}</strong></div>
+                            <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% residential labor){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
+                        </div>
+                        <div class="summary-box">
+                            <h4>Service Breakdown</h4>
+                            <div class="price-row"><span>Residential Cleaning</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
+                            {% for item, amount in residential_result.addon_details %}
+                                {% if 'Carpet Cleaning' in item %}
+                                <div class="price-row"><span>Carpet Cleaning</span><strong>${{ amount }}</strong></div>
+                                {% endif %}
+                                {% if 'Pressure Washing' in item %}
+                                <div class="price-row"><span>Pressure Washing</span><strong>${{ amount }}</strong></div>
+                                {% endif %}
+                            {% endfor %}
+                            {% if residential_result.selected_bundle %}
+                            <div class="price-row"><span>Bundle Savings ({{ residential_result.selected_bundle.name }})</span><strong>-${{ residential_result.bundle_discount_amount }}</strong></div>
+                            {% endif %}
+                            {% if residential_result.eco_selected %}
+                            <div class="price-row"><span>Eco Adjustment</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
+                            {% endif %}
+                            <div class="price-row"><span>Final Total</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Price Breakdown</h4>
@@ -1176,10 +1227,8 @@
                             <div class="price-row"><span>Original Subtotal</span><strong>${{ residential_result.subtotal_before_bundle }}</strong></div>
                             {% if residential_result.selected_bundle %}
                             <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.selected_bundle.name }}</strong></div>
-                            <div class="price-row"><span>Original Price</span><strong>${{ residential_result.selected_bundle.original_price }}</strong></div>
                             <div class="price-row"><span>Bundle Discount</span><strong>{{ residential_result.selected_bundle.discount_pct }}%</strong></div>
                             <div class="price-row"><span>You Save</span><strong>${{ residential_result.bundle_discount_amount }}</strong></div>
-                            <div class="price-row"><span>Final Bundle Price</span><strong>${{ residential_result.total_after_bundle }}</strong></div>
                             {% endif %}
                             <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
                             <div class="price-row"><span>Recurring Savings</span><strong>${{ residential_result.recurring_discount_amount }}</strong></div>
@@ -1215,46 +1264,6 @@
                 </aside>
             </div>
 
-            {% if residential_result %}
-            <div class="stack" style="margin-top: 16px;">
-                <details class="card">
-                    <summary>
-                        <span>Residential diagnostics & pricing matrix</span>
-                        <span class="muted">Collapsed by default to keep the quoting flow shorter</span>
-                    </summary>
-                    <div class="details-body stack">
-                        <div class="compact-stats">
-                            <div class="compact-stat"><strong>{{ residential_result.square_feet }} sq ft</strong><span>Property size</span></div>
-                            <div class="compact-stat"><strong>{{ '%.2f'|format(residential_result.room_time_hours) }} hrs</strong><span>Base room time</span></div>
-                            <div class="compact-stat"><strong>{{ '%.2f'|format(residential_result.detail_load_hours) }} hrs</strong><span>Detail load</span></div>
-                            <div class="compact-stat"><strong>${{ residential_result.addon_total }}</strong><span>Add-ons total</span></div>
-                        </div>
-                        <div class="pricing-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Service</th>
-                                        <th>Base Time</th>
-                                        <th>Detail Load</th>
-                                        <th>One-Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in residential_result.rows %}
-                                    <tr>
-                                        <td><strong>{{ row.label }}</strong></td>
-                                        <td>{{ '%.2f'|format(row.base_hours) }} hrs</td>
-                                        <td>{{ '%.2f'|format(row.detail_load_hours) }} hrs</td>
-                                        <td>${{ row.normal }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </details>
-            </div>
-            {% endif %}
         </div>
 
         <div id="realtor" class="tab-content {% if active_tab == 'realtor' %}active{% endif %}">
@@ -1635,6 +1644,7 @@
 
         const residentialServiceDetails = {{ residential_service_details|tojson }};
         const realtorServiceDetails = {{ realtor_service_details|tojson }};
+        const residentialBundleOptions = {{ residential_bundle_options|tojson }};
 
         function renderChecklist(listId, items) {
             const list = document.getElementById(listId);
@@ -1698,25 +1708,21 @@
             const carpetToggle = document.querySelector('input[name="include_carpet"]');
             const floorToggle = document.querySelector('input[name="include_floor_care"]');
             const pressureToggle = document.querySelector('input[name="include_pressure"]');
-            const map = {
-                home_refresh: {service: 'deep', carpet: true},
-                move_out_reset: {service: 'deep', carpet: true},
-                full_property_reset: {service: 'deep', carpet: true, floor: true, pressure: true}
-            };
-            const config = map[bundleKey];
+            const config = residentialBundleOptions[bundleKey];
             if (!config) return;
 
-            const packageInput = document.querySelector(`input[name="chosen_service"][value="${config.service}"]`);
+            const packageInput = document.querySelector(`input[name="chosen_service"][value="deep"]`);
             if (packageInput) {
                 packageInput.checked = true;
                 packageInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            if (config.carpet && carpetToggle) carpetToggle.checked = true;
-            if (config.floor && floorToggle) floorToggle.checked = true;
-            if (config.pressure && pressureToggle) pressureToggle.checked = true;
-            if (config.carpet && carpetInput && parseFloat(carpetInput.value || '0') <= 0 && sqft > 0) carpetInput.value = sqft;
-            if (config.floor && floorInput && parseFloat(floorInput.value || '0') <= 0 && sqft > 0) floorInput.value = sqft;
-            if (config.pressure && pressureInput && parseFloat(pressureInput.value || '0') <= 0 && sqft > 0) pressureInput.value = sqft;
+            const autoFillServices = config.autofill_services || [];
+            if (autoFillServices.includes('carpet') && carpetToggle) carpetToggle.checked = true;
+            if (autoFillServices.includes('floor') && floorToggle) floorToggle.checked = true;
+            if (autoFillServices.includes('pressure') && pressureToggle) pressureToggle.checked = true;
+            if (autoFillServices.includes('carpet') && carpetInput && parseFloat(carpetInput.value || '0') <= 0 && sqft > 0) carpetInput.value = sqft;
+            if (autoFillServices.includes('floor') && floorInput && parseFloat(floorInput.value || '0') <= 0 && sqft > 0) floorInput.value = sqft;
+            if (autoFillServices.includes('pressure') && pressureInput && parseFloat(pressureInput.value || '0') <= 0 && sqft > 0) pressureInput.value = sqft;
             syncServiceInputs();
         }
 
@@ -1774,6 +1780,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-accordion-trigger]').forEach(trigger => {
+                trigger.addEventListener('click', function () {
+                    const section = trigger.closest('[data-accordion-section]');
+                    if (section) section.classList.toggle('open');
+                });
+            });
+
             document.querySelectorAll('[data-stepper]').forEach(btn => {
                 btn.addEventListener('click', function () {
                     handleStepper(btn);
@@ -1807,12 +1820,7 @@
                     syncServiceInputs();
                     const bundleKey = document.getElementById('selected_bundle')?.value || '';
                     if (!bundleKey) return;
-                    const requirements = {
-                        home_refresh: ['include_carpet'],
-                        move_out_reset: ['include_carpet'],
-                        full_property_reset: ['include_carpet', 'include_floor_care', 'include_pressure']
-                    };
-                    const required = requirements[bundleKey] || [];
+                    const required = (residentialBundleOptions[bundleKey] || {}).required_toggles || [];
                     const isComplete = required.every(name => document.querySelector(`input[name="${name}"]`)?.checked);
                     if (!isComplete) applyBundleSelection('');
                 });
