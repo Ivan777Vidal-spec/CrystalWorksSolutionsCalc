@@ -749,17 +749,9 @@
         .service-accordion.open .service-accordion-content {
             display: block;
         }
-        .addon-row.service-inactive {
-            opacity: 0.62;
-        }
-        .service-state-note {
-            margin-top: 4px;
-            font-size: 0.78rem;
-            color: var(--muted);
-            font-weight: 600;
-        }
-        .service-state-note strong {
-            color: #0f172a;
+        .toggle-switch {
+            display: inline-flex;
+            cursor: pointer;
         }
 
         .compact-stats {
@@ -1030,14 +1022,13 @@
                                         <div class="addon-row">
                                             <div class="addon-title"><strong>Add Carpet Cleaning</strong><span class="addon-meta">$0.37 / sq ft</span></div>
                                             <div class="toggle-wrap">
-                                                <span>
+                                                <label class="toggle-switch" for="include_carpet">
                                                     <input class="toggle-input service-toggle" id="include_carpet" type="checkbox" name="include_carpet" data-target-inputs="carpet_sqft" {% if request.form.get('include_carpet') == 'on' %}checked{% endif %}>
                                                     <span class="toggle-track"></span>
-                                                </span>
+                                                </label>
                                             </div>
                                             <input class="text-input service-amount" id="carpet_sqft" type="number" step="0.01" name="carpet_sqft" min="0" value="{{ request.form.get('carpet_sqft', '0') }}">
                                         </div>
-                                        <p class="service-state-note" id="include_carpet_state">Service is <strong>OFF</strong>. Turn on “Add Carpet Cleaning” to include this in pricing.</p>
                                     </div>
                                 </section>
 
@@ -1072,14 +1063,13 @@
                                                 </div>
                                             </div>
                                             <div class="toggle-wrap">
-                                                <span>
+                                                <label class="toggle-switch" for="include_pressure">
                                                     <input class="toggle-input service-toggle" id="include_pressure" type="checkbox" name="include_pressure" data-target-inputs="pressure_condition,pressure_stain_addon,pressure_sqft" {% if request.form.get('include_pressure') == 'on' %}checked{% endif %}>
                                                     <span class="toggle-track"></span>
-                                                </span>
+                                                </label>
                                             </div>
                                             <input class="text-input service-amount" id="pressure_sqft" type="number" step="0.01" name="pressure_sqft" min="0" value="{{ request.form.get('pressure_sqft', '0') }}">
                                         </div>
-                                        <p class="service-state-note" id="include_pressure_state">Service is <strong>OFF</strong>. Turn on “Add Pressure Washing” to include this in pricing.</p>
                                     </div>
                                 </section>
 
@@ -1708,17 +1698,6 @@
                     target.disabled = !toggle.checked;
                 });
 
-                const containerRow = toggle.closest('.addon-row');
-                if (containerRow) {
-                    containerRow.classList.toggle('service-inactive', !toggle.checked);
-                }
-
-                const stateNote = document.getElementById(`${toggle.name}_state`);
-                if (stateNote) {
-                    stateNote.innerHTML = toggle.checked
-                        ? 'Service is <strong>ON</strong>. Inputs below are active and included in pricing.'
-                        : 'Service is <strong>OFF</strong>. Turn this on to include it in pricing.';
-                }
             });
         }
 
