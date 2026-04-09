@@ -926,10 +926,10 @@
                     <section class="card" id="residential-package-section">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Choose Your Cleaning Package</h2>
+                                <h2 class="card-title">Cleaning Package</h2>
                                 <p class="card-subtitle">Select a residential package to match the level of detail you need.</p>
                             </div>
-                            <span class="section-chip">Step 1 of 4</span>
+                            <span class="section-chip">Step 2 of 6</span>
                         </div>
                         <div class="card-body compact-grid">
                             <div class="choice-grid" data-selection-group="residential-service">
@@ -973,22 +973,6 @@
                                     </div>
                                 </div>
 
-                                <div class="compact-grid">
-                                    <div class="checklist-card">
-                                        <h4>Eco Option</h4>
-                                        <div class="field-group">
-                                            <label for="eco_friendly">Eco-friendly cleaning supplies</label>
-                                            <label class="toggle-wrap" style="justify-self:start;">
-                                                <span class="inline-label">+10% residential package only</span>
-                                                <span>
-                                                    <input class="toggle-input" id="eco_friendly" type="checkbox" name="eco_friendly" {% if request.form.get('eco_friendly') %}checked{% endif %}>
-                                                    <span class="toggle-track"></span>
-                                                </span>
-                                            </label>
-                                        </div>
-                                        <p class="helper-inline">Eco option is applied after package labor pricing and does not affect non-residential services.</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </section>
@@ -996,27 +980,21 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Recurring Frequency</h2>
-                                <p class="card-subtitle">More compact recurring selector with the same discount labels.</p>
+                                <h2 class="card-title">Eco Option</h2>
+                                <p class="card-subtitle">Apply eco-friendly supplies to residential package pricing only.</p>
                             </div>
-                            <span class="section-chip">Display mode only</span>
+                            <span class="section-chip">Step 3 of 6</span>
                         </div>
                         <div class="card-body">
-                            <div class="frequency-grid" id="frequency_cards">
-                                {% for value, title, detail in [
-                                    ('weekly', 'Weekly', pricing_snapshot.weekly_discount ~ '% discount'),
-                                    ('biweekly', 'Biweekly', pricing_snapshot.biweekly_discount ~ '% discount'),
-                                    ('monthly', 'Monthly', pricing_snapshot.monthly_discount ~ '% discount'),
-                                    ('one_time', 'One-Time', 'Full quoted rate')
-                                ] %}
-                                <label class="choice-card frequency-card">
-                                    <input type="radio" name="display_frequency" value="{{ value }}" {% if selected_display_frequency == value %}checked{% endif %}>
-                                    <span class="choice-card-content">
-                                        <strong>{{ title }}</strong>
-                                        <span>{{ detail }}</span>
+                            <div class="field-group">
+                                <label for="eco_friendly">Eco-friendly cleaning supplies</label>
+                                <label class="toggle-wrap" style="justify-self:start;">
+                                    <span class="inline-label">+10% residential package only</span>
+                                    <span>
+                                        <input class="toggle-input" id="eco_friendly" type="checkbox" name="eco_friendly" {% if request.form.get('eco_friendly') %}checked{% endif %}>
+                                        <span class="toggle-track"></span>
                                     </span>
                                 </label>
-                                {% endfor %}
                             </div>
                         </div>
                     </section>
@@ -1024,14 +1002,13 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
-                                <h2 class="card-title">Optional Services</h2>
-                                <p class="card-subtitle">Expand only what you need. Pricing changes only when a service is explicitly selected.</p>
+                                <h2 class="card-title">Additional Services</h2>
+                                <p class="card-subtitle">Open any section to review inputs. Pricing only changes when a service is selected.</p>
                             </div>
-                            <span class="section-chip">Step 2 of 4</span>
+                            <span class="section-chip">Step 4 of 6</span>
                         </div>
                         <div class="card-body">
-                            <input type="hidden" name="selected_bundle" id="selected_bundle" value="{{ request.form.get('selected_bundle', '') }}">
-                            <div class="service-accordion-group">
+                                                        <div class="service-accordion-group">
                                 <section class="service-accordion" data-accordion-section>
                                     <button type="button" class="service-accordion-header" data-accordion-trigger>
                                         <span class="service-accordion-title"><strong>Carpet Cleaning</strong><span>Optional service charged by square footage.</span></span>
@@ -1094,7 +1071,7 @@
 
                                 <section class="service-accordion" data-accordion-section>
                                     <button type="button" class="service-accordion-header" data-accordion-trigger>
-                                        <span class="service-accordion-title"><strong>Add-ons &amp; Bundles</strong><span>General add-ons plus optional bundle discounts in one place.</span></span>
+                                        <span class="service-accordion-title"><strong>Add-Ons</strong><span>Optional extras for windows, appliances, floors, couch, and bins.</span></span>
                                         <span class="accordion-chevron"></span>
                                     </button>
                                     <div class="service-accordion-content">
@@ -1139,7 +1116,7 @@
                                                 <input class="text-input service-amount" id="floor_care_sqft" type="number" step="0.01" name="floor_care_sqft" min="0" value="{{ request.form.get('floor_care_sqft', '0') }}">
                                             </div>
                                             <div class="addon-row">
-                                                <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Bundled and standalone bin pricing still comes from the backend.</span></div>
+                                                <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Flat per-bin pricing.</span></div>
                                                 <div class="toggle-wrap">
                                                     <span>
                                                         <input class="toggle-input service-toggle" type="checkbox" name="include_bins" data-target-input="bins" {% if request.form.get('include_bins') == 'on' %}checked{% endif %}>
@@ -1149,24 +1126,38 @@
                                                 <input class="text-input service-amount" id="bins" type="number" name="bins" min="0" value="{{ request.form.get('bins', '0') }}">
                                             </div>
                                         </div>
-                                        <div style="margin-top: 14px;">
-                                            <h4 style="margin:0 0 10px;">Bundle Packages</h4>
-                                            <div class="choice-grid choice-grid-4" data-selection-group="bundle-selection">
-                                                {% for key, bundle in residential_bundle_options.items() %}
-                                                <label class="choice-card {% if request.form.get('selected_bundle') == key %}is-selected{% endif %}">
-                                                    <input type="radio" name="bundle_choice" value="{{ key }}" data-bundle-key="{{ key }}" {% if request.form.get('selected_bundle') == key %}checked{% endif %}>
-                                                    <span class="choice-card-content">
-                                                        <strong>{{ bundle.name }}</strong>
-                                                        <span>{{ bundle.description }}</span>
-                                                        <small>Bundle discount: {{ bundle.discount_pct }}% off</small>
-                                                    </span>
-                                                </label>
-                                                {% endfor %}
-                                            </div>
-                                            <p class="helper-inline">Bundle logic now lives in the main service flow. Select bundle + required services for savings.</p>
-                                        </div>
                                     </div>
                                 </section>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+                    <section class="card">
+                        <div class="card-header inline-header">
+                            <div>
+                                <h2 class="card-title">Recurring Frequency</h2>
+                                <p class="card-subtitle">Choose frequency after building the full job.</p>
+                            </div>
+                            <span class="section-chip">Step 5 of 6</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="frequency-grid" id="frequency_cards">
+                                {% for value, title, detail in [
+                                    ('weekly', 'Weekly', pricing_snapshot.weekly_discount ~ '% discount'),
+                                    ('biweekly', 'Biweekly', pricing_snapshot.biweekly_discount ~ '% discount'),
+                                    ('monthly', 'Monthly', pricing_snapshot.monthly_discount ~ '% discount'),
+                                    ('one_time', 'One-Time', 'Full quoted rate')
+                                ] %}
+                                <label class="choice-card frequency-card">
+                                    <input type="radio" name="display_frequency" value="{{ value }}" {% if selected_display_frequency == value %}checked{% endif %}>
+                                    <span class="choice-card-content">
+                                        <strong>{{ title }}</strong>
+                                        <span>{{ detail }}</span>
+                                    </span>
+                                </label>
+                                {% endfor %}
                             </div>
                         </div>
                     </section>
@@ -1190,26 +1181,37 @@
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
-                            <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ selected_display_frequency }}</strong></div>
+                            <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ residential_result.chosen_frequency_label }}</strong></div>
                             <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% residential labor){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Service Breakdown</h4>
-                            <div class="price-row"><span>Residential Cleaning</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
-                            {% for item, amount in residential_result.addon_details %}
-                                {% if 'Carpet Cleaning' in item %}
-                                <div class="price-row"><span>Carpet Cleaning</span><strong>${{ amount }}</strong></div>
-                                {% endif %}
-                                {% if 'Pressure Washing' in item %}
-                                <div class="price-row"><span>Pressure Washing</span><strong>${{ amount }}</strong></div>
-                                {% endif %}
-                            {% endfor %}
-                            {% if residential_result.selected_bundle %}
-                            <div class="price-row"><span>Bundle Savings ({{ residential_result.selected_bundle.name }})</span><strong>-${{ residential_result.bundle_discount_amount }}</strong></div>
+                            <div class="price-row"><span>Residential Cleaning ({{ residential_result.chosen_service_label }})</span><strong>${{ '%.2f'|format(residential_result.base_price) }}</strong></div>
+                            {% if residential_result.additional_services %}
+                                {% for service in residential_result.additional_services %}
+                                <div class="price-row"><span>{{ service.name }}</span><strong>${{ '%.2f'|format(service.amount) }}</strong></div>
+                                {% endfor %}
+                            {% else %}
+                            <p class="summary-muted">No additional services selected.</p>
+                            {% endif %}
+                            {% if residential_result.add_ons %}
+                                {% for addon in residential_result.add_ons %}
+                                <div class="price-row"><span>{{ addon.name }}</span><strong>${{ '%.2f'|format(addon.amount) }}</strong></div>
+                                {% endfor %}
+                            {% else %}
+                            <p class="summary-muted">No add-ons selected.</p>
+                            {% endif %}
+                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            {% if residential_result.applied_bundle %}
+                            <div class="price-row"><span>{{ residential_result.applied_bundle.name }} Bundle Applied</span><strong>-${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
+                            <p class="summary-muted">You saved ${{ '%.2f'|format(residential_result.bundle_discount_amount) }} with bundle pricing.</p>
                             {% endif %}
                             {% if residential_result.eco_selected %}
-                            <div class="price-row"><span>Eco Adjustment</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
+                            <div class="price-row"><span>Eco Option (+10% residential only)</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
+                            {% endif %}
+                            {% if residential_result.recurring_discount_pct > 0 %}
+                            <div class="price-row"><span>Recurring Discount ({{ residential_result.recurring_discount_pct }}%)</span><strong>-${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
                             {% endif %}
                             <div class="price-row"><span>Final Total</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
@@ -1219,40 +1221,23 @@
                             <div class="price-row"><span>Package Detail Load</span><strong>{{ '%.2f'|format(residential_result.detail_load_hours) }} hrs</strong></div>
                             <div class="price-row"><span>Total Labor Time</span><strong>{{ '%.2f'|format(residential_result.base_hours) }} hrs</strong></div>
                             <div class="price-row"><span>Labor Price @ ${{ pricing_snapshot.rate_per_hour }}/hr</span><strong>${{ '%.2f'|format(residential_result.base_price) }}</strong></div>
-                            {% if residential_result.eco_selected %}
-                            <div class="price-row"><span>Eco Adjustment (+10%)</span><strong>${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
-                            {% endif %}
-                            <div class="price-row"><span>Add-Ons</span><strong>${{ residential_result.addon_total }}</strong></div>
+                            <div class="price-row"><span>Additional Services</span><strong>${{ '%.2f'|format(residential_result.additional_services_total) }}</strong></div>
+                            <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.add_ons_total) }}</strong></div>
                             <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Original Subtotal</span><strong>${{ residential_result.subtotal_before_bundle }}</strong></div>
-                            {% if residential_result.selected_bundle %}
-                            <div class="price-row"><span>Selected Bundle</span><strong>{{ residential_result.selected_bundle.name }}</strong></div>
-                            <div class="price-row"><span>Bundle Discount</span><strong>{{ residential_result.selected_bundle.discount_pct }}%</strong></div>
-                            <div class="price-row"><span>You Save</span><strong>${{ residential_result.bundle_discount_amount }}</strong></div>
+                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            {% if residential_result.applied_bundle %}
+                            <div class="price-row"><span>Bundle Discount ({{ residential_result.applied_bundle.discount_pct }}%)</span><strong>-${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
                             {% endif %}
+                            {% if residential_result.eco_selected %}
+                            <div class="price-row"><span>Eco Adjustment (+10%)</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
+                            {% endif %}
+                            <div class="price-row"><span>Total Before Recurring</span><strong>${{ '%.2f'|format(residential_result.total_before_recurring) }}</strong></div>
                             <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
-                            <div class="price-row"><span>Recurring Savings</span><strong>${{ residential_result.recurring_discount_amount }}</strong></div>
+                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
                             <div class="price-row"><span>Final Quote</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
-                        <div class="summary-box">
-                            <h4>Recurring Rates</h4>
-                            <div class="price-row"><span>Weekly</span><strong>${{ residential_result.recurring_for_selected.weekly }}</strong></div>
-                            <div class="price-row"><span>Every 2 Weeks</span><strong>${{ residential_result.recurring_for_selected.biweekly }}</strong></div>
-                            <div class="price-row"><span>Every 4 Weeks</span><strong>${{ residential_result.recurring_for_selected.monthly }}</strong></div>
-                            <p class="summary-muted">One-time pricing continues to use the full quoted amount.</p>
-                            <p class="summary-muted">Deep cleaning includes inside oven/fridge in standard condition only. Extreme buildup may require additional time and pricing. Reachable vent covers only.</p>
-                        </div>
-                        <div class="summary-box">
-                            <h4>Add-On Summary</h4>
-                            {% if residential_result.addon_details %}
-                                {% for item, amount in residential_result.addon_details %}
-                                <div class="price-row"><span>{{ item }}</span><strong>${{ amount }}</strong></div>
-                                {% endfor %}
-                            {% else %}
-                            <p class="summary-muted">{{ residential_result.addon_summary }}</p>
-                            {% endif %}
-                        </div>
-                        <a href="/" class="reset-btn">Reset Calculator</a>
+                        <p class="summary-muted">Deep cleaning includes inside oven/fridge in standard condition only. Extreme buildup may require additional time and pricing. Reachable vent covers only.</p>
+<a href="/" class="reset-btn">Reset Calculator</a>
                     </div>
                     {% else %}
                     <div class="summary-body">
@@ -1644,7 +1629,6 @@
 
         const residentialServiceDetails = {{ residential_service_details|tojson }};
         const realtorServiceDetails = {{ realtor_service_details|tojson }};
-        const residentialBundleOptions = {{ residential_bundle_options|tojson }};
 
         function renderChecklist(listId, items) {
             const list = document.getElementById(listId);
@@ -1686,44 +1670,6 @@
                     card.classList.add('is-selected');
                 }
             });
-        }
-
-        
-        function applyBundleSelection(bundleKey) {
-            const hiddenBundle = document.getElementById('selected_bundle');
-            if (!hiddenBundle) return;
-            hiddenBundle.value = bundleKey || '';
-
-            const bundleCards = document.querySelectorAll('[data-selection-group="bundle-selection"] .choice-card');
-            bundleCards.forEach(card => {
-                const input = card.querySelector('input[name="bundle_choice"]');
-                card.classList.toggle('is-selected', !!input && input.value === bundleKey);
-            });
-
-            if (!bundleKey) return;
-            const sqft = parseFloat(document.getElementById('square_feet')?.value || '0');
-            const carpetInput = document.getElementById('carpet_sqft');
-            const floorInput = document.getElementById('floor_care_sqft');
-            const pressureInput = document.getElementById('pressure_sqft');
-            const carpetToggle = document.querySelector('input[name="include_carpet"]');
-            const floorToggle = document.querySelector('input[name="include_floor_care"]');
-            const pressureToggle = document.querySelector('input[name="include_pressure"]');
-            const config = residentialBundleOptions[bundleKey];
-            if (!config) return;
-
-            const packageInput = document.querySelector(`input[name="chosen_service"][value="deep"]`);
-            if (packageInput) {
-                packageInput.checked = true;
-                packageInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            const autoFillServices = config.autofill_services || [];
-            if (autoFillServices.includes('carpet') && carpetToggle) carpetToggle.checked = true;
-            if (autoFillServices.includes('floor') && floorToggle) floorToggle.checked = true;
-            if (autoFillServices.includes('pressure') && pressureToggle) pressureToggle.checked = true;
-            if (autoFillServices.includes('carpet') && carpetInput && parseFloat(carpetInput.value || '0') <= 0 && sqft > 0) carpetInput.value = sqft;
-            if (autoFillServices.includes('floor') && floorInput && parseFloat(floorInput.value || '0') <= 0 && sqft > 0) floorInput.value = sqft;
-            if (autoFillServices.includes('pressure') && pressureInput && parseFloat(pressureInput.value || '0') <= 0 && sqft > 0) pressureInput.value = sqft;
-            syncServiceInputs();
         }
 
         function updateFrequencyLabel() {
@@ -1808,21 +1754,11 @@
                         excludesId: 'residential-service-excludes',
                         selectionGroup: 'residential-service'
                     });
-                applyBundleSelection('');
-            });
-
-            setupToggleableRadio('bundle_choice', function (value) {
-                applyBundleSelection(value);
             });
 
             document.querySelectorAll('.service-toggle').forEach(toggle => {
                 toggle.addEventListener('change', function () {
                     syncServiceInputs();
-                    const bundleKey = document.getElementById('selected_bundle')?.value || '';
-                    if (!bundleKey) return;
-                    const required = (residentialBundleOptions[bundleKey] || {}).required_toggles || [];
-                    const isComplete = required.every(name => document.querySelector(`input[name="${name}"]`)?.checked);
-                    if (!isComplete) applyBundleSelection('');
                 });
             });
 
@@ -1863,7 +1799,6 @@
                 selectionGroup: 'realtor-service'
             });
 
-            applyBundleSelection(document.getElementById('selected_bundle')?.value || '');
             syncServiceInputs();
             updateFrequencyLabel();
         });
