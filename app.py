@@ -36,6 +36,7 @@ FLOOR_CARE_RATES = {
     "heavy": 0.35,
 }
 FLOOR_CARE_MINIMUM = 120
+COUCH_CLEANING_PRICE = 75
 
 RECURRING_DISCOUNTS = {
     "weekly": 0.20,
@@ -108,6 +109,30 @@ BUNDLE_DEFINITIONS = {
         "name": "Full Property Reset",
         "discount": 0.12,
         "service": "deep",
+    },
+}
+
+RESIDENTIAL_BUNDLE_OPTIONS = {
+    "home_refresh": {
+        "name": "Home Refresh",
+        "description": "Deep Cleaning + Carpet Cleaning",
+        "discount_pct": 9,
+        "required_toggles": ["include_carpet"],
+        "autofill_services": ["carpet"],
+    },
+    "move_out_reset": {
+        "name": "Move-Out Reset",
+        "description": "Deep Cleaning + Carpet Cleaning",
+        "discount_pct": 10,
+        "required_toggles": ["include_carpet"],
+        "autofill_services": ["carpet"],
+    },
+    "full_property_reset": {
+        "name": "Full Property Reset",
+        "description": "Deep Cleaning + Carpet + Floor Care + Pressure Washing",
+        "discount_pct": 12,
+        "required_toggles": ["include_carpet", "include_floor_care", "include_pressure"],
+        "autofill_services": ["carpet", "floor", "pressure"],
     },
 }
 
@@ -369,7 +394,7 @@ def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_ro
     return ((bedrooms * 0.6) + (bathrooms * 1.0) + (kitchens * 1.25) + (living_rooms * 0.5) + (dining_rooms * 0.5) + (hallways * 0.25))
 
 
-def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=0, floor_care_condition="standard", service_context="residential", pressure_condition="standard", pressure_stain_addon="none", apply_rounding=True):
+def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=0, floor_care_condition="standard", service_context="residential", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, apply_rounding=True):
     addon_details = []
     addon_total = 0.0
     if window_count > 0:
@@ -409,6 +434,9 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
         total = bins * bin_rate
         addon_total += total
         addon_details.append(("Trash Bin Cleaning", money(total) if apply_rounding else total))
+    if couch_cleaning:
+        addon_total += COUCH_CLEANING_PRICE
+        addon_details.append(("Couch Cleaning", COUCH_CLEANING_PRICE))
     return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
@@ -450,12 +478,12 @@ def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_ro
     return rows
 
 
-def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", chosen_service="", selected_bundle="", selected_frequency="one_time", eco_friendly=False):
+def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_bundle="", selected_frequency="one_time", eco_friendly=False):
     valid_service = chosen_service if chosen_service in RESIDENTIAL_PACKAGE_TIME_CONFIG else ""
     if selected_bundle in BUNDLE_DEFINITIONS:
         valid_service = BUNDLE_DEFINITIONS[selected_bundle]["service"]
 
-    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon, apply_rounding=False)
+    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="residential", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon, couch_cleaning=couch_cleaning, apply_rounding=False)
     rows = build_residential_rows(
         square_feet=square_feet,
         bedrooms=bedrooms,
@@ -604,12 +632,14 @@ def index():
             bin_selected = request.form.get('include_bins') == 'on'
             selected_bundle = request.form.get('selected_bundle', '')
 
-            if selected_bundle in {"home_refresh", "move_out_reset"}:
-                carpet_selected = True
-            elif selected_bundle == "full_property_reset":
-                carpet_selected = True
-                pressure_selected = True
-                floor_selected = True
+            if selected_bundle in RESIDENTIAL_BUNDLE_OPTIONS:
+                autofill_services = RESIDENTIAL_BUNDLE_OPTIONS[selected_bundle].get("autofill_services", [])
+                if "carpet" in autofill_services:
+                    carpet_selected = True
+                if "pressure" in autofill_services:
+                    pressure_selected = True
+                if "floor" in autofill_services:
+                    floor_selected = True
 
             residential_result = calculate_residential(
                 square_feet=safe_int(request.form.get('square_feet')),
@@ -629,6 +659,7 @@ def index():
                 floor_care_condition=request.form.get('floor_care_condition', 'standard'),
                 pressure_condition=request.form.get('pressure_condition', 'standard'),
                 pressure_stain_addon=request.form.get('pressure_stain_addon', 'none'),
+                couch_cleaning=(request.form.get('include_couch_cleaning') == 'on'),
                 chosen_service=request.form.get('chosen_service', ''),
                 selected_bundle=selected_bundle,
                 selected_frequency=request.form.get('display_frequency', 'one_time'),
@@ -674,9 +705,21 @@ def index():
         'weekly_discount': int(RECURRING_DISCOUNTS['weekly'] * 100),
         'biweekly_discount': int(RECURRING_DISCOUNTS['biweekly'] * 100),
         'monthly_discount': int(RECURRING_DISCOUNTS['monthly'] * 100),
+        'couch_cleaning_price': COUCH_CLEANING_PRICE,
     }
 
-    return render_template('index.html', active_tab=active_tab, residential_result=residential_result, realtor_result=realtor_result, commercial_result=commercial_result, pricing_snapshot=pricing_snapshot, residential_service_details=RESIDENTIAL_SERVICE_DETAILS, realtor_service_details=REALTOR_SERVICE_DETAILS, commercial_service_details=COMMERCIAL_SERVICE_DETAILS)
+    return render_template(
+        'index.html',
+        active_tab=active_tab,
+        residential_result=residential_result,
+        realtor_result=realtor_result,
+        commercial_result=commercial_result,
+        pricing_snapshot=pricing_snapshot,
+        residential_service_details=RESIDENTIAL_SERVICE_DETAILS,
+        realtor_service_details=REALTOR_SERVICE_DETAILS,
+        commercial_service_details=COMMERCIAL_SERVICE_DETAILS,
+        residential_bundle_options=RESIDENTIAL_BUNDLE_OPTIONS,
+    )
 
 
 if __name__ == '__main__':
