@@ -39,9 +39,9 @@ FLOOR_CARE_MINIMUM = 120
 COUCH_CLEANING_PRICE = 75
 
 RECURRING_DISCOUNTS = {
-    "weekly": 0.20,
-    "biweekly": 0.15,
-    "monthly": 0.10,
+    "weekly": 0.15,
+    "biweekly": 0.10,
+    "monthly": 0.05,
 }
 
 ECO_MULTIPLIER = Decimal("1.10")
@@ -49,31 +49,52 @@ ECO_MULTIPLIER = Decimal("1.10")
 RESIDENTIAL_PACKAGE_TIME_CONFIG = {
     "basic": {
         "bedroom": Decimal("20"),
-        "bathroom": Decimal("35"),
+        "bathroom": Decimal("22"),
         "kitchen": Decimal("45"),
-        "living_room": Decimal("30"),
+        "living_room": Decimal("25"),
         "hallway": Decimal("15"),
-        "detail_load_hours": Decimal("0.00"),
+        "floors": Decimal("30"),
+        "extras": Decimal("15"),
     },
     "plus": {
-        "bedroom": Decimal("30"),
-        "bathroom": Decimal("47.5"),
-        "kitchen": Decimal("65"),
-        "living_room": Decimal("45"),
-        "hallway": Decimal("20"),
-        "detail_load_hours": Decimal("0.75"),
+        "bedroom": Decimal("28"),
+        "bathroom": Decimal("40"),
+        "kitchen": Decimal("70"),
+        "living_room": Decimal("35"),
+        "hallway": Decimal("18"),
+        "floors": Decimal("40"),
+        "extras": Decimal("60"),
     },
     "deep": {
-        "bedroom": Decimal("42.5"),
-        "bathroom": Decimal("65"),
-        "kitchen": Decimal("95"),
-        "living_room": Decimal("60"),
-        "hallway": Decimal("25"),
-        "detail_load_hours": Decimal("1.00"),
+        "bedroom": Decimal("40"),
+        "bathroom": Decimal("60"),
+        "kitchen": Decimal("105"),
+        "living_room": Decimal("50"),
+        "hallway": Decimal("22"),
+        "floors": Decimal("50"),
+        "extras": Decimal("120"),
     },
 }
 
-USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS = True
+RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS = {
+    "basic": {
+        "standard": Decimal("0"),
+        "moderate_buildup": Decimal("30"),
+        "heavy_buildup": Decimal("60"),
+    },
+    "plus": {
+        "standard": Decimal("0"),
+        "moderate_buildup": Decimal("45"),
+        "heavy_buildup": Decimal("90"),
+    },
+    "deep": {
+        "standard": Decimal("0"),
+        "moderate_buildup": Decimal("60"),
+        "heavy_buildup": Decimal("120"),
+    },
+}
+
+MOVE_OUT_ADDED_MINUTES = Decimal("170")
 
 REALTOR_MULTIPLIERS = {
     "listing_prep": 1.00,
@@ -96,6 +117,13 @@ CONDITION_ADJUSTMENTS = {
 
 RESIDENTIAL_AUTO_BUNDLES = [
     {
+        "key": "move_out_reset",
+        "name": "Move-Out Reset",
+        "discount": Decimal("0.10"),
+        "required": ["is_deep", "is_move_out", "has_carpet"],
+        "eligible_parts": ["residential", "carpet"],
+    },
+    {
         "key": "full_property_reset",
         "name": "Full Property Reset",
         "discount": Decimal("0.12"),
@@ -114,62 +142,88 @@ RESIDENTIAL_AUTO_BUNDLES = [
 RESIDENTIAL_SERVICE_DETAILS = {
     "basic": {
         "label": "Basic Cleaning",
-        "purpose": "Maintenance/upkeep cleaning for homes already in good condition.",
+        "purpose": "Basic Cleaning is the maintenance/upkeep package.",
         "includes": [
-            "Dusting all reachable surfaces + light wipe-down",
-            "Cobweb removal and trash removal",
-            "Floors vacuumed and mopped",
-            "Reachable vent covers dusted/wiped",
-            "Kitchen: countertops, sink, appliance exteriors, light wipe-down",
-            "Bathrooms: toilet, sink/counters, mirrors, light shower/tub clean",
-            "Living areas/bedrooms: dusting, light wipe-down, reset appearance",
+            "Dusting all reachable surfaces, light wipe-down of surfaces, cobweb removal, and trash removal",
+            "Floors vacuumed and mopped, plus reachable vent covers dusted/wiped",
+            "Kitchen includes countertops, sink, appliance exteriors, and light surface wipe-down with no degreasing",
+            "Bathrooms include toilet, sink/counters, shower/tub light clean, and mirrors, with no buildup scrubbing",
+            "Bedrooms and living areas include dusting, light wipe-down, and general reset",
         ],
         "not_included": [
             "No heavy scrubbing or buildup removal",
-            "No inside oven or inside fridge",
+            "No inside oven or inside fridge cleaning",
             "No heavy degreasing",
         ],
     },
     "plus": {
         "label": "Plus Cleaning",
-        "purpose": "Detailed premium maintenance cleaning. Most popular and best value.",
+        "purpose": "Plus Cleaning is the main premium maintenance package.",
         "includes": [
-            "Everything in Basic",
-            "Full dusting with more detailed wipe-down",
-            "Baseboards spot cleaned",
-            "Light switches and door handles sanitized",
-            "Reachable vent covers detailed wiped",
-            "Rotational detail focus (baseboards, doors, or window sills)",
-            "Kitchen: inside microwave, cabinet fronts, stovetop light/moderate degreasing, backsplash",
-            "Bathrooms: soap scum/mineral buildup removal, scrubbed shower/tub, polished fixtures",
-            "Living areas/bedrooms: detailed dusting + light organizing/reset",
+            "Everything in Basic plus fuller dusting and more detailed wipe-down",
+            "Baseboards spot cleaned, light switches and door handles sanitized, and reachable vent covers detailed wiped",
+            "Rotational detail focus like baseboards, doors, and window sills",
+            "Kitchen includes inside microwave, cabinet fronts wiped, stovetop degreased in light to moderate conditions, backsplash cleaned, and appliance exteriors detailed",
+            "Bathrooms include soap scum and mineral buildup removal in normal/light-moderate conditions, shower/tub scrubbed, and fixtures polished",
+            "Bedrooms and living areas receive more detailed dusting and light organizing/reset",
         ],
         "not_included": [
-            "No heavy restoration or unlimited buildup labor",
-            "No moving appliances/furniture",
+            "No extreme restoration or unlimited buildup labor",
+            "No moving appliances or heavy furniture",
         ],
     },
     "deep": {
         "label": "Deep Cleaning",
-        "purpose": "First-time, reset, or heavy-attention clean with the deepest detail level.",
+        "purpose": "Deep Cleaning is a first-time/reset clean with the deepest detail level.",
         "includes": [
-            "Everything in Plus",
-            "Full baseboard cleaning",
-            "Doors and door frames detailed",
-            "Window sills and tracks cleaned",
-            "Heavy dust removal and detailed wipe-down throughout",
+            "Everything in Plus plus full baseboard cleaning, doors and door frames detailed, window sills and tracks cleaned, heavy dust removal, and detailed wipe-down throughout",
             "Reachable vent covers thoroughly cleaned",
-            "Kitchen: inside microwave + inside oven/fridge (standard condition)",
-            "Heavy kitchen degreasing and cabinet fronts deep cleaned",
-            "Bathrooms: full soap scum/mineral removal, grout focus (light/moderate)",
-            "Living areas/bedrooms: lower-detail focus and intensive vacuuming/detailing",
+            "Kitchen includes inside microwave, inside oven and inside fridge in standard condition only, cabinet fronts deep cleaned, and heavy degreasing",
+            "Bathrooms include full soap scum and mineral buildup removal in standard conditions, grout focus light to moderate, and detailed scrubbing throughout",
+            "Bedrooms and living areas include lower/detail areas cleaned and more intensive vacuuming/detailing",
         ],
         "not_included": [
             "Extreme buildup may require additional labor/pricing",
             "Inside oven/fridge included for standard condition only",
-            "No moving appliances or heavy furniture by default",
+            "No moving appliances or heavy furniture",
         ],
     },
+}
+
+MOVE_OUT_SERVICE_DETAILS = {
+    "short_description": "Complete move-out / move-in ready cleaning including inside cabinets, drawers, and full detail throughout.",
+    "full_scope": [
+        "Move-Out Reset is a vacant-home enhanced deep cleaning service. It includes everything in Deep Cleaning plus full vacant-home access detailing.",
+        "All cabinet interiors wiped down",
+        "All drawer interiors wiped down",
+        "Shelving cleaned",
+        "Crumbs, dust, and debris removed from cabinets/drawers",
+        "Full perimeter baseboard cleaning",
+        "Corners detailed with no furniture limitations",
+        "Wall edges fully cleaned",
+        "Edge-to-edge vacuuming / floor access",
+        "Corners and wall edges detailed on carpets and floors",
+        "No 'around furniture' limitations",
+        "Enhanced kitchen detail because cabinets/drawers are empty and accessible",
+        "Cabinet fronts deep cleaned",
+        "Full backsplash cleaned",
+        "More thorough degreasing due to full access",
+        "Appliance exteriors detailed",
+        "Behind toilet fully cleaned",
+        "Better grout access in bathrooms",
+        "Full perimeter bathroom detail",
+        "Fixtures detailed",
+        "Window sills cleaned",
+        "Tracks cleaned",
+        "Door frames fully wiped",
+        "Doors detailed",
+        "Vent covers cleaned thoroughly",
+        "Full dust removal including areas normally blocked by furniture",
+    ],
+    "internal_notes": [
+        "Home must be vacant for Move-Out Reset.",
+        "Extreme buildup may require additional time or charges.",
+    ],
 }
 
 REALTOR_SERVICE_DETAILS = {
@@ -345,24 +399,10 @@ def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, livi
         (bathrooms * package_minutes["bathroom"]) +
         (kitchens * package_minutes["kitchen"]) +
         (living_rooms * package_minutes["living_room"]) +
-        (hallways * package_minutes["hallway"])
+        (hallways * package_minutes["hallway"]) +
+        package_minutes["floors"] +
+        package_minutes["extras"]
     )
-
-
-def calculate_residential_package_totals(labor_price, addon_total, eco_selected):
-    eco_adjustment = (labor_price * (ECO_MULTIPLIER - Decimal("1.00"))) if eco_selected else Decimal("0.00")
-    normal_price = max(labor_price + addon_total + eco_adjustment, to_decimal(MINIMUM_SERVICE_PRICE))
-    weekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["weekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
-    biweekly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["biweekly"])), to_decimal(MINIMUM_SERVICE_PRICE))
-    monthly_price = max(normal_price * (Decimal(1) - to_decimal(RECURRING_DISCOUNTS["monthly"])), to_decimal(MINIMUM_SERVICE_PRICE))
-
-    return {
-        "normal": normal_price,
-        "weekly": weekly_price,
-        "biweekly": biweekly_price,
-        "monthly": monthly_price,
-        "eco_adjustment": eco_adjustment,
-    }
 
 
 def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
@@ -415,37 +455,20 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
-def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways, addon_total, eco_selected, use_package_time_formulas=True):
+def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways):
     rows = []
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
-    addon_total_dec = to_decimal(addon_total)
     for key in RESIDENTIAL_PACKAGE_TIME_CONFIG:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        formula_service_key = key if use_package_time_formulas else "basic"
-        base_minutes = residential_formula_minutes(formula_service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
-        detail_load_hours = RESIDENTIAL_PACKAGE_TIME_CONFIG[key]["detail_load_hours"]
+        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
         base_hours = Decimal(base_minutes) / Decimal(60)
-        total_labor_hours = base_hours + detail_load_hours
-        labor_price = total_labor_hours * hourly_rate
-        package_totals = calculate_residential_package_totals(
-            labor_price=labor_price,
-            addon_total=addon_total_dec,
-            eco_selected=eco_selected,
-        )
+        labor_price = base_hours * hourly_rate
         rows.append({
             "key": key,
             "label": label,
             "minutes": base_minutes,
-            "base_hours": base_hours,
-            "detail_load_hours": detail_load_hours,
-            "hours": total_labor_hours,
+            "hours": base_hours,
             "base_price": labor_price,
-            "uses_package_time_formulas": use_package_time_formulas,
-            "normal": package_totals["normal"],
-            "weekly": package_totals["weekly"],
-            "biweekly": package_totals["biweekly"],
-            "monthly": package_totals["monthly"],
-            "eco_adjustment": package_totals["eco_adjustment"],
             "purpose": RESIDENTIAL_SERVICE_DETAILS[key]["purpose"],
             "includes": RESIDENTIAL_SERVICE_DETAILS[key]["includes"],
             "not_included": RESIDENTIAL_SERVICE_DETAILS[key]["not_included"],
@@ -515,9 +538,10 @@ def calculate_residential_service_totals(window_count, oven, fridge, carpet_sqft
     }
 
 
-def detect_residential_bundle(chosen_service, carpet_total, pressure_total, floor_care_total, residential_price):
+def detect_residential_bundle(chosen_service, move_out_selected, carpet_total, pressure_total, floor_care_total, residential_price):
     flags = {
         "is_deep": chosen_service == "deep",
+        "is_move_out": move_out_selected,
         "has_carpet": carpet_total > 0,
         "has_pressure": pressure_total > 0,
         "has_floor_care": floor_care_total > 0,
@@ -529,22 +553,27 @@ def detect_residential_bundle(chosen_service, carpet_total, pressure_total, floo
         "floor_care": floor_care_total,
     }
 
+    matching_bundles = []
     for bundle in RESIDENTIAL_AUTO_BUNDLES:
         if all(flags.get(flag) for flag in bundle["required"]):
             eligible_subtotal = sum(part_prices[part] for part in bundle["eligible_parts"])
             discount_amount = eligible_subtotal * bundle["discount"]
-            return {
+            matching_bundles.append({
                 "key": bundle["key"],
                 "name": bundle["name"],
                 "discount_pct": int(bundle["discount"] * 100),
                 "eligible_subtotal": eligible_subtotal,
                 "amount": discount_amount,
-            }
-    return None
+            })
+    if not matching_bundles:
+        return None
+    return max(matching_bundles, key=lambda item: item["amount"])
 
 
-def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False):
+def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False, home_condition="standard", move_out_vacant=False):
     valid_service = chosen_service if chosen_service in RESIDENTIAL_PACKAGE_TIME_CONFIG else ""
+    valid_condition = home_condition if home_condition in RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS["basic"] else "standard"
+    move_out_applied = bool(move_out_vacant and valid_service == "deep")
 
     rows = build_residential_rows(
         square_feet=square_feet,
@@ -553,17 +582,15 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         kitchens=kitchens,
         living_rooms=living_rooms,
         hallways=hallways,
-        addon_total=Decimal("0"),
-        eco_selected=False,
-        use_package_time_formulas=USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS,
     )
 
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
     selected_minutes = chosen_row["minutes"] if chosen_row else 0
-    selected_base_hours = chosen_row["base_hours"] if chosen_row else Decimal(0)
-    selected_detail_load_hours = chosen_row["detail_load_hours"] if chosen_row else Decimal(0)
-    selected_hours = chosen_row["hours"] if chosen_row else Decimal(0)
-    selected_base_price = chosen_row["base_price"] if chosen_row else Decimal(0)
+    condition_minutes = RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS.get(valid_service, {}).get(valid_condition, Decimal("0")) if chosen_row else Decimal("0")
+    move_out_minutes = MOVE_OUT_ADDED_MINUTES if (chosen_row and move_out_applied) else Decimal("0")
+    selected_total_minutes = Decimal(selected_minutes) + condition_minutes + move_out_minutes
+    selected_hours = selected_total_minutes / Decimal(60) if chosen_row else Decimal(0)
+    selected_base_price = selected_hours * to_decimal(RESIDENTIAL_RATE_PER_HOUR)
 
     service_totals = calculate_residential_service_totals(
         window_count=window_count,
@@ -581,24 +608,32 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
 
     residential_price = selected_base_price
     eco_adjustment = residential_price * (ECO_MULTIPLIER - Decimal("1.00")) if eco_friendly else Decimal("0")
+    subtotal_before_discounts_raw = residential_price + service_totals["additional_services_total"] + service_totals["add_ons_total"] + eco_adjustment
+    minimum_floor_delta = max(to_decimal(MINIMUM_SERVICE_PRICE) - subtotal_before_discounts_raw, Decimal("0"))
+    subtotal_before_discounts = subtotal_before_discounts_raw + minimum_floor_delta
+    recurring_map = {"weekly": RECURRING_DISCOUNTS["weekly"], "biweekly": RECURRING_DISCOUNTS["biweekly"], "monthly": RECURRING_DISCOUNTS["monthly"], "one_time": 0}
+    recurring_pct = to_decimal(recurring_map.get(selected_frequency, 0))
+    if valid_service not in {"basic", "plus"}:
+        recurring_pct = Decimal("0")
+    recurring_discount_amount = subtotal_before_discounts * recurring_pct
+    subtotal_after_recurring = subtotal_before_discounts - recurring_discount_amount
 
-    subtotal_before_bundle = residential_price + service_totals["additional_services_total"] + service_totals["add_ons_total"]
     applied_bundle = detect_residential_bundle(
         chosen_service=valid_service,
+        move_out_selected=move_out_applied,
         carpet_total=service_totals["carpet_total"],
         pressure_total=service_totals["pressure_total"],
         floor_care_total=service_totals["floor_care_total"],
         residential_price=residential_price,
     )
-    bundle_discount_amount = applied_bundle["amount"] if applied_bundle else Decimal("0")
+    recurring_factor = Decimal("1.00") - recurring_pct
+    if applied_bundle:
+        eligible_after_recurring = applied_bundle["eligible_subtotal"] * recurring_factor
+        bundle_discount_amount = eligible_after_recurring * (to_decimal(applied_bundle["discount_pct"]) / Decimal("100"))
+    else:
+        bundle_discount_amount = Decimal("0")
 
-    total_before_recurring = subtotal_before_bundle - bundle_discount_amount + eco_adjustment
-    total_with_minimum = max(total_before_recurring, to_decimal(MINIMUM_SERVICE_PRICE))
-
-    recurring_map = {"weekly": RECURRING_DISCOUNTS["weekly"], "biweekly": RECURRING_DISCOUNTS["biweekly"], "monthly": RECURRING_DISCOUNTS["monthly"], "one_time": 0}
-    recurring_pct = to_decimal(recurring_map.get(selected_frequency, 0))
-    recurring_discount_amount = total_with_minimum * recurring_pct
-    final_quote = total_with_minimum - recurring_discount_amount
+    final_quote = subtotal_after_recurring - bundle_discount_amount
 
     selected_frequency_label = {
         "weekly": "Weekly",
@@ -606,13 +641,16 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "monthly": "Monthly",
         "one_time": "One-Time",
     }.get(selected_frequency, "One-Time")
+    if recurring_pct == Decimal("0") and valid_service == "deep":
+        selected_frequency_label = "One-Time (Deep package)"
 
     return {
         "square_feet": square_feet,
         "formula_units": selected_hours,
-        "base_minutes": selected_minutes,
-        "room_time_hours": selected_base_hours,
-        "detail_load_hours": selected_detail_load_hours,
+        "base_minutes": Decimal(selected_minutes),
+        "condition_minutes": condition_minutes,
+        "move_out_minutes": move_out_minutes,
+        "total_minutes": selected_total_minutes,
         "base_hours": selected_hours,
         "base_price": residential_price,
         "eco_selected": eco_friendly,
@@ -620,17 +658,26 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         "rows": rows,
         "chosen_service": valid_service,
         "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[valid_service]["label"] if valid_service else "No package selected",
-        "uses_package_time_formulas": USE_RESIDENTIAL_PACKAGE_TIME_FORMULAS,
+        "home_condition": valid_condition,
+        "home_condition_label": {"standard": "Standard", "moderate_buildup": "Moderate buildup", "heavy_buildup": "Heavy buildup"}[valid_condition],
+        "move_out_selected": bool(move_out_vacant),
+        "move_out_applied": move_out_applied,
+        "move_out_description": MOVE_OUT_SERVICE_DETAILS["short_description"],
+        "move_out_internal_scope": MOVE_OUT_SERVICE_DETAILS["full_scope"],
+        "move_out_internal_notes": MOVE_OUT_SERVICE_DETAILS["internal_notes"],
         "chosen_frequency": selected_frequency,
         "chosen_frequency_label": selected_frequency_label,
         "additional_services": service_totals["additional_services"],
         "additional_services_total": service_totals["additional_services_total"],
         "add_ons": service_totals["add_ons"],
         "add_ons_total": service_totals["add_ons_total"],
-        "subtotal_before_bundle": subtotal_before_bundle,
+        "subtotal_before_discounts_raw": subtotal_before_discounts_raw,
+        "minimum_floor_delta": minimum_floor_delta,
+        "subtotal_before_bundle": subtotal_after_recurring,
+        "subtotal_before_discounts": subtotal_before_discounts,
         "applied_bundle": applied_bundle,
         "bundle_discount_amount": bundle_discount_amount,
-        "total_before_recurring": total_with_minimum,
+        "total_before_recurring": subtotal_after_recurring,
         "recurring_discount_pct": int(recurring_pct * 100),
         "recurring_discount_amount": recurring_discount_amount,
         "final_quote": final_quote,
@@ -724,6 +771,8 @@ def index():
                 chosen_service=request.form.get('chosen_service', ''),
                 selected_frequency=request.form.get('display_frequency', 'one_time'),
                 eco_friendly=(request.form.get('eco_friendly') == 'on'),
+                home_condition=request.form.get('home_condition', 'standard'),
+                move_out_vacant=(request.form.get('move_out_vacant') == 'on'),
             )
         elif form_type == 'realtor':
             realtor_result = calculate_realtor(
@@ -778,6 +827,7 @@ def index():
         residential_service_details=RESIDENTIAL_SERVICE_DETAILS,
         realtor_service_details=REALTOR_SERVICE_DETAILS,
         commercial_service_details=COMMERCIAL_SERVICE_DETAILS,
+        move_out_service_details=MOVE_OUT_SERVICE_DETAILS,
     )
 
 
