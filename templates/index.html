@@ -870,6 +870,7 @@
     {% set selected_residential_service = request.form.get('chosen_service', '') %}
     {% set selected_realtor_service = request.form.get('service_type', 'listing_prep') %}
     {% set selected_display_frequency = request.form.get('display_frequency', 'one_time') %}
+    {% set selected_home_condition = request.form.get('home_condition', 'standard') %}
 
     <div class="page-shell">
         <section class="hero">
@@ -984,10 +985,47 @@
                     <section class="card">
                         <div class="card-header inline-header">
                             <div>
+                                <h2 class="card-title">Home Condition</h2>
+                                <p class="card-subtitle">Select the current condition so labor time can be estimated accurately.</p>
+                            </div>
+                            <span class="section-chip">Step 3 of 6</span>
+                        </div>
+                        <div class="card-body stack">
+                            <p class="helper-inline">Homes with buildup or neglect may require additional time and cost.</p>
+                            <div class="choice-grid">
+                                {% for value, title in [
+                                    ('standard', 'Standard'),
+                                    ('moderate_buildup', 'Moderate buildup'),
+                                    ('heavy_buildup', 'Heavy buildup')
+                                ] %}
+                                <label class="choice-card">
+                                    <input type="radio" name="home_condition" value="{{ value }}" {% if selected_home_condition == value %}checked{% endif %} required>
+                                    <span class="choice-card-content">
+                                        <strong>{{ title }}</strong>
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div class="addon-row compact-toggle" id="move-out-option-row">
+                                <div class="addon-title">
+                                    <strong>Move-Out / Vacant (Deep only)</strong>
+                                    <span class="addon-meta">{{ move_out_service_details.short_description }}</span>
+                                </div>
+                                <label class="toggle-wrap">
+                                    <span class="inline-label">Vacant home required</span>
+                                    <span><input class="toggle-input" id="move_out_vacant" type="checkbox" name="move_out_vacant" {% if request.form.get('move_out_vacant') %}checked{% endif %}><span class="toggle-track"></span></span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header inline-header">
+                            <div>
                                 <h2 class="card-title">Eco Option</h2>
                                 <p class="card-subtitle">Apply eco-friendly supplies to residential package pricing only.</p>
                             </div>
-                            <span class="section-chip">Step 3 of 6</span>
+                            <span class="section-chip">Step 4 of 6</span>
                         </div>
                         <div class="card-body">
                             <div class="field-group">
@@ -1009,7 +1047,7 @@
                                 <h2 class="card-title">Additional Services</h2>
                                 <p class="card-subtitle">Open any section to review inputs. Pricing only changes when a service is selected.</p>
                             </div>
-                            <span class="section-chip">Step 4 of 6</span>
+                            <span class="section-chip">Step 5 of 6</span>
                         </div>
                         <div class="card-body">
                                                         <div class="service-accordion-group">
@@ -1142,9 +1180,9 @@
                         <div class="card-header inline-header">
                             <div>
                                 <h2 class="card-title">Recurring Frequency</h2>
-                                <p class="card-subtitle">Choose frequency after building the full job.</p>
+                                <p class="card-subtitle">Recurring discounts apply to Basic and Plus. Deep remains one-time pricing in-app.</p>
                             </div>
-                            <span class="section-chip">Step 5 of 6</span>
+                            <span class="section-chip">Step 6 of 6</span>
                         </div>
                         <div class="card-body">
                             <div class="frequency-grid" id="frequency_cards">
@@ -1185,6 +1223,8 @@
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
+                            <div class="summary-row"><span>Home Condition</span><strong>{{ residential_result.home_condition_label }}</strong></div>
+                            <div class="summary-row"><span>Move-Out / Vacant</span><strong>{% if residential_result.move_out_applied %}Selected (Deep vacant scope){% elif residential_result.move_out_selected %}Selected (only applies to Deep){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ residential_result.chosen_frequency_label }}</strong></div>
                             <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% residential labor){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.square_feet }} sq ft</strong></div>
@@ -1206,41 +1246,47 @@
                             {% else %}
                             <p class="summary-muted">No add-ons selected.</p>
                             {% endif %}
-                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
-                            {% if residential_result.applied_bundle %}
-                            <div class="price-row"><span>{{ residential_result.applied_bundle.name }} Bundle Applied</span><strong>-${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
-                            <p class="summary-muted">You saved ${{ '%.2f'|format(residential_result.bundle_discount_amount) }} with bundle pricing.</p>
-                            {% endif %}
+                            <div class="price-row"><span>Subtotal (Before Discounts)</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_discounts) }}</strong></div>
                             {% if residential_result.eco_selected %}
                             <div class="price-row"><span>Eco Option (+10% residential only)</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
                             {% endif %}
                             {% if residential_result.recurring_discount_pct > 0 %}
                             <div class="price-row"><span>Recurring Discount ({{ residential_result.recurring_discount_pct }}%)</span><strong>-${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
                             {% endif %}
+                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            {% if residential_result.applied_bundle %}
+                            <div class="price-row"><span>{{ residential_result.applied_bundle.name }} Bundle Applied</span><strong>-${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
+                            <p class="summary-muted">You saved ${{ '%.2f'|format(residential_result.bundle_discount_amount) }} with bundle pricing.</p>
+                            {% endif %}
                             <div class="price-row"><span>Final Total</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
                         <div class="summary-box">
                             <h4>Price Breakdown</h4>
-                            <div class="price-row"><span>Base Room Time</span><strong>{{ '%.2f'|format(residential_result.room_time_hours) }} hrs</strong></div>
-                            <div class="price-row"><span>Package Detail Load</span><strong>{{ '%.2f'|format(residential_result.detail_load_hours) }} hrs</strong></div>
+                            <div class="price-row"><span>Base Room Time</span><strong>{{ '%.2f'|format((residential_result.base_minutes / 60)) }} hrs</strong></div>
+                            <div class="price-row"><span>Condition Time</span><strong>{{ '%.2f'|format((residential_result.condition_minutes / 60)) }} hrs</strong></div>
+                            <div class="price-row"><span>Move-Out / Vacant Time</span><strong>{{ '%.2f'|format((residential_result.move_out_minutes / 60)) }} hrs</strong></div>
                             <div class="price-row"><span>Total Labor Time</span><strong>{{ '%.2f'|format(residential_result.base_hours) }} hrs</strong></div>
                             <div class="price-row"><span>Labor Price @ ${{ pricing_snapshot.rate_per_hour }}/hr</span><strong>${{ '%.2f'|format(residential_result.base_price) }}</strong></div>
                             <div class="price-row"><span>Additional Services</span><strong>${{ '%.2f'|format(residential_result.additional_services_total) }}</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(residential_result.add_ons_total) }}</strong></div>
-                            <div class="price-row"><span>Minimum Protection</span><strong>${{ '%.0f'|format(pricing_snapshot.minimum_service_price) }}</strong></div>
-                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_bundle) }}</strong></div>
+                            <div class="price-row"><span>Subtotal (Before Discounts)</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_discounts_raw) }}</strong></div>
+                            {% if residential_result.minimum_floor_delta > 0 %}
+                            <div class="price-row"><span>Minimum Service Protection</span><strong>+${{ '%.2f'|format(residential_result.minimum_floor_delta) }}</strong></div>
+                            {% endif %}
+                            <div class="price-row"><span>Subtotal After Minimum</span><strong>${{ '%.2f'|format(residential_result.subtotal_before_discounts) }}</strong></div>
+                            {% if residential_result.recurring_discount_pct > 0 %}
+                            <div class="price-row"><span>Recurring Discount ({{ residential_result.recurring_discount_pct }}%)</span><strong>-${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
+                            {% endif %}
+                            <div class="price-row"><span>Subtotal Before Bundle</span><strong>${{ '%.2f'|format(residential_result.total_before_recurring) }}</strong></div>
                             {% if residential_result.applied_bundle %}
                             <div class="price-row"><span>Bundle Discount ({{ residential_result.applied_bundle.discount_pct }}%)</span><strong>-${{ '%.2f'|format(residential_result.bundle_discount_amount) }}</strong></div>
                             {% endif %}
-                            {% if residential_result.eco_selected %}
-                            <div class="price-row"><span>Eco Adjustment (+10%)</span><strong>+${{ '%.2f'|format(residential_result.eco_adjustment) }}</strong></div>
-                            {% endif %}
-                            <div class="price-row"><span>Total Before Recurring</span><strong>${{ '%.2f'|format(residential_result.total_before_recurring) }}</strong></div>
-                            <div class="price-row"><span>Recurring Discount</span><strong>{{ residential_result.recurring_discount_pct }}%</strong></div>
-                            <div class="price-row"><span>Recurring Savings</span><strong>${{ '%.2f'|format(residential_result.recurring_discount_amount) }}</strong></div>
                             <div class="price-row"><span>Final Quote</span><strong>${{ '%.1f'|format(residential_result.final_quote_display) }}</strong></div>
                         </div>
                         <p class="summary-muted">Deep cleaning includes inside oven/fridge in standard condition only. Extreme buildup may require additional time and pricing. Reachable vent covers only.</p>
+                        {% if residential_result.move_out_applied %}
+                        <p class="summary-muted"><strong>Move-Out / Vacant scope:</strong> {{ residential_result.move_out_description }}</p>
+                        {% endif %}
 <a href="/" class="reset-btn">Reset Calculator</a>
                     </div>
                     {% else %}
@@ -1701,6 +1747,19 @@
             });
         }
 
+        function syncMoveOutAvailability() {
+            const selectedPackage = document.querySelector('input[name="chosen_service"]:checked');
+            const moveOutRow = document.getElementById('move-out-option-row');
+            const moveOutInput = document.getElementById('move_out_vacant');
+            if (!moveOutRow || !moveOutInput) return;
+            const deepSelected = selectedPackage && selectedPackage.value === 'deep';
+            moveOutRow.style.opacity = deepSelected ? '1' : '0.55';
+            moveOutInput.disabled = !deepSelected;
+            if (!deepSelected) {
+                moveOutInput.checked = false;
+            }
+        }
+
         function setupToggleableRadio(name, onChange) {
             document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
                 input.addEventListener('click', function (event) {
@@ -1765,6 +1824,7 @@
                         excludesId: 'residential-service-excludes',
                         selectionGroup: 'residential-service'
                     });
+                syncMoveOutAvailability();
             });
 
             document.querySelectorAll('.service-toggle').forEach(toggle => {
@@ -1798,6 +1858,7 @@
                 excludesId: 'residential-service-excludes',
                 selectionGroup: 'residential-service'
             });
+            syncMoveOutAvailability();
 
             updateServicePreview({
                 inputName: 'service_type',
