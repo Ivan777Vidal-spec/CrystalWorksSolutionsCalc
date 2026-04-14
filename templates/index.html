@@ -918,8 +918,7 @@
                                     ('bedrooms', 'Bedrooms', '3'),
                                     ('bathrooms', 'Bathrooms', '2'),
                                     ('kitchens', 'Kitchens', '1'),
-                                    ('living_rooms', 'Living Rooms', '1'),
-                                    ('dining_rooms', 'Dining Rooms', '1'),
+                                    ('living_areas', 'Living Areas (Living Room, Dining Room, Family Room, etc.)', '2'),
                                     ('hallways', 'Hallways', '1')
                                 ] %}
                                 <div class="field-group">
@@ -1022,6 +1021,44 @@
                                     <span class="inline-label">Vacant home required</span>
                                     <span><input class="toggle-input" id="move_out_vacant" type="checkbox" name="move_out_vacant" {% if request.form.get('move_out_vacant') %}checked{% endif %}><span class="toggle-track"></span></span>
                                 </label>
+                            </div>
+                            <div class="addon-row compact-toggle" id="basic-pet-row">
+                                <div class="addon-title">
+                                    <strong>Pet Hair Buildup</strong>
+                                    <span class="addon-meta">Basic cleaning only. Adds +15 minutes.</span>
+                                </div>
+                                <label class="toggle-wrap">
+                                    <span class="inline-label">OFF / ON</span>
+                                    <span><input class="toggle-input" id="pet_hair_buildup" type="checkbox" name="pet_hair_buildup" {% if request.form.get('pet_hair_buildup') %}checked{% endif %}><span class="toggle-track"></span></span>
+                                </label>
+                            </div>
+                            <div id="excessive-pet-section">
+                                <div class="addon-row compact-toggle" id="excessive-pet-row">
+                                    <div class="addon-title">
+                                        <strong>Excessive Pet Hair</strong>
+                                        <span class="addon-meta">Plus and Deep only. Time-based adjustment.</span>
+                                    </div>
+                                    <label class="toggle-wrap">
+                                        <span class="inline-label">OFF / ON</span>
+                                        <span><input class="toggle-input" id="excessive_pet_hair_toggle" type="checkbox" name="excessive_pet_hair_toggle" {% if request.form.get('excessive_pet_hair_toggle') %}checked{% endif %}><span class="toggle-track"></span></span>
+                                    </label>
+                                </div>
+                                <div class="choice-grid" id="excessive-pet-levels">
+                                    <label class="choice-card">
+                                        <input type="radio" name="excessive_pet_hair_level" value="moderate" {% if request.form.get('excessive_pet_hair_level', 'moderate') == 'moderate' %}checked{% endif %}>
+                                        <span class="choice-card-content">
+                                            <strong>Moderate</strong>
+                                            <span>+30 minutes</span>
+                                        </span>
+                                    </label>
+                                    <label class="choice-card">
+                                        <input type="radio" name="excessive_pet_hair_level" value="heavy" {% if request.form.get('excessive_pet_hair_level') == 'heavy' %}checked{% endif %}>
+                                        <span class="choice-card-content">
+                                            <strong>Heavy</strong>
+                                            <span>+60 minutes</span>
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -1232,6 +1269,9 @@
                             <div class="summary-row"><span>Cleaning Package</span><strong>{{ residential_result.chosen_service_label }}</strong></div>
                             <div class="summary-row"><span>Home Condition</span><strong>{{ residential_result.home_condition_label }}</strong></div>
                             <div class="summary-row"><span>Move-Out / Vacant</span><strong>{% if residential_result.move_out_applied %}Selected (Deep vacant scope){% elif residential_result.move_out_selected %}Selected (only applies to Deep){% else %}Not selected{% endif %}</strong></div>
+                            {% if residential_result.pet_adjustment_label %}
+                            <div class="summary-row"><span>Pet Hair Adjustment</span><strong>{{ residential_result.pet_adjustment_label }}</strong></div>
+                            {% endif %}
                             <div class="summary-row"><span>Recurring Frequency</span><strong id="selected_frequency_label">{{ residential_result.chosen_frequency_label }}</strong></div>
                             <div class="summary-row"><span>Eco Option</span><strong>{% if residential_result.eco_selected %}Enabled (+10% residential labor){% else %}Not selected{% endif %}</strong></div>
                             <div class="summary-row"><span>Property Size</span><strong>{{ residential_result.property_size_label }} (+{{ residential_result.property_size_adjustment_pct }}%)</strong></div>
@@ -1271,10 +1311,12 @@
                             <h4>Price Breakdown</h4>
                             <div class="price-row"><span>Base Room Time</span><strong>{{ '%.2f'|format((residential_result.base_minutes / 60)) }} hrs</strong></div>
                             <div class="price-row"><span>Condition Time</span><strong>{{ '%.2f'|format((residential_result.condition_minutes / 60)) }} hrs</strong></div>
+                            <div class="price-row"><span>Pet Hair Time</span><strong>{{ '%.2f'|format((residential_result.pet_hair_minutes / 60)) }} hrs</strong></div>
                             <div class="price-row"><span>Move-Out / Vacant Time</span><strong>{{ '%.2f'|format((residential_result.move_out_minutes / 60)) }} hrs</strong></div>
                             <div class="price-row"><span>Total Labor Time</span><strong>{{ '%.2f'|format(residential_result.base_hours) }} hrs</strong></div>
                             <div class="price-row"><span>Base Price</span><strong>${{ '%.2f'|format(residential_result.base_room_price) }}</strong></div>
                             <div class="price-row"><span>Condition Adjustment</span><strong>+${{ '%.2f'|format(residential_result.condition_price) }}</strong></div>
+                            <div class="price-row"><span>Pet Hair Adjustment</span><strong>+${{ '%.2f'|format(residential_result.pet_hair_price) }}</strong></div>
                             {% if residential_result.move_out_price > 0 %}
                             <div class="price-row"><span>Move-Out / Vacant Adjustment</span><strong>+${{ '%.2f'|format(residential_result.move_out_price) }}</strong></div>
                             {% endif %}
@@ -1773,6 +1815,41 @@
             }
         }
 
+        function syncPetHairVisibility() {
+            const selectedPackage = document.querySelector('input[name="chosen_service"]:checked');
+            const selectedValue = selectedPackage ? selectedPackage.value : '';
+            const basicPetRow = document.getElementById('basic-pet-row');
+            const basicPetInput = document.getElementById('pet_hair_buildup');
+            const excessivePetSection = document.getElementById('excessive-pet-section');
+            const excessiveToggle = document.getElementById('excessive_pet_hair_toggle');
+            const excessiveLevels = document.getElementById('excessive-pet-levels');
+            const excessiveLevelInputs = document.querySelectorAll('input[name="excessive_pet_hair_level"]');
+
+            const isBasic = selectedValue === 'basic';
+            const isPlusOrDeep = selectedValue === 'plus' || selectedValue === 'deep';
+
+            if (basicPetRow) basicPetRow.style.display = isBasic ? '' : 'none';
+            if (basicPetInput) {
+                basicPetInput.disabled = !isBasic;
+                if (!isBasic) basicPetInput.checked = false;
+            }
+
+            if (excessivePetSection) excessivePetSection.style.display = isPlusOrDeep ? '' : 'none';
+            if (excessiveToggle) {
+                excessiveToggle.disabled = !isPlusOrDeep;
+                if (!isPlusOrDeep) excessiveToggle.checked = false;
+            }
+
+            const showExcessiveLevels = isPlusOrDeep && excessiveToggle && excessiveToggle.checked;
+            if (excessiveLevels) excessiveLevels.style.display = showExcessiveLevels ? 'grid' : 'none';
+            excessiveLevelInputs.forEach((input, index) => {
+                input.disabled = !showExcessiveLevels;
+                if (!showExcessiveLevels) {
+                    input.checked = index === 0;
+                }
+            });
+        }
+
         function setupToggleableRadio(name, onChange) {
             document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
                 input.addEventListener('click', function (event) {
@@ -1838,6 +1915,7 @@
                         selectionGroup: 'residential-service'
                     });
                 syncMoveOutAvailability();
+                syncPetHairVisibility();
             });
 
             document.querySelectorAll('.service-toggle').forEach(toggle => {
@@ -1845,6 +1923,11 @@
                     syncServiceInputs();
                 });
             });
+
+            const excessiveToggle = document.getElementById('excessive_pet_hair_toggle');
+            if (excessiveToggle) {
+                excessiveToggle.addEventListener('change', syncPetHairVisibility);
+            }
 
             document.querySelectorAll('input[name="service_type"]').forEach(input => {
                 input.addEventListener('change', function () {
@@ -1872,6 +1955,7 @@
                 selectionGroup: 'residential-service'
             });
             syncMoveOutAvailability();
+            syncPetHairVisibility();
 
             updateServicePreview({
                 inputName: 'service_type',
