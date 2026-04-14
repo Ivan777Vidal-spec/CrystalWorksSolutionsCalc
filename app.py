@@ -100,6 +100,11 @@ RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS = {
 }
 
 MOVE_OUT_ADDED_MINUTES = Decimal("170")
+RESIDENTIAL_BASIC_PET_HAIR_MINUTES = Decimal("15")
+RESIDENTIAL_EXCESSIVE_PET_HAIR_MINUTES = {
+    "moderate": Decimal("30"),
+    "heavy": Decimal("60"),
+}
 
 REALTOR_MULTIPLIERS = {
     "listing_prep": 1.00,
@@ -397,10 +402,10 @@ def to_decimal(value) -> Decimal:
     return Decimal(str(value))
 
 
-def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
+def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_areas, hallways):
     package_minutes = RESIDENTIAL_PACKAGE_TIME_CONFIG.get(service_key, RESIDENTIAL_PACKAGE_TIME_CONFIG["basic"])
     kitchen_count = Decimal("1") if kitchens > 0 else Decimal("0")
-    living_area_count = to_decimal(living_rooms + dining_rooms)
+    living_area_count = to_decimal(living_areas)
     return (
         (to_decimal(bedrooms) * package_minutes["bedroom"]) +
         (to_decimal(bathrooms) * package_minutes["bathroom"]) +
@@ -461,12 +466,12 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
-def build_residential_rows(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
+def build_residential_rows(bedrooms, bathrooms, kitchens, living_areas, hallways):
     rows = []
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
     for key in RESIDENTIAL_PACKAGE_TIME_CONFIG:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
+        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_areas, hallways)
         base_hours = Decimal(base_minutes) / Decimal(60)
         labor_price = base_hours * hourly_rate
         rows.append({
@@ -576,7 +581,7 @@ def detect_residential_bundle(chosen_service, move_out_selected, carpet_total, p
     return max(matching_bundles, key=lambda item: item["amount"])
 
 
-def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False, home_condition="standard", move_out_vacant=False):
+def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_areas, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False, home_condition="standard", move_out_vacant=False, pet_hair_buildup=False, excessive_pet_hair_toggle=False, excessive_pet_hair_level="moderate"):
     valid_service = chosen_service if chosen_service in RESIDENTIAL_PACKAGE_TIME_CONFIG else ""
     valid_condition = home_condition if home_condition in RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS["basic"] else "standard"
     move_out_applied = bool(move_out_vacant and valid_service == "deep")
@@ -585,20 +590,29 @@ def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_r
         bedrooms=bedrooms,
         bathrooms=bathrooms,
         kitchens=kitchens,
-        living_rooms=living_rooms,
-        dining_rooms=dining_rooms,
+        living_areas=living_areas,
         hallways=hallways,
     )
 
     chosen_row = next((row for row in rows if row["key"] == valid_service), None)
     selected_minutes = chosen_row["minutes"] if chosen_row else 0
-    condition_minutes = RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS.get(valid_service, {}).get(valid_condition, Decimal("0")) if chosen_row else Decimal("0")
+    condition_minutes = RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS.get(valid_service, {}).get(valid_condition, Decimal("0")) if (chosen_row and valid_service in {"plus", "deep"}) else Decimal("0")
+    pet_hair_minutes = Decimal("0")
+    pet_adjustment_label = ""
+    valid_excessive_level = excessive_pet_hair_level if excessive_pet_hair_level in RESIDENTIAL_EXCESSIVE_PET_HAIR_MINUTES else "moderate"
+    if chosen_row and valid_service == "basic" and pet_hair_buildup:
+        pet_hair_minutes = RESIDENTIAL_BASIC_PET_HAIR_MINUTES
+        pet_adjustment_label = f"Pet Hair Buildup: +{int(pet_hair_minutes)} min"
+    elif chosen_row and valid_service in {"plus", "deep"} and excessive_pet_hair_toggle:
+        pet_hair_minutes = RESIDENTIAL_EXCESSIVE_PET_HAIR_MINUTES[valid_excessive_level]
+        pet_adjustment_label = f"Excessive Pet Hair ({valid_excessive_level.title()}): +{int(pet_hair_minutes)} min"
     move_out_minutes = MOVE_OUT_ADDED_MINUTES if (chosen_row and move_out_applied) else Decimal("0")
-    selected_total_minutes = Decimal(selected_minutes) + condition_minutes + move_out_minutes
+    selected_total_minutes = Decimal(selected_minutes) + condition_minutes + pet_hair_minutes + move_out_minutes
     selected_hours = selected_total_minutes / Decimal(60) if chosen_row else Decimal(0)
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
     base_room_price = (Decimal(selected_minutes) / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
     condition_price = (condition_minutes / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
+    pet_hair_price = (pet_hair_minutes / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
     move_out_price = (move_out_minutes / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
     selected_base_price = selected_hours * hourly_rate
 
@@ -668,11 +682,13 @@ def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_r
         "formula_units": selected_hours,
         "base_minutes": Decimal(selected_minutes),
         "condition_minutes": condition_minutes,
+        "pet_hair_minutes": pet_hair_minutes,
         "move_out_minutes": move_out_minutes,
         "total_minutes": selected_total_minutes,
         "base_hours": selected_hours,
         "base_room_price": base_room_price,
         "condition_price": condition_price,
+        "pet_hair_price": pet_hair_price,
         "move_out_price": move_out_price,
         "labor_price_before_size": selected_base_price,
         "base_price": residential_price,
@@ -683,6 +699,7 @@ def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_r
         "chosen_service_label": RESIDENTIAL_SERVICE_DETAILS[valid_service]["label"] if valid_service else "No package selected",
         "home_condition": valid_condition,
         "home_condition_label": {"standard": "Standard", "moderate_buildup": "Moderate buildup", "heavy_buildup": "Heavy buildup"}[valid_condition],
+        "pet_adjustment_label": pet_adjustment_label,
         "move_out_selected": bool(move_out_vacant),
         "move_out_applied": move_out_applied,
         "move_out_description": MOVE_OUT_SERVICE_DETAILS["short_description"],
@@ -777,8 +794,7 @@ def index():
                 bedrooms=safe_int(request.form.get('bedrooms')),
                 bathrooms=safe_int(request.form.get('bathrooms')),
                 kitchens=safe_int(request.form.get('kitchens'), 1),
-                living_rooms=safe_int(request.form.get('living_rooms'), 1),
-                dining_rooms=safe_int(request.form.get('dining_rooms'), 1),
+                living_areas=safe_int(request.form.get('living_areas'), 2),
                 hallways=safe_int(request.form.get('hallways'), 1),
                 window_count=safe_int(request.form.get('window_count')),
                 oven=('oven' in request.form),
@@ -796,6 +812,9 @@ def index():
                 eco_friendly=(request.form.get('eco_friendly') == 'on'),
                 home_condition=request.form.get('home_condition', 'standard'),
                 move_out_vacant=(request.form.get('move_out_vacant') == 'on'),
+                pet_hair_buildup=(request.form.get('pet_hair_buildup') == 'on'),
+                excessive_pet_hair_toggle=(request.form.get('excessive_pet_hair_toggle') == 'on'),
+                excessive_pet_hair_level=request.form.get('excessive_pet_hair_level', 'moderate'),
             )
         elif form_type == 'realtor':
             realtor_result = calculate_realtor(
