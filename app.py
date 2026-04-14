@@ -50,29 +50,26 @@ RESIDENTIAL_PACKAGE_TIME_CONFIG = {
     "basic": {
         "bedroom": Decimal("20"),
         "bathroom": Decimal("22"),
-        "kitchen": Decimal("45"),
+        "kitchen": Decimal("40"),
         "living_room": Decimal("25"),
         "hallway": Decimal("15"),
-        "floors": Decimal("30"),
-        "extras": Decimal("15"),
+        "floors": Decimal("25"),
     },
     "plus": {
         "bedroom": Decimal("28"),
         "bathroom": Decimal("40"),
-        "kitchen": Decimal("70"),
+        "kitchen": Decimal("60"),
         "living_room": Decimal("35"),
         "hallway": Decimal("18"),
-        "floors": Decimal("40"),
-        "extras": Decimal("60"),
+        "floors": Decimal("30"),
     },
     "deep": {
-        "bedroom": Decimal("40"),
-        "bathroom": Decimal("60"),
-        "kitchen": Decimal("105"),
-        "living_room": Decimal("50"),
-        "hallway": Decimal("22"),
-        "floors": Decimal("50"),
-        "extras": Decimal("120"),
+        "bedroom": Decimal("35"),
+        "bathroom": Decimal("50"),
+        "kitchen": Decimal("90"),
+        "living_room": Decimal("45"),
+        "hallway": Decimal("20"),
+        "floors": Decimal("40"),
     },
 }
 
@@ -92,6 +89,14 @@ RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS = {
         "moderate_buildup": Decimal("60"),
         "heavy_buildup": Decimal("120"),
     },
+}
+
+RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS = {
+    "0_1999": {"label": "0–1,999 sqft", "multiplier": Decimal("1.00")},
+    "2000_2999": {"label": "2,000–2,999 sqft", "multiplier": Decimal("1.10")},
+    "3000_3999": {"label": "3,000–3,999 sqft", "multiplier": Decimal("1.15")},
+    "4000_4999": {"label": "4,000–4,999 sqft", "multiplier": Decimal("1.20")},
+    "5000_plus": {"label": "5,000+ sqft", "multiplier": Decimal("1.30")},
 }
 
 MOVE_OUT_ADDED_MINUTES = Decimal("170")
@@ -392,16 +397,17 @@ def to_decimal(value) -> Decimal:
     return Decimal(str(value))
 
 
-def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_rooms, hallways):
+def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
     package_minutes = RESIDENTIAL_PACKAGE_TIME_CONFIG.get(service_key, RESIDENTIAL_PACKAGE_TIME_CONFIG["basic"])
+    kitchen_count = Decimal("1") if kitchens > 0 else Decimal("0")
+    living_area_count = to_decimal(living_rooms + dining_rooms)
     return (
-        (bedrooms * package_minutes["bedroom"]) +
-        (bathrooms * package_minutes["bathroom"]) +
-        (kitchens * package_minutes["kitchen"]) +
-        (living_rooms * package_minutes["living_room"]) +
-        (hallways * package_minutes["hallway"]) +
-        package_minutes["floors"] +
-        package_minutes["extras"]
+        (to_decimal(bedrooms) * package_minutes["bedroom"]) +
+        (to_decimal(bathrooms) * package_minutes["bathroom"]) +
+        (kitchen_count * package_minutes["kitchen"]) +
+        (living_area_count * package_minutes["living_room"]) +
+        (to_decimal(hallways) * package_minutes["hallway"]) +
+        package_minutes["floors"]
     )
 
 
@@ -455,12 +461,12 @@ def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bin
     return (money(addon_total) if apply_rounding else addon_total), addon_details
 
 
-def build_residential_rows(square_feet, bedrooms, bathrooms, kitchens, living_rooms, hallways):
+def build_residential_rows(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
     rows = []
     hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
     for key in RESIDENTIAL_PACKAGE_TIME_CONFIG:
         label = RESIDENTIAL_SERVICE_DETAILS[key]["label"]
-        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, hallways)
+        base_minutes = residential_formula_minutes(key, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
         base_hours = Decimal(base_minutes) / Decimal(60)
         labor_price = base_hours * hourly_rate
         rows.append({
@@ -570,17 +576,17 @@ def detect_residential_bundle(chosen_service, move_out_selected, carpet_total, p
     return max(matching_bundles, key=lambda item: item["amount"])
 
 
-def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False, home_condition="standard", move_out_vacant=False):
+def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, chosen_service="", selected_frequency="one_time", eco_friendly=False, home_condition="standard", move_out_vacant=False):
     valid_service = chosen_service if chosen_service in RESIDENTIAL_PACKAGE_TIME_CONFIG else ""
     valid_condition = home_condition if home_condition in RESIDENTIAL_CONDITION_TIME_ADJUSTMENTS["basic"] else "standard"
     move_out_applied = bool(move_out_vacant and valid_service == "deep")
 
     rows = build_residential_rows(
-        square_feet=square_feet,
         bedrooms=bedrooms,
         bathrooms=bathrooms,
         kitchens=kitchens,
         living_rooms=living_rooms,
+        dining_rooms=dining_rooms,
         hallways=hallways,
     )
 
@@ -590,7 +596,17 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
     move_out_minutes = MOVE_OUT_ADDED_MINUTES if (chosen_row and move_out_applied) else Decimal("0")
     selected_total_minutes = Decimal(selected_minutes) + condition_minutes + move_out_minutes
     selected_hours = selected_total_minutes / Decimal(60) if chosen_row else Decimal(0)
-    selected_base_price = selected_hours * to_decimal(RESIDENTIAL_RATE_PER_HOUR)
+    hourly_rate = to_decimal(RESIDENTIAL_RATE_PER_HOUR)
+    base_room_price = (Decimal(selected_minutes) / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
+    condition_price = (condition_minutes / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
+    move_out_price = (move_out_minutes / Decimal(60)) * hourly_rate if chosen_row else Decimal("0")
+    selected_base_price = selected_hours * hourly_rate
+
+    valid_property_size = property_size if property_size in RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS else "0_1999"
+    size_multiplier_data = RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS[valid_property_size]
+    size_multiplier = size_multiplier_data["multiplier"]
+    size_adjustment = selected_base_price * (size_multiplier - Decimal("1.00"))
+    residential_price = selected_base_price * size_multiplier
 
     service_totals = calculate_residential_service_totals(
         window_count=window_count,
@@ -606,7 +622,6 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         couch_cleaning=couch_cleaning,
     )
 
-    residential_price = selected_base_price
     eco_adjustment = residential_price * (ECO_MULTIPLIER - Decimal("1.00")) if eco_friendly else Decimal("0")
     subtotal_before_discounts_raw = residential_price + service_totals["additional_services_total"] + service_totals["add_ons_total"] + eco_adjustment
     minimum_floor_delta = max(to_decimal(MINIMUM_SERVICE_PRICE) - subtotal_before_discounts_raw, Decimal("0"))
@@ -645,13 +660,21 @@ def calculate_residential(square_feet, bedrooms, bathrooms, kitchens, living_roo
         selected_frequency_label = "One-Time (Deep package)"
 
     return {
-        "square_feet": square_feet,
+        "property_size": valid_property_size,
+        "property_size_label": size_multiplier_data["label"],
+        "property_size_multiplier": size_multiplier,
+        "property_size_adjustment_pct": int((size_multiplier - Decimal("1.00")) * 100),
+        "size_adjustment": size_adjustment,
         "formula_units": selected_hours,
         "base_minutes": Decimal(selected_minutes),
         "condition_minutes": condition_minutes,
         "move_out_minutes": move_out_minutes,
         "total_minutes": selected_total_minutes,
         "base_hours": selected_hours,
+        "base_room_price": base_room_price,
+        "condition_price": condition_price,
+        "move_out_price": move_out_price,
+        "labor_price_before_size": selected_base_price,
         "base_price": residential_price,
         "eco_selected": eco_friendly,
         "eco_adjustment": eco_adjustment,
@@ -750,7 +773,7 @@ def index():
             floor_selected = request.form.get('include_floor_care') == 'on'
             bin_selected = request.form.get('include_bins') == 'on'
             residential_result = calculate_residential(
-                square_feet=safe_int(request.form.get('square_feet')),
+                property_size=request.form.get('property_size', '0_1999'),
                 bedrooms=safe_int(request.form.get('bedrooms')),
                 bathrooms=safe_int(request.form.get('bathrooms')),
                 kitchens=safe_int(request.form.get('kitchens'), 1),
