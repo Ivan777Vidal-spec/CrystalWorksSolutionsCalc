@@ -362,6 +362,11 @@
             gap: 12px;
         }
 
+        .service-preview.compact {
+            padding: 12px;
+            gap: 10px;
+        }
+
         .service-preview-head {
             display: flex;
             flex-wrap: wrap;
@@ -394,6 +399,10 @@
             border: 1px solid rgba(148, 163, 184, 0.22);
             background: rgba(255,255,255,0.82);
             padding: 14px;
+        }
+
+        .checklist-card.compact {
+            padding: 12px;
         }
 
         .checklist-card h4,
@@ -1372,8 +1381,14 @@
                         <div class="card-body stack">
                             <div class="fields-grid">
                                 <div class="field-group">
-                                    <label for="realtor_square_feet">Square Footage</label>
-                                    <input class="text-input" id="realtor_square_feet" type="number" name="realtor_square_feet" required value="{{ request.form.get('realtor_square_feet', '') }}">
+                                    <label for="realtor_property_size">Property Size</label>
+                                    <select class="select-input" id="realtor_property_size" name="realtor_property_size">
+                                        <option value="0_1999" {% if request.form.get('realtor_property_size', '0_1999') == '0_1999' %}selected{% endif %}>0–1,999 sqft</option>
+                                        <option value="2000_2999" {% if request.form.get('realtor_property_size') == '2000_2999' %}selected{% endif %}>2,000–2,999 sqft</option>
+                                        <option value="3000_3999" {% if request.form.get('realtor_property_size') == '3000_3999' %}selected{% endif %}>3,000–3,999 sqft</option>
+                                        <option value="4000_4999" {% if request.form.get('realtor_property_size') == '4000_4999' %}selected{% endif %}>4,000–4,999 sqft</option>
+                                        <option value="5000_plus" {% if request.form.get('realtor_property_size') == '5000_plus' %}selected{% endif %}>5,000+ sqft</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="stepper-grid">
@@ -1381,8 +1396,7 @@
                                     ('realtor_bedrooms', 'Bedrooms', '3'),
                                     ('realtor_bathrooms', 'Bathrooms', '2'),
                                     ('realtor_kitchens', 'Kitchens', '1'),
-                                    ('realtor_living_rooms', 'Living Rooms', '1'),
-                                    ('realtor_dining_rooms', 'Dining Rooms', '1'),
+                                    ('realtor_living_areas', 'Living Areas (Living Room, Dining Room, Family Room, etc.)', '2'),
                                     ('realtor_hallways', 'Hallways', '1')
                                 ] %}
                                 <div class="field-group">
@@ -1402,7 +1416,7 @@
                         <div class="card-header inline-header">
                             <div>
                                 <h2 class="card-title">Service Type</h2>
-                                <p class="card-subtitle">Interactive service selection with immediate scope notes.</p>
+                                <p class="card-subtitle">Choose a realtor service to reveal a compact live scope checklist.</p>
                             </div>
                             <span class="section-chip">Inline checklist reveal</span>
                         </div>
@@ -1420,57 +1434,62 @@
                                     <span class="choice-card-content">
                                         <strong>{{ detail.label }}</strong>
                                         <span>{{ detail.purpose }}</span>
-                                        <small>{% if key == 'listing_prep' %}Photo and showing ready.{% elif key == 'vacant_move_out' %}Empty-home turnover clean.{% elif key == 'post_renovation' %}After worksite dust cleanup.{% else %}Quick pre-showing refresh.{% endif %}</small>
                                     </span>
                                 </label>
                                 {% endfor %}
                             </div>
 
-                            <div class="inline-summary-grid">
-                                <div class="service-preview" id="realtor-service-preview">
-                                    <div class="service-preview-head">
-                                        <div>
-                                            <h3 id="realtor-service-title"></h3>
-                                            <p class="service-preview-purpose" id="realtor-service-purpose"></p>
-                                        </div>
-                                        <span class="selection-tag">Live service scope</span>
+                            <div class="service-preview compact" id="realtor-service-preview">
+                                <div class="service-preview-head">
+                                    <div>
+                                        <h3 id="realtor-service-title"></h3>
+                                        <p class="service-preview-purpose" id="realtor-service-purpose"></p>
                                     </div>
-                                    <div class="two-col-list">
-                                        <div class="checklist-card">
-                                            <h4>Included</h4>
-                                            <ul class="clean-list" id="realtor-service-includes"></ul>
-                                        </div>
-                                        <div class="checklist-card">
-                                            <h4>Not Included</h4>
-                                            <ul class="clean-list not-included" id="realtor-service-excludes"></ul>
-                                        </div>
+                                    <span class="selection-tag">Live service scope</span>
+                                </div>
+                                <div class="two-col-list">
+                                    <div class="checklist-card compact">
+                                        <h4>Included</h4>
+                                        <ul class="clean-list" id="realtor-service-includes"></ul>
+                                    </div>
+                                    <div class="checklist-card compact">
+                                        <h4>Not Included</h4>
+                                        <ul class="clean-list not-included" id="realtor-service-excludes"></ul>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </section>
 
-                                <div class="compact-grid">
-                                    <div class="checklist-card">
-                                        <h4>Job modifiers</h4>
-                                        <div class="fields-grid">
-                                            <div class="field-group">
-                                                <label for="rush_type">Rush Service</label>
-                                                <select class="select-input" id="rush_type" name="rush_type">
-                                                    <option value="none" {% if request.form.get('rush_type', 'none') == 'none' %}selected{% endif %}>None</option>
-                                                    <option value="next_day" {% if request.form.get('rush_type') == 'next_day' %}selected{% endif %}>Next-Day (+15%)</option>
-                                                    <option value="same_day" {% if request.form.get('rush_type') == 'same_day' %}selected{% endif %}>Same-Day (+25%)</option>
-                                                </select>
-                                            </div>
-                                            <div class="field-group">
-                                                <label for="realtor_condition">Condition</label>
-                                                <select class="select-input" id="realtor_condition" name="realtor_condition">
-                                                    <option value="normal" {% if request.form.get('realtor_condition', 'normal') == 'normal' %}selected{% endif %}>Normal</option>
-                                                    <option value="dirty" {% if request.form.get('realtor_condition') == 'dirty' %}selected{% endif %}>Dirty</option>
-                                                    <option value="very_dirty" {% if request.form.get('realtor_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <p class="helper-inline">Rush fees and condition adjustments still use the existing backend math.</p>
+                    <section class="card">
+                        <div class="card-header inline-header">
+                            <div>
+                                <h2 class="card-title">Job Modifiers / Adjustments</h2>
+                                <p class="card-subtitle">Keep rush and condition adjustments with current backend pricing behavior.</p>
+                            </div>
+                            <span class="section-chip">Step 3 of 6</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="checklist-card compact">
+                                <div class="fields-grid">
+                                    <div class="field-group">
+                                        <label for="rush_type">Rush Service</label>
+                                        <select class="select-input" id="rush_type" name="rush_type">
+                                            <option value="none" {% if request.form.get('rush_type', 'none') == 'none' %}selected{% endif %}>None</option>
+                                            <option value="next_day" {% if request.form.get('rush_type') == 'next_day' %}selected{% endif %}>Next-Day (+15%)</option>
+                                            <option value="same_day" {% if request.form.get('rush_type') == 'same_day' %}selected{% endif %}>Same-Day (+25%)</option>
+                                        </select>
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="realtor_condition">Condition</label>
+                                        <select class="select-input" id="realtor_condition" name="realtor_condition">
+                                            <option value="normal" {% if request.form.get('realtor_condition', 'normal') == 'normal' %}selected{% endif %}>Normal</option>
+                                            <option value="dirty" {% if request.form.get('realtor_condition') == 'dirty' %}selected{% endif %}>Dirty</option>
+                                            <option value="very_dirty" {% if request.form.get('realtor_condition') == 'very_dirty' %}selected{% endif %}>Very Dirty</option>
+                                        </select>
                                     </div>
                                 </div>
+                                <p class="helper-inline">Rush fees and condition adjustments still use the existing backend math.</p>
                             </div>
                         </div>
                     </section>
@@ -1484,75 +1503,107 @@
                             <span class="section-chip">Backend totals preserved</span>
                         </div>
                         <div class="card-body">
-                            <div class="addon-list">
-                                <div class="addon-row">
-                                    <div class="addon-title"><strong>Window Cleaning</strong><span class="addon-meta">Per-window add-on.</span></div>
-                                    <div class="price-badge">$5 each</div>
-                                    <input class="text-input" type="number" name="realtor_window_count" min="0" value="{{ request.form.get('realtor_window_count', '0') }}">
-                                </div>
-                                <div class="addon-row compact-toggle">
-                                    <div class="addon-title"><strong>Inside Oven Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
-                                    <label class="toggle-wrap"><span class="inline-label">$25</span><span><input class="toggle-input" type="checkbox" name="realtor_oven" {% if request.form.get('realtor_oven') %}checked{% endif %}><span class="toggle-track"></span></span></label>
-                                </div>
-                                <div class="addon-row compact-toggle">
-                                    <div class="addon-title"><strong>Inside Refrigerator Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
-                                    <label class="toggle-wrap"><span class="inline-label">$20</span><span><input class="toggle-input" type="checkbox" name="realtor_fridge" {% if request.form.get('realtor_fridge') %}checked{% endif %}><span class="toggle-track"></span></span></label>
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title"><strong>Carpet Cleaning</strong><span class="addon-meta">Charged by carpet square footage.</span></div>
-                                    <div class="price-badge">$0.30 / sq ft</div>
-                                    <input class="text-input" type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="{{ request.form.get('realtor_carpet_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Floor Cleaning & Shine</strong>
-                                        <span class="addon-meta">Deep cleaning for hard floors with buildup removal and shine improvement.</span>
-                                        <div class="addon-breakdown">
-                                            <div class="field-group">
-                                                <label for="realtor_floor_care_condition">Condition</label>
-                                                <select class="select-input" id="realtor_floor_care_condition" name="realtor_floor_care_condition">
-                                                    <option value="standard" {% if request.form.get('realtor_floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
-                                                    <option value="heavy" {% if request.form.get('realtor_floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
-                                                </select>
+                            <div class="service-accordion-group">
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Carpet Cleaning</strong><span>Optional service charged by square footage.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-row">
+                                            <div class="addon-title"><strong>Carpet Cleaning</strong><span class="addon-meta">Charged by carpet square footage.</span></div>
+                                            <div class="price-badge">$0.30 / sq ft</div>
+                                            <input class="text-input" type="number" step="0.01" name="realtor_carpet_sqft" min="0" value="{{ request.form.get('realtor_carpet_sqft', '0') }}">
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Pressure Washing</strong><span>Optional service with condition rate + minimum + stain add-on.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-row">
+                                            <div class="addon-title">
+                                                <strong>Pressure Washing</strong>
+                                                <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
+                                                <div class="addon-breakdown">
+                                                    <div class="field-group">
+                                                        <label for="realtor_pressure_condition">Condition</label>
+                                                        <select class="select-input" id="realtor_pressure_condition" name="realtor_pressure_condition">
+                                                            <option value="standard" {% if request.form.get('realtor_pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
+                                                            <option value="dirty" {% if request.form.get('realtor_pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="field-group">
+                                                        <label for="realtor_pressure_stain_addon">Stain Add-On</label>
+                                                        <select class="select-input" id="realtor_pressure_stain_addon" name="realtor_pressure_stain_addon">
+                                                            <option value="none" {% if request.form.get('realtor_pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
+                                                            <option value="oil_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
+                                                            <option value="oil_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
+                                                            <option value="rust_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
+                                                            <option value="rust_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
+                                                            <option value="heavy_buildup" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="price-badge">$0.40 / $0.45 + $130 min</div>
+                                            <input class="text-input" type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="{{ request.form.get('realtor_pressure_sqft', '0') }}">
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="service-accordion" data-accordion-section>
+                                    <button type="button" class="service-accordion-header" data-accordion-trigger>
+                                        <span class="service-accordion-title"><strong>Add-Ons</strong><span>Optional extras for windows, appliances, floors, couch, and bins.</span></span>
+                                        <span class="accordion-chevron"></span>
+                                    </button>
+                                    <div class="service-accordion-content">
+                                        <div class="addon-list">
+                                            <div class="addon-row">
+                                                <div class="addon-title"><strong>Window Cleaning</strong><span class="addon-meta">Per-window add-on.</span></div>
+                                                <div class="price-badge">$5 each</div>
+                                                <input class="text-input" type="number" name="realtor_window_count" min="0" value="{{ request.form.get('realtor_window_count', '0') }}">
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Inside Oven Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">$25</span><span><input class="toggle-input" type="checkbox" name="realtor_oven" {% if request.form.get('realtor_oven') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Inside Refrigerator Cleaning</strong><span class="addon-meta">Flat add-on when selected.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">$20</span><span><input class="toggle-input" type="checkbox" name="realtor_fridge" {% if request.form.get('realtor_fridge') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row compact-toggle">
+                                                <div class="addon-title"><strong>Couch Cleaning</strong><span class="addon-meta">Placeholder flat-price add-on.</span></div>
+                                                <label class="toggle-wrap"><span class="inline-label">${{ pricing_snapshot.couch_cleaning_price }}</span><span><input class="toggle-input" type="checkbox" name="realtor_couch_cleaning" {% if request.form.get('realtor_couch_cleaning') %}checked{% endif %}><span class="toggle-track"></span></span></label>
+                                            </div>
+                                            <div class="addon-row">
+                                                <div class="addon-title">
+                                                    <strong>Floor Cleaning & Shine</strong>
+                                                    <span class="addon-meta">Deep cleaning for hard floors with buildup removal and shine improvement.</span>
+                                                    <div class="addon-breakdown">
+                                                        <div class="field-group">
+                                                            <label for="realtor_floor_care_condition">Condition</label>
+                                                            <select class="select-input" id="realtor_floor_care_condition" name="realtor_floor_care_condition">
+                                                                <option value="standard" {% if request.form.get('realtor_floor_care_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.28 / sq ft)</option>
+                                                                <option value="heavy" {% if request.form.get('realtor_floor_care_condition') == 'heavy' %}selected{% endif %}>Heavy ($0.35 / sq ft)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="price-badge">$0.28 / $0.35 + $120 min</div>
+                                                <input class="text-input" type="number" step="0.01" name="realtor_floor_care_sqft" min="0" value="{{ request.form.get('realtor_floor_care_sqft', '0') }}">
+                                            </div>
+                                            <div class="addon-row">
+                                                <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Uses the same bundled vs standalone backend pricing.</span></div>
+                                                <div class="price-badge">$17–$20 each</div>
+                                                <input class="text-input" type="number" name="realtor_bins" min="0" value="{{ request.form.get('realtor_bins', '0') }}">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="price-badge">$0.28 / $0.35 + $120 min</div>
-                                    <input class="text-input" type="number" step="0.01" name="realtor_floor_care_sqft" min="0" value="{{ request.form.get('realtor_floor_care_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title">
-                                        <strong>Pressure Washing</strong>
-                                        <span class="addon-meta">Base uses selected condition rate, then $130 minimum, then stain add-on.</span>
-                                        <div class="addon-breakdown">
-                                            <div class="field-group">
-                                                <label for="realtor_pressure_condition">Condition</label>
-                                                <select class="select-input" id="realtor_pressure_condition" name="realtor_pressure_condition">
-                                                    <option value="standard" {% if request.form.get('realtor_pressure_condition', 'standard') == 'standard' %}selected{% endif %}>Standard ($0.40 / sq ft)</option>
-                                                    <option value="dirty" {% if request.form.get('realtor_pressure_condition') == 'dirty' %}selected{% endif %}>Dirty ($0.45 / sq ft)</option>
-                                                </select>
-                                            </div>
-                                            <div class="field-group">
-                                                <label for="realtor_pressure_stain_addon">Stain Add-On</label>
-                                                <select class="select-input" id="realtor_pressure_stain_addon" name="realtor_pressure_stain_addon">
-                                                    <option value="none" {% if request.form.get('realtor_pressure_stain_addon', 'none') == 'none' %}selected{% endif %}>None</option>
-                                                    <option value="oil_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_light' %}selected{% endif %}>Oil stain treatment light (+$40)</option>
-                                                    <option value="oil_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'oil_stain_heavy' %}selected{% endif %}>Oil stain treatment heavy (+$80)</option>
-                                                    <option value="rust_stain_light" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_light' %}selected{% endif %}>Rust stain removal light (+$50)</option>
-                                                    <option value="rust_stain_heavy" {% if request.form.get('realtor_pressure_stain_addon') == 'rust_stain_heavy' %}selected{% endif %}>Rust stain removal heavy (+$120)</option>
-                                                    <option value="heavy_buildup" {% if request.form.get('realtor_pressure_stain_addon') == 'heavy_buildup' %}selected{% endif %}>Heavy buildup treatment (+$60)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="price-badge">$0.40 / $0.45 + $130 min</div>
-                                    <input class="text-input" type="number" step="0.01" name="realtor_pressure_sqft" min="0" value="{{ request.form.get('realtor_pressure_sqft', '0') }}">
-                                </div>
-                                <div class="addon-row">
-                                    <div class="addon-title"><strong>Trash Bin Cleaning</strong><span class="addon-meta">Uses the same bundled vs standalone backend pricing.</span></div>
-                                    <div class="price-badge">$17–$20 each</div>
-                                    <input class="text-input" type="number" name="realtor_bins" min="0" value="{{ request.form.get('realtor_bins', '0') }}">
-                                </div>
+                                </section>
                             </div>
                         </div>
                     </section>
@@ -1576,6 +1627,7 @@
                         <div class="summary-box">
                             <h4>Selection Overview</h4>
                             <div class="summary-row"><span>Service Type</span><strong>{{ realtor_result.service_label }}</strong></div>
+                            <div class="summary-row"><span>Property Size</span><strong>{{ realtor_result.property_size_label }} (+{{ realtor_result.sqft_adjustment_pct }}%)</strong></div>
                             <div class="summary-row"><span>Condition</span><strong>{{ realtor_result.condition_label }}</strong></div>
                             <div class="summary-row"><span>Rush Service</span><strong>{{ realtor_result.rush_label }}</strong></div>
                             <div class="summary-row"><span>Formula Units</span><strong>{{ realtor_result.formula_units }}</strong></div>
@@ -1583,7 +1635,7 @@
                         <div class="summary-box">
                             <h4>Breakdown</h4>
                             <div class="price-row"><span>Base Price</span><strong>${{ '%.2f'|format(realtor_result.base_price) }}</strong></div>
-                            <div class="price-row"><span>Sq Ft Adjustment</span><strong>{{ realtor_result.sqft_adjustment_pct }}%</strong></div>
+                            <div class="price-row"><span>Property Size Adjustment</span><strong>{{ realtor_result.sqft_adjustment_pct }}%</strong></div>
                             <div class="price-row"><span>Add-Ons</span><strong>${{ '%.2f'|format(realtor_result.addon_total) }}</strong></div>
                             <div class="price-row"><span>Rush Fee</span><strong>{{ realtor_result.rush_pct }}%</strong></div>
                             <div class="price-row"><span>Individual Service Total</span><strong>${{ '%.2f'|format(realtor_result.individual_service_total) }}</strong></div>

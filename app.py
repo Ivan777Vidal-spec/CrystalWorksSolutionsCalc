@@ -239,7 +239,7 @@ MOVE_OUT_SERVICE_DETAILS = {
 REALTOR_SERVICE_DETAILS = {
     "listing_prep": {
         "label": "Listing Prep Cleaning",
-        "purpose": "Prepare a home for listing photos and showings.",
+        "purpose": "Photo-ready cleaning for listings and showings.",
         "includes": [
             "Counters wiped",
             "Bathrooms cleaned",
@@ -255,7 +255,7 @@ REALTOR_SERVICE_DETAILS = {
     },
     "vacant_move_out": {
         "label": "Vacant / Move-Out Cleaning",
-        "purpose": "Cleaning for empty homes before listing or after move-out.",
+        "purpose": "Full empty-home turnover cleaning.",
         "includes": [
             "Kitchen cleaning",
             "Bathroom detail cleaning",
@@ -271,7 +271,7 @@ REALTOR_SERVICE_DETAILS = {
     },
     "post_renovation": {
         "label": "Post-Renovation Cleaning",
-        "purpose": "Cleaning after remodeling or repair work.",
+        "purpose": "Dust and debris cleanup after renovation or repair work.",
         "includes": [
             "Dust removal from surfaces",
             "Counters and fixtures cleaned",
@@ -287,7 +287,7 @@ REALTOR_SERVICE_DETAILS = {
     },
     "open_house_touchup": {
         "label": "Open House Touch-Up",
-        "purpose": "Quick refresh before an open house or showing.",
+        "purpose": "Quick refresh before showings or open houses.",
         "includes": [
             "Quick countertop wipe-down",
             "Bathroom touch-up",
@@ -386,16 +386,11 @@ def select_best_bundle(base_total, selections):
     return best_bundle
 
 
-def get_sqft_adjustment(square_feet: int) -> float:
-    if square_feet > 5000:
-        return 0.30
-    elif square_feet > 4000:
-        return 0.20
-    elif square_feet > 3000:
-        return 0.15
-    elif square_feet > 2000:
-        return 0.10
-    return 0.00
+def get_property_size_details(property_size_key: str):
+    return RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS.get(
+        property_size_key,
+        RESIDENTIAL_PROPERTY_SIZE_MULTIPLIERS["0_1999"],
+    )
 
 
 def to_decimal(value) -> Decimal:
@@ -416,8 +411,8 @@ def residential_formula_minutes(service_key, bedrooms, bathrooms, kitchens, livi
     )
 
 
-def realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways):
-    return ((bedrooms * 0.6) + (bathrooms * 1.0) + (kitchens * 1.25) + (living_rooms * 0.5) + (dining_rooms * 0.5) + (hallways * 0.25))
+def realtor_formula_units(bedrooms, bathrooms, kitchens, living_areas, hallways):
+    return ((bedrooms * 0.6) + (bathrooms * 1.0) + (kitchens * 1.25) + (living_areas * 0.5) + (hallways * 0.25))
 
 
 def calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=0, floor_care_condition="standard", service_context="residential", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False, apply_rounding=True):
@@ -725,15 +720,19 @@ def calculate_residential(property_size, bedrooms, bathrooms, kitchens, living_a
     }
 
 
-def calculate_realtor(square_feet, bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways, service_type, rush_type, condition, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none"):
-    formula_units = realtor_formula_units(bedrooms, bathrooms, kitchens, living_rooms, dining_rooms, hallways)
+def calculate_realtor(property_size, bedrooms, bathrooms, kitchens, living_areas, hallways, service_type, rush_type, condition, window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft, floor_care_condition="standard", pressure_condition="standard", pressure_stain_addon="none", couch_cleaning=False):
+    formula_units = realtor_formula_units(bedrooms, bathrooms, kitchens, living_areas, hallways)
     base_price = formula_units * COMMERCIAL_JANITORIAL_RATE_PER_HOUR
-    sqft_adjustment = get_sqft_adjustment(square_feet)
-    subtotal = base_price * (1 + sqft_adjustment)
+    property_size_details = get_property_size_details(property_size)
+    size_multiplier_decimal = property_size_details["multiplier"]
+    size_multiplier = float(size_multiplier_decimal)
+    sqft_adjustment = size_multiplier - 1
+    sqft_adjustment_pct = int((size_multiplier_decimal - Decimal("1.00")) * 100)
+    subtotal = base_price * size_multiplier
     subtotal *= (1 + CONDITION_ADJUSTMENTS.get(condition, 0.00))
     service_multiplier = REALTOR_MULTIPLIERS.get(service_type, 1.00)
     subtotal *= service_multiplier
-    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="commercial", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon)
+    addon_total, addon_details = calculate_addons(window_count, oven, fridge, carpet_sqft, pressure_sqft, bins, floor_care_sqft=floor_care_sqft, floor_care_condition=floor_care_condition, service_context="commercial", pressure_condition=pressure_condition, pressure_stain_addon=pressure_stain_addon, couch_cleaning=couch_cleaning)
     subtotal += addon_total
     rush_pct = RUSH_FEES.get(rush_type, 0.00)
     total = subtotal * (1 + rush_pct)
@@ -742,7 +741,7 @@ def calculate_realtor(square_feet, bedrooms, bathrooms, kitchens, living_rooms, 
     individual_total = round_to_clean_price(total)
     bundle_selection = {"deep_cleaning": service_type == "post_renovation", "vacant_cleaning": service_type == "vacant_move_out", "carpet_cleaning": carpet_sqft > 0, "floor_care": floor_care_sqft > 0, "pressure_washing": pressure_sqft > 0}
     best_bundle = select_best_bundle(individual_total, bundle_selection)
-    return {"formula_units": money(formula_units), "base_price": money(base_price), "sqft_adjustment_pct": int(sqft_adjustment * 100), "condition_label": {"normal": "Normal", "dirty": "Dirty", "very_dirty": "Very Dirty"}[condition], "service_label": details["label"], "purpose": details["purpose"], "includes": details["includes"], "not_included": details["not_included"], "rush_label": {"none": "None", "next_day": "Next-Day", "same_day": "Same-Day"}[rush_type], "addon_total": addon_total, "addon_details": addon_details, "service_multiplier": service_multiplier, "rush_pct": int(rush_pct * 100), "total": individual_total, "bundle_offer": best_bundle, "individual_service_total": individual_total}
+    return {"formula_units": money(formula_units), "base_price": money(base_price), "sqft_adjustment_pct": sqft_adjustment_pct, "property_size_label": property_size_details["label"], "condition_label": {"normal": "Normal", "dirty": "Dirty", "very_dirty": "Very Dirty"}[condition], "service_label": details["label"], "purpose": details["purpose"], "includes": details["includes"], "not_included": details["not_included"], "rush_label": {"none": "None", "next_day": "Next-Day", "same_day": "Same-Day"}[rush_type], "addon_total": addon_total, "addon_details": addon_details, "service_multiplier": service_multiplier, "rush_pct": int(rush_pct * 100), "total": individual_total, "bundle_offer": best_bundle, "individual_service_total": individual_total}
 
 
 def calculate_commercial(square_feet, service_type, recurring, carpet_sqft, floor_care_sqft, floor_care_condition="standard"):
@@ -818,12 +817,11 @@ def index():
             )
         elif form_type == 'realtor':
             realtor_result = calculate_realtor(
-                square_feet=safe_int(request.form.get('realtor_square_feet')),
+                property_size=request.form.get('realtor_property_size', '0_1999'),
                 bedrooms=safe_int(request.form.get('realtor_bedrooms')),
                 bathrooms=safe_int(request.form.get('realtor_bathrooms')),
                 kitchens=safe_int(request.form.get('realtor_kitchens'), 1),
-                living_rooms=safe_int(request.form.get('realtor_living_rooms'), 1),
-                dining_rooms=safe_int(request.form.get('realtor_dining_rooms'), 1),
+                living_areas=safe_int(request.form.get('realtor_living_areas'), 1),
                 hallways=safe_int(request.form.get('realtor_hallways'), 1),
                 service_type=request.form.get('service_type', 'listing_prep'),
                 rush_type=request.form.get('rush_type', 'none'),
@@ -838,6 +836,7 @@ def index():
                 floor_care_condition=request.form.get('realtor_floor_care_condition', 'standard'),
                 pressure_condition=request.form.get('realtor_pressure_condition', 'standard'),
                 pressure_stain_addon=request.form.get('realtor_pressure_stain_addon', 'none'),
+                couch_cleaning=('realtor_couch_cleaning' in request.form),
             )
         elif form_type == 'commercial':
             commercial_result = calculate_commercial(
