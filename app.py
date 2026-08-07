@@ -12,7 +12,13 @@ def home():
 
 @app.route("/commercial", methods=["GET"])
 def commercial():
-    """Render the commercial estimator."""
+    """Render the commercial estimator with a persistent way back to the estimator menu."""
+    return render_template("commercial_wrapper.html")
+
+
+@app.route("/commercial-estimator", methods=["GET"])
+def commercial_estimator():
+    """Render the existing commercial estimator itself."""
     return render_template("index.html")
 
 
