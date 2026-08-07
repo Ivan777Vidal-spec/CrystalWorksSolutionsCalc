@@ -29,6 +29,7 @@ def turnovers():
     scripts = (
         '<script src="/static/turnover-enhancements.js"></script>'
         '<script src="/static/turnover-mobile-fixes.js"></script>'
+        '<script src="/static/turnover-crew-work-order.js"></script>'
     )
     return html.replace("</body>", f"{scripts}</body>")
 
