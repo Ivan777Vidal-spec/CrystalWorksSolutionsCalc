@@ -24,8 +24,10 @@ def commercial_estimator():
 
 @app.route("/turnovers", methods=["GET"])
 def turnovers():
-    """Render the vacant property and multi-unit turnover estimator."""
-    return render_template("turnovers.html")
+    """Render the turnover estimator and its customer-summary enhancements."""
+    html = render_template("turnovers.html")
+    enhancement = '<script src="/static/turnover-enhancements.js"></script>'
+    return html.replace("</body>", f"{enhancement}</body>")
 
 
 if __name__ == "__main__":
