@@ -26,8 +26,11 @@ def commercial_estimator():
 def turnovers():
     """Render the turnover estimator and its customer-summary enhancements."""
     html = render_template("turnovers.html")
-    enhancement = '<script src="/static/turnover-enhancements.js"></script>'
-    return html.replace("</body>", f"{enhancement}</body>")
+    scripts = (
+        '<script src="/static/turnover-enhancements.js"></script>'
+        '<script src="/static/turnover-mobile-fixes.js"></script>'
+    )
+    return html.replace("</body>", f"{scripts}</body>")
 
 
 if __name__ == "__main__":
