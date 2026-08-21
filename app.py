@@ -30,6 +30,7 @@ def turnovers():
         '<script src="/static/turnover-enhancements.js"></script>'
         '<script src="/static/turnover-mobile-fixes.js"></script>'
         '<script src="/static/turnover-crew-work-order.js"></script>'
+        '<script src="/static/turnover-input-updates.js"></script>'
         '<script src="/static/turnover-pricing-fixes.js"></script>'
         '<script src="/static/turnover-scope-print-update.js"></script>'
         '<script src="/static/turnover-targeted-print-balance.js"></script>'
