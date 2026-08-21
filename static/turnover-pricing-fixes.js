@@ -33,8 +33,6 @@
     const expectedBathEq=interp(s,'ba');
     const actualBathEq=n('baths')+n('halfBaths')*.5;
 
-    // Continuous bedroom/bath adjustment. The old Math.floor() logic could make
-    // a 400-sq-ft 2bd/1ba quote higher than the same 900-sq-ft layout.
     const roomAdj=(n('beds')-expectedBeds)*.22+(actualBathEq-expectedBathEq)*.42;
     base=Math.max(1,base+roomAdj);
 
@@ -43,13 +41,18 @@
     const add=addonCalc();
     const extra=(settings.pricingMode==='advanced'?n('extraMinutes')/60:0);
 
+    const hardWindows=val('hardWindows');
+    const hardWindowLabor=hardWindows*(10/60);
+    const hardWindowPrice=hardWindows*20;
+
     const baseLabor=Math.max(.5,(base+extra)*serviceMult*conditionMult);
-    const labor=baseLabor+add.labor;
+    const labor=baseLabor+add.labor+hardWindowLabor;
     const manual=(settings.pricingMode==='advanced'?n('manualAdjust'):0);
 
-    // Flat-rate add-ons are charged exactly once. Their labor still increases
-    // estimated labor, crew duration and direct cost for profitability tracking.
-    const quote=Math.max(settings.minJob,baseLabor*settings.hourlyRate)+add.price+manual;
+    // Standard add-ons remain flat-rate. Hard-to-reach windows are separate at
+    // $20 each and add 10 minutes of scheduling labor each.
+    const addonPrice=add.price+hardWindowPrice;
+    const quote=Math.max(settings.minJob,baseLabor*settings.hourlyRate)+addonPrice+manual;
 
     const crew=Math.max(1,Math.ceil(labor/Math.max(n('targetShift'),.5)));
     const duration=labor/crew;
@@ -57,20 +60,17 @@
     const profit=quote-cost;
     const margin=quote?profit/quote*100:0;
 
-    last={labor,quote,crew,duration,addons:add.price,cost,profit,margin};
+    last={labor,quote,crew,duration,addons:addonPrice,cost,profit,margin};
     $('summaryTitle').textContent=$('service').selectedOptions[0].text;
     $('quote').textContent=money(quote);
     $('labor').textContent=labor.toFixed(2)+' hr';
     $('crew').textContent=crew;
     $('duration').textContent=duration.toFixed(2)+' hr';
-    $('addons').textContent=money(add.price);
+    $('addons').textContent=money(addonPrice);
     $('profitBox').innerHTML=`Estimated direct cost: <b>${money(cost)}</b><br>Estimated gross profit: <b>${money(profit)}</b> (${margin.toFixed(1)}%)`;
     $('scopeText').textContent=scope[$('service').value];
     $('serviceDescription').textContent=scope[$('service').value];
     renderUnits();
-
-    // Enhancement script watches these values, so refresh our accurate Square
-    // line-item breakdown after it has had a chance to react.
     setTimeout(renderCorrectBreakdown,0);
   }
 
@@ -78,7 +78,8 @@
     const items=[];
     const fridge=val('fridge'); if(fridge>0) items.push([fridge===.5?'Inside refrigerator — only if needed':'Inside refrigerator',fridge*50]);
     if(val('oven')) items.push(['Inside oven',60]);
-    const windows=val('windows'); if(windows) items.push([`Interior windows (${windows})`,windows*10]);
+    const windows=val('windows'); if(windows) items.push([`Standard interior windows (${windows})`,windows*10]);
+    const hardWindows=val('hardWindows'); if(hardWindows) items.push([`Hard-to-reach interior windows (${hardWindows})`,hardWindows*20]);
     const blinds=val('blinds'); if(blinds) items.push([`Wet-wipe blinds (${blinds})`,blinds*10]);
     if(val('garage')) items.push(['Garage cleaning',75]);
     const carpet=val('carpetSqft'); if(carpet) items.push([`Carpet cleaning (${carpet.toLocaleString()} sqft)`,carpet*.37]);
@@ -107,8 +108,8 @@
     try{correctedCalc();renderCorrectBreakdown();}catch(e){console.error('Turnover pricing recalculation failed',e);}
   }
 
-  document.addEventListener('input',()=>setTimeout(renderCorrectBreakdown,1));
-  document.addEventListener('change',()=>setTimeout(renderCorrectBreakdown,1));
+  document.addEventListener('input',()=>setTimeout(rerun,1));
+  document.addEventListener('change',()=>setTimeout(rerun,1));
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(rerun,0));
   else setTimeout(rerun,0);
 })();
