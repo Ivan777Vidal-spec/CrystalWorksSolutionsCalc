@@ -1,7 +1,5 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  const num=id=>parseFloat($(id)?.value)||0;
-  const selected=id=>$(id)?.selectedOptions?.[0]?.textContent||'';
 
   function field(label,html){
     const wrap=document.createElement('div');
@@ -18,14 +16,46 @@
     grid.appendChild(field('Kitchen size','<select id="kitchenSize"><option value="small">Small / Kitchenette</option><option value="standard" selected>Standard Kitchen</option><option value="large">Large Kitchen</option></select>'));
   }
 
-  function addHardWindows(){
-    if($('hardWindows')) return;
+  function setupWindowService(){
     const windows=$('windows');
     const normalField=windows?.closest('.field');
     if(!normalField) return;
+
     const label=normalField.querySelector('label');
-    if(label) label.textContent='Standard interior windows';
-    normalField.insertAdjacentElement('afterend',field('Hard-to-reach interior windows','<input id="hardWindows" type="number" min="0" value="0">'));
+    if(label) label.textContent='Standard windows';
+
+    if(!$('windowService')){
+      normalField.insertAdjacentElement('beforebegin',field(
+        'Window cleaning service',
+        '<select id="windowService"><option value="interior">Interior Only</option><option value="complete">Complete — Interior + Exterior</option></select>'
+      ));
+    }
+
+    if(!$('hardWindows')){
+      normalField.insertAdjacentElement('afterend',field(
+        'High / hard-to-reach windows',
+        '<input id="hardWindows" type="number" min="0" value="0">'
+      ));
+    }else{
+      const hardLabel=$('hardWindows')?.closest('.field')?.querySelector('label');
+      if(hardLabel) hardLabel.textContent='High / hard-to-reach windows';
+    }
+
+    if(!$('hardWaterWindows')){
+      $('hardWindows')?.closest('.field')?.insertAdjacentElement('afterend',field(
+        'Windows with hard-water removal',
+        '<input id="hardWaterWindows" type="number" min="0" value="0">'
+      ));
+    }
+
+    if(!$('windowServiceNote')){
+      const note=document.createElement('div');
+      note.id='windowServiceNote';
+      note.className='notice';
+      note.style.gridColumn='1 / -1';
+      note.innerHTML='<strong>Window service:</strong> Interior Only includes interior glass + accessible interior sill. Complete includes interior/exterior glass + accessible sills + screen cleaning when present and accessible. Hard-water removal is optional.';
+      $('hardWaterWindows')?.closest('.grid')?.appendChild(note);
+    }
   }
 
   function renameMetrics(){
@@ -35,44 +65,6 @@
     if(duration) duration.textContent='Estimated on-site time';
   }
 
-  function patchCustomerSummary(){
-    if($('csProperty') && $('kitchenSize')){
-      const current=$('csProperty').textContent.replace(/ • Kitchen:.*$/,'');
-      $('csProperty').textContent=`${current} • Kitchen: ${selected('kitchenSize')}`;
-    }
-    const count=num('hardWindows');
-    if(!count || !$('csAddons')) return;
-    const section=$('csAddons').querySelector('.cws-summary-section')||$('csAddons');
-    if(section.querySelector('[data-hard-window-summary]')) return;
-    const row=document.createElement('div');
-    row.className='cws-check';
-    row.dataset.hardWindowSummary='1';
-    row.textContent=`Hard-to-reach interior windows (${count})`;
-    section.appendChild(row);
-    if($('csAddonWrap')) $('csAddonWrap').style.display='block';
-  }
-
-  function patchCrewWorkOrder(){
-    const count=num('hardWindows');
-    if(count && $('cwTasks') && !$('cwTasks').querySelector('[data-hard-window-task]')){
-      const group=document.createElement('tr');
-      group.className='group';
-      group.dataset.hardWindowTask='1';
-      group.innerHTML='<td colspan="5">Selected Add-ons</td>';
-      const row=document.createElement('tr');
-      row.className='addon';
-      row.dataset.hardWindowTask='1';
-      row.innerHTML=`<td class="order">+</td><td>Clean ${count} hard-to-reach interior window${count===1?'':'s'}; use approved ladder/access method</td><td class="target">${Math.max(10,count*10)} min est.</td><td class="assign"></td><td class="done"><span class="crew-check-square"></span></td>`;
-      $('cwTasks').append(group,row);
-    }
-    if($('cwService') && $('kitchenSize')){
-      const base=$('cwService').textContent.replace(/ • Kitchen:.*$/,'');
-      $('cwService').textContent=`${base} • Kitchen: ${selected('kitchenSize')}`;
-    }
-    const laborLabel=$('cwLabor')?.parentElement;
-    if(laborLabel) laborLabel.innerHTML=`<strong>Total Labor Hours:</strong> <span id="cwLabor">${$('labor')?.textContent||'—'}</span>`;
-  }
-
   function patchSavedTemplate(){
     try{
       const all=JSON.parse(localStorage.getItem('cwsTurnoverTemplates')||'[]');
@@ -80,20 +72,19 @@
       const last=all[all.length-1];
       last.data=last.data||{};
       last.data.kitchenSize=$('kitchenSize')?.value||'standard';
+      last.data.windowService=$('windowService')?.value||'interior';
       last.data.hardWindows=$('hardWindows')?.value||'0';
+      last.data.hardWaterWindows=$('hardWaterWindows')?.value||'0';
       localStorage.setItem('cwsTurnoverTemplates',JSON.stringify(all));
     }catch(e){console.warn('Could not extend turnover template',e);}
   }
 
   function init(){
     addKitchenSize();
-    addHardWindows();
+    setupWindowService();
     renameMetrics();
     document.addEventListener('click',e=>{
-      const id=e.target?.id;
-      if(id==='customerSummaryBtn') setTimeout(patchCustomerSummary,25);
-      if(id==='workOrderBtn') setTimeout(patchCrewWorkOrder,25);
-      if(id==='cwsSaveTemplate') setTimeout(patchSavedTemplate,25);
+      if(e.target?.id==='cwsSaveTemplate') setTimeout(patchSavedTemplate,25);
     });
   }
 
