@@ -93,7 +93,7 @@
 
     const minutes=(d.standard*(d.mode==='complete'?8:5))+(d.high*(d.mode==='complete'?14:10));
     const taskName=d.mode==='complete'
-      ? `Window cleaning — ${windowCountText(d)}: clean interior + exterior glass, accessible sills, and screens when present/accesssible`
+      ? `Window cleaning — ${windowCountText(d)}: clean interior + exterior glass, accessible sills, and screens when present and accessible`
       : `Window cleaning — ${windowCountText(d)}: clean interior glass and accessible interior sills`;
     addCrewRow(tbody,taskName,`${Math.max(5,Math.round(minutes))} min est.`);
     if(d.hardWater) addCrewRow(tbody,`Hard-water removal — ${d.hardWater} affected window${d.hardWater===1?'':'s'}; treat mineral buildup with approved method and document permanent etching/damage`,'10 min/window est.');
