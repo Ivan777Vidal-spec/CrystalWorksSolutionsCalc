@@ -1,7 +1,7 @@
 (()=>{
   const local$=id=>document.getElementById(id);
   const val=id=>parseFloat(local$(id)?.value)||0;
-  const fmt=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v||0);
+  const fmt=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:Number.isInteger(Number(v||0))?0:2,maximumFractionDigits:2}).format(v||0);
   const readMoney=s=>Number(String(s||'').replace(/[^0-9.-]/g,''))||0;
 
   const style=document.createElement('style');
@@ -26,6 +26,29 @@
   `;
   document.head.appendChild(style);
 
+  function windowCalc(){
+    const standard=val('windows');
+    const high=val('hardWindows');
+    const hardWater=val('hardWaterWindows');
+    const mode=local$('windowService')?.value||'interior';
+
+    const standardRate=mode==='complete'?15:10;
+    const highRate=mode==='complete'?20:15;
+    const standardMinutes=mode==='complete'?8:5;
+    const highMinutes=mode==='complete'?14:10;
+
+    return {
+      standard,
+      high,
+      hardWater,
+      mode,
+      price:standard*standardRate+high*highRate+hardWater*15,
+      labor:(standard*standardMinutes+high*highMinutes+hardWater*10)/60,
+      standardRate,
+      highRate
+    };
+  }
+
   function correctedCalc(){
     const s=Math.max(n('sqft'),100);
     let base=interp(s,'h');
@@ -40,18 +63,17 @@
     const conditionMult=settings[$('condition').value+'Mult']||1;
     const add=addonCalc();
     const extra=(settings.pricingMode==='advanced'?n('extraMinutes')/60:0);
+    const windows=windowCalc();
 
-    const hardWindows=val('hardWindows');
-    const hardWindowLabor=hardWindows*(10/60);
-    const hardWindowPrice=hardWindows*20;
+    // Remove the legacy standard-window contribution from addonCalc, then use
+    // the packaged window-service rates/labor below. Other add-ons are unchanged.
+    const nonWindowAddonPrice=Math.max(0,add.price-windows.standard*10);
+    const nonWindowAddonLabor=Math.max(0,add.labor-windows.standard*.08);
 
     const baseLabor=Math.max(.5,(base+extra)*serviceMult*conditionMult);
-    const labor=baseLabor+add.labor+hardWindowLabor;
+    const labor=baseLabor+nonWindowAddonLabor+windows.labor;
     const manual=(settings.pricingMode==='advanced'?n('manualAdjust'):0);
-
-    // Standard add-ons remain flat-rate. Hard-to-reach windows are separate at
-    // $20 each and add 10 minutes of scheduling labor each.
-    const addonPrice=add.price+hardWindowPrice;
+    const addonPrice=nonWindowAddonPrice+windows.price;
     const quote=Math.max(settings.minJob,baseLabor*settings.hourlyRate)+addonPrice+manual;
 
     const crew=Math.max(1,Math.ceil(labor/Math.max(n('targetShift'),.5)));
@@ -62,12 +84,12 @@
 
     last={labor,quote,crew,duration,addons:addonPrice,cost,profit,margin};
     $('summaryTitle').textContent=$('service').selectedOptions[0].text;
-    $('quote').textContent=money(quote);
+    $('quote').textContent=fmt(quote);
     $('labor').textContent=labor.toFixed(2)+' hr';
     $('crew').textContent=crew;
     $('duration').textContent=duration.toFixed(2)+' hr';
-    $('addons').textContent=money(addonPrice);
-    $('profitBox').innerHTML=`Estimated direct cost: <b>${money(cost)}</b><br>Estimated gross profit: <b>${money(profit)}</b> (${margin.toFixed(1)}%)`;
+    $('addons').textContent=fmt(addonPrice);
+    $('profitBox').innerHTML=`Estimated direct cost: <b>${fmt(cost)}</b><br>Estimated gross profit: <b>${fmt(profit)}</b> (${margin.toFixed(1)}%)`;
     $('scopeText').textContent=scope[$('service').value];
     $('serviceDescription').textContent=scope[$('service').value];
     renderUnits();
@@ -78,8 +100,13 @@
     const items=[];
     const fridge=val('fridge'); if(fridge>0) items.push([fridge===.5?'Inside refrigerator — only if needed':'Inside refrigerator',fridge*50]);
     if(val('oven')) items.push(['Inside oven',60]);
-    const windows=val('windows'); if(windows) items.push([`Standard interior windows (${windows})`,windows*10]);
-    const hardWindows=val('hardWindows'); if(hardWindows) items.push([`Hard-to-reach interior windows (${hardWindows})`,hardWindows*20]);
+
+    const wc=windowCalc();
+    const modeLabel=wc.mode==='complete'?'Complete — interior + exterior':'Interior only';
+    if(wc.standard) items.push([`Standard windows — ${modeLabel} (${wc.standard})`,wc.standard*wc.standardRate]);
+    if(wc.high) items.push([`High / hard-to-reach windows — ${modeLabel} (${wc.high})`,wc.high*wc.highRate]);
+    if(wc.hardWater) items.push([`Hard-water removal (${wc.hardWater})`,wc.hardWater*15]);
+
     const blinds=val('blinds'); if(blinds) items.push([`Wet-wipe blinds (${blinds})`,blinds*10]);
     if(val('garage')) items.push(['Garage cleaning',75]);
     const carpet=val('carpetSqft'); if(carpet) items.push([`Carpet cleaning (${carpet.toLocaleString()} sqft)`,carpet*.37]);
