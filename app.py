@@ -36,6 +36,7 @@ def turnovers():
         '<script src="/static/turnover-targeted-print-balance.js"></script>'
         '<script src="/static/turnover-window-docs.js"></script>'
         '<script src="/static/turnover-editable-docs.js"></script>'
+        '<script src="/static/turnover-inline-edit.js"></script>'
     )
     return html.replace("</body>", f"{scripts}</body>")
 
