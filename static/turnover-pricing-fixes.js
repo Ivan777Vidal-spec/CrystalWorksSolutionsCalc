@@ -1,7 +1,8 @@
 (()=>{
   const local$=id=>document.getElementById(id);
   const val=id=>parseFloat(local$(id)?.value)||0;
-  const fmt=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:Number.isInteger(Number(v||0))?0:2,maximumFractionDigits:2}).format(v||0);
+  const fmt=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v||0);
+  const roundCustomerPrice=v=>Math.round((Number(v)||0)/5)*5;
   const readMoney=s=>Number(String(s||'').replace(/[^0-9.-]/g,''))||0;
 
   const style=document.createElement('style');
@@ -74,7 +75,8 @@
     const labor=baseLabor+nonWindowAddonLabor+windows.labor;
     const manual=(settings.pricingMode==='advanced'?n('manualAdjust'):0);
     const addonPrice=nonWindowAddonPrice+windows.price;
-    const quote=Math.max(settings.minJob,baseLabor*settings.hourlyRate)+addonPrice+manual;
+    const rawQuote=Math.max(settings.minJob,baseLabor*settings.hourlyRate)+addonPrice+manual;
+    const quote=roundCustomerPrice(rawQuote);
 
     const crew=Math.max(1,Math.ceil(labor/Math.max(n('targetShift'),.5)));
     const duration=labor/crew;
