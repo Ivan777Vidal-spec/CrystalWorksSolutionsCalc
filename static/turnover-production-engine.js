@@ -79,6 +79,7 @@ by('scopeText').textContent=scope[by('service').value]+' Customized room levels:
 by('serviceDescription').textContent=scope[by('service').value];
 groups && AREAS.filter(a=>a.id!=='floor').forEach(a=>groups[a.id].forEach((g,i)=>{const el=document.querySelector('[data-group-time="'+a.id+'-'+i+'"]');if(el)el.textContent=(g.qty*config.times[a.id][LEVELS.indexOf(g.level)]*(a.id==='kitchen'?config.kitchenSize[g.size]:1)).toFixed(0)+' worker-minutes'}));
 renderUnits();
+const breakdown=by('cwsPriceBreakdown');if(breakdown){const base=Math.max(0,quote-addonPrice);breakdown.innerHTML='<div class="cws-breakdown"><div class="cws-price-row"><span>Room cleaning and labor</span><strong>'+money(base)+'</strong></div><div class="cws-price-row"><span>Ovens</span><strong>'+money(ovens.price)+'</strong></div><div class="cws-price-row"><span>Windows</span><strong>'+money(windows.price)+'</strong></div><div class="cws-price-row"><span>Other services</span><strong>'+money(otherPrice)+'</strong></div><div class="cws-price-row cws-price-total"><span>Recommended total</span><strong>'+money(quote)+'</strong></div></div>'}
 }finally{updating=false}}
 calc=calculate;
 function documentDetails(){return model.lines.concat(model.ovenGroups.map(g=>g.qty+' × '+g.condition+' oven cleaning'),model.windowGroups.map(g=>g.qty+' × '+g.service+' windows ('+g.access+(g.hardWater?', hard-water':'')+')'))}
