@@ -8,16 +8,6 @@
     return wrap;
   }
 
-  function addKitchenSize(){
-    // Kitchen sizes are edited per kitchen in Cleaning Areas.
-    return;
-    if($('kitchenSize')) return;
-    const sqft=$('sqft');
-    const grid=sqft?.closest('.grid');
-    if(!grid) return;
-    grid.appendChild(field('Kitchen size','<select id="kitchenSize"><option value="small">Small / Kitchenette</option><option value="standard" selected>Standard Kitchen</option><option value="large">Large Kitchen</option></select>'));
-  }
-
   function setupWindowService(){
     const windows=$('windows');
     const normalField=windows?.closest('.field');
@@ -73,7 +63,6 @@
       if(!all.length) return;
       const last=all[all.length-1];
       last.data=last.data||{};
-      last.data.kitchenSize=$('kitchenSize')?.value||'standard';
       last.data.windowService=$('windowService')?.value||'interior';
       last.data.hardWindows=$('hardWindows')?.value||'0';
       last.data.hardWaterWindows=$('hardWaterWindows')?.value||'0';
@@ -82,7 +71,6 @@
   }
 
   function init(){
-    addKitchenSize();
     setupWindowService();
     renameMetrics();
     document.addEventListener('click',e=>{
