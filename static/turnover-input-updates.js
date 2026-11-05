@@ -9,6 +9,8 @@
   }
 
   function addKitchenSize(){
+    // Kitchen sizes are edited per kitchen in Cleaning Areas.
+    return;
     if($('kitchenSize')) return;
     const sqft=$('sqft');
     const grid=sqft?.closest('.grid');
