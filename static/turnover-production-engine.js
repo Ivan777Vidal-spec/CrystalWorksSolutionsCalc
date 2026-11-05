@@ -94,9 +94,13 @@ const breakdown=by('cwsPriceBreakdown');if(breakdown){const base=Math.max(0,quot
 }finally{updating=false}}
 calc=calculate;
 function documentDetails(){return model.lines.concat(model.ovenGroups.map(g=>g.qty+' × '+g.condition+' oven cleaning'),model.windowGroups.map(g=>g.qty+' × '+g.service+' windows ('+g.access+(g.hardWater?', hard-water':'')+')'),model.specialLines)}
-function updateDocuments(){const details=documentDetails();const scopeText=scope[by('service').value]+'\nCustomized area instructions:\n'+details.join('\n');if(by('wScope'))by('wScope').textContent=scopeText;if(by('pScope'))by('pScope').textContent=scopeText;if(by('wLabor'))by('wLabor').textContent='Estimated labor: '+model.labor.toFixed(2)+' worker-hours';if(by('wCrew'))by('wCrew').textContent='Recommended crew: '+model.crew;if(by('pPrice'))by('pPrice').textContent=money(model.quote);if(by('pAddons'))by('pAddons').textContent=documentDetails().filter(x=>/oven|windows/.test(x)).concat(model.specialLines).join('; ')||'No specialty services selected.'}
-by('proposalBtn').addEventListener('click',()=>setTimeout(updateDocuments,30));
-by('workOrderBtn').addEventListener('click',()=>setTimeout(updateDocuments,30));
+function updateDocuments(){const details=documentDetails();const scopeText=scope[by('service').value]+'\nCustomized area instructions:\n'+details.join('\n');if(by('wScope'))by('wScope').textContent=scopeText;if(by('pScope'))by('pScope').textContent=scopeText;if(by('wLabor'))by('wLabor').textContent='Estimated labor: '+model.labor.toFixed(2)+' worker-hours';if(by('wCrew'))by('wCrew').textContent='Recommended crew: '+model.crew;if(by('pPrice'))by('pPrice').textContent=money(model.quote);if(by('pAddons'))by('pAddons').textContent=documentDetails().filter(x=>/oven|windows/.test(x)).concat(model.specialLines).join('; ')||'No specialty services selected.';
+const tbody=by('cwTasks');if(tbody){const safe=t=>esc(t);let rows='<tr class="group"><td colspan="5">Cleaning Areas — Assigned Levels</td></tr>';details.forEach((line,i)=>{rows+='<tr><td class="order">'+(i+1)+'</td><td>'+safe(line)+'</td><td class="target">See owner estimate</td><td class="assign"></td><td class="done"><span class="crew-check-square"></span></td></tr>'});tbody.innerHTML=rows;}if(by('cwLabor'))by('cwLabor').textContent=model.labor.toFixed(2)+' worker-hours';if(by('cwCrew'))by('cwCrew').textContent=String(model.crew);
+if(by('csScope')){const existing=by('csScope');existing.textContent=scopeText;}
+}
+by('proposalBtn').addEventListener('click',()=>setTimeout(updateDocuments,120));
+by('workOrderBtn').addEventListener('click',()=>setTimeout(updateDocuments,120));
+by('customerSummaryBtn')?.addEventListener('click',()=>setTimeout(updateDocuments,120));
 document.addEventListener('input',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 document.addEventListener('change',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 drawGroups();
