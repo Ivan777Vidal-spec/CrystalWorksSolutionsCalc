@@ -31,25 +31,6 @@
     return items;
   }
 
-  function scopeSections(){
-    const level=$('service')?.value||'turnover';
-    const general=['Dust reachable surfaces','Remove cobwebs','Vacuum floors','Mop hard floors','Clean doors and handles as included','Clean window sills'];
-    const kitchen=['Clean countertops and sink','Clean backsplash','Clean appliance exteriors','Wipe cabinet fronts'];
-    const bath=['Clean and sanitize toilet','Clean sink and vanity','Clean mirrors and fixtures','Clean shower / tub','Vacuum and mop floor'];
-    const living=['Dust reachable surfaces','Clean closets and shelving as included','Vacuum and mop floors'];
-    if(level==='turnover'||level==='restoration'){
-      general.push('Detail baseboards','Clean door frames','Clean reachable vent covers');
-      kitchen.push('Clean inside cabinets','Clean inside drawers');
-      living.push('Detail baseboards and trim');
-    }
-    if(level==='restoration'){
-      general.push('Extra detail for buildup and neglected areas');
-      kitchen.push('Heavy grease and buildup treatment as needed');
-      bath.push('Extra soap scum / hard-water buildup treatment as needed');
-    }
-    return {General:general,Kitchen:kitchen,Bathrooms:bath,'Bedrooms & Living Areas':living};
-  }
-
   function ensureBreakdown(){
     if($('cwsPriceBreakdown')) return;
     const profit=$('profitBox'); if(!profit) return;
@@ -101,8 +82,9 @@
     $('csProperty').textContent=`${$('propertyType')?.value||'Property'} • ${num('beds')} bd / ${num('baths')} ba${num('halfBaths')?` + ${num('halfBaths')} half`:''} • ${num('sqft').toLocaleString()} sqft`;
     $('csCondition').textContent=`Condition: ${conditionLabel()}`;
     $('csBanner').innerHTML=`<span class="cws-pill">${serviceLabel()}</span><span class="cws-pill">${$('propertyType')?.value||'Property'}</span><span class="cws-pill">${conditionLabel()} condition</span>`;
-    const sections=scopeSections(); $('csScope').innerHTML=Object.entries(sections).map(([h,arr])=>`<div class="cws-summary-section"><h3>${h}</h3>${arr.map(x=>`<div class="cws-check">${x}</div>`).join('')}</div>`).join('');
-    const adds=addonItems(); $('csAddonWrap').style.display=adds.length?'block':'none'; $('csAddons').innerHTML=adds.length?`<div class="cws-summary-section" style="grid-column:1/-1">${adds.map(x=>`<div class="cws-check">${x.name}</div>`).join('')}</div>`:'';
+    // Room-specific scope and add-ons come exclusively from the production engine.
+    if(typeof window.cwsRenderGroupedDocuments!=='function') throw new Error('Room-group document renderer is unavailable');
+    window.cwsRenderGroupedDocuments();
     const notes=text('specialNotes'); $('csNotesWrap').style.display=notes?'block':'none'; $('csNotes').textContent=notes;
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); $('customerSummaryView').classList.add('active'); window.scrollTo(0,0);
   }
