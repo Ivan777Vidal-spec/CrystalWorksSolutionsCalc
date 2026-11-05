@@ -28,6 +28,8 @@ const serviceCard=by('service').closest('section.card');serviceCard.after(sectio
 // Room quantities and kitchen size are managed only in Cleaning Areas.
 ['beds','baths','halfBaths','kitchenSize'].forEach(id=>{const field=by(id)?.closest('.field');if(field)field.style.display='none'});
 if(by('kitchenSize'))groups.kitchen[0].size=by('kitchenSize').value;
+// Hide any legacy kitchen-size field that was inserted by an older cached script.
+const kitchenLegacy=by('kitchenSize');if(kitchenLegacy?.closest('.field'))kitchenLegacy.closest('.field').hidden=true;
 const oldOven=by('oven').closest('.field');oldOven.style.display='none';by('oven').value='0';
 const oldWindow=by('windows').closest('.field');oldWindow.style.display='none';by('windows').value='0';
 const oldHard=by('hardWindows')?.closest('.field');if(oldHard)oldHard.style.display='none';
@@ -141,6 +143,9 @@ function updateDocuments(){
 }
 const docStyle=document.createElement('style');docStyle.textContent='.cws-crew-subtasks{font-size:10px;line-height:1.4;margin-top:5px;color:#41546a}.cws-crew-subtasks>div{padding:2px 0}.cws-summary-room{margin:8px 0 12px}.cws-summary-room strong{display:block;margin-bottom:5px}#pScope,#pAddons{line-height:1.55;white-space:normal}@media print{.cws-crew-subtasks{font-size:9px}.cws-summary-room{break-inside:avoid}}';document.head.appendChild(docStyle);
 ['proposalBtn','workOrderBtn','customerSummaryBtn'].forEach(id=>by(id)?.addEventListener('click',()=>setTimeout(updateDocuments,200)));
+// The legacy customer summary renderer rewrites the scope when opened.
+// Apply the grouped-room version immediately after that renderer finishes.
+document.addEventListener('click',e=>{if(e.target?.closest('#customerSummaryBtn')){setTimeout(updateDocuments,0);setTimeout(updateDocuments,100)}},true);
 document.addEventListener('input',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 document.addEventListener('change',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 drawGroups();
