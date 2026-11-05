@@ -73,7 +73,6 @@
       if(!all.length) return;
       const last=all[all.length-1];
       last.data=last.data||{};
-      last.data.kitchenSize=$('kitchenSize')?.value||'standard';
       last.data.windowService=$('windowService')?.value||'interior';
       last.data.hardWindows=$('hardWindows')?.value||'0';
       last.data.hardWaterWindows=$('hardWaterWindows')?.value||'0';
@@ -82,7 +81,6 @@
   }
 
   function init(){
-    addKitchenSize();
     setupWindowService();
     renameMetrics();
     document.addEventListener('click',e=>{
