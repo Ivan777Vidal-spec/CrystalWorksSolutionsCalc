@@ -141,11 +141,10 @@ function updateDocuments(){
  if(by('csScope')){const room=roomRows();const labels=[['General','hall','floor'],['Kitchen','kitchen'],['Bathrooms','bath','half'],['Bedrooms, Closets & Living Areas','bed','living']];by('csScope').innerHTML=labels.map(([title,...ids])=>{const included=room.filter(r=>ids.includes(r.type));if(!included.length)return '';return '<div class="cws-summary-section"><h3>'+title+'</h3>'+included.map(r=>{const status=r.level!==selected?(LEVELS.indexOf(r.level)>LEVELS.indexOf(selected)?' — Upgraded':' — Adjusted scope'):'';return '<div class="cws-summary-room"><strong>'+esc(r.qty+' × '+r.name+(r.type==='kitchen'?' ('+r.size+')':'')+' — '+LABEL[r.level]+status)+'</strong>'+taskList(r).map(t=>'<div class="cws-check">'+esc(t)+'</div>').join('')+'</div>'}).join('')+'</div>'}).join('')}
  if(by('csAddonWrap')){const adds=specialtyDescriptions();by('csAddonWrap').style.display=adds.length?'block':'none';if(by('csAddons'))by('csAddons').innerHTML=adds.length?'<div class="cws-summary-section" style="grid-column:1/-1">'+adds.map(t=>'<div class="cws-check">'+esc(t)+'</div>').join('')+'</div>':''}
 }
+window.cwsRenderGroupedDocuments=updateDocuments;
 const docStyle=document.createElement('style');docStyle.textContent='.cws-crew-subtasks{font-size:10px;line-height:1.4;margin-top:5px;color:#41546a}.cws-crew-subtasks>div{padding:2px 0}.cws-summary-room{margin:8px 0 12px}.cws-summary-room strong{display:block;margin-bottom:5px}#pScope,#pAddons{line-height:1.55;white-space:normal}@media print{.cws-crew-subtasks{font-size:9px}.cws-summary-room{break-inside:avoid}}';document.head.appendChild(docStyle);
-['proposalBtn','workOrderBtn','customerSummaryBtn'].forEach(id=>by(id)?.addEventListener('click',()=>setTimeout(updateDocuments,200)));
-// The legacy customer summary renderer rewrites the scope when opened.
-// Apply the grouped-room version immediately after that renderer finishes.
-document.addEventListener('click',e=>{if(e.target?.closest('#customerSummaryBtn')){setTimeout(updateDocuments,0);setTimeout(updateDocuments,100)}},true);
+['proposalBtn','workOrderBtn'].forEach(id=>by(id)?.addEventListener('click',()=>setTimeout(updateDocuments,200)));
+
 document.addEventListener('input',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 document.addEventListener('change',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
 drawGroups();
