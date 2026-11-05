@@ -101,8 +101,12 @@
     $('csProperty').textContent=`${$('propertyType')?.value||'Property'} • ${num('beds')} bd / ${num('baths')} ba${num('halfBaths')?` + ${num('halfBaths')} half`:''} • ${num('sqft').toLocaleString()} sqft`;
     $('csCondition').textContent=`Condition: ${conditionLabel()}`;
     $('csBanner').innerHTML=`<span class="cws-pill">${serviceLabel()}</span><span class="cws-pill">${$('propertyType')?.value||'Property'}</span><span class="cws-pill">${conditionLabel()} condition</span>`;
-    const sections=scopeSections(); $('csScope').innerHTML=Object.entries(sections).map(([h,arr])=>`<div class="cws-summary-section"><h3>${h}</h3>${arr.map(x=>`<div class="cws-check">${x}</div>`).join('')}</div>`).join('');
-    const adds=addonItems(); $('csAddonWrap').style.display=adds.length?'block':'none'; $('csAddons').innerHTML=adds.length?`<div class="cws-summary-section" style="grid-column:1/-1">${adds.map(x=>`<div class="cws-check">${x.name}</div>`).join('')}</div>`:'';
+    if(typeof window.cwsRenderGroupedDocuments==='function'){
+      window.cwsRenderGroupedDocuments();
+    }else{
+      const sections=scopeSections(); $('csScope').innerHTML=Object.entries(sections).map(([h,arr])=>`<div class="cws-summary-section"><h3>${h}</h3>${arr.map(x=>`<div class="cws-check">${x}</div>`).join('')}</div>`).join('');
+      const adds=addonItems(); $('csAddonWrap').style.display=adds.length?'block':'none'; $('csAddons').innerHTML=adds.length?`<div class="cws-summary-section" style="grid-column:1/-1">${adds.map(x=>`<div class="cws-check">${x.name}</div>`).join('')}</div>`:'';
+    }
     const notes=text('specialNotes'); $('csNotesWrap').style.display=notes?'block':'none'; $('csNotes').textContent=notes;
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); $('customerSummaryView').classList.add('active'); window.scrollTo(0,0);
   }
