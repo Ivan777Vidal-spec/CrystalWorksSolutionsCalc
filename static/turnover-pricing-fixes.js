@@ -134,7 +134,7 @@
   calc=correctedCalc;
 
   function rerun(){
-    try{correctedCalc();renderCorrectBreakdown();}catch(e){console.error('Turnover pricing recalculation failed',e);}
+    try{calc();if(!document.getElementById('cwsRoomGroups'))renderCorrectBreakdown();}catch(e){console.error('Turnover pricing recalculation failed',e);}
   }
 
   document.addEventListener('input',()=>setTimeout(rerun,1));
