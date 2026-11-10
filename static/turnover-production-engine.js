@@ -119,8 +119,10 @@ blinds:{light:['Dust accessible blinds'],normal:['Wipe accessible blinds'],heavy
 garage:{light:['Sweep accessible garage'],normal:['Sweep and wipe accessible garage surfaces'],heavy:['Detailed garage cleaning within approved scope']},
 trash:{light:['Collect light trash'],normal:['Bag and remove approved trash'],heavy:['Handle heavier approved debris; report hazardous items']}
 };
-function taskList(row){return scopeTasks[row.type]?.[row.level]||['Complete selected cleaning scope']}
+function taskList(row){if(row.type==='inspection')return ['Photograph all rooms and existing damage','Report unexpected damage or heavy buildup'];if(row.type==='completion')return ['Photograph completed work','Perform final walkthrough'];return scopeTasks[row.type]?.[row.level]||['Complete selected cleaning scope']}
 function roundTarget(m){return Math.max(5,Math.round(m/5)*5)}
+function laborDisplay(hours){const total=Math.round(hours*60/5)*5;return Math.floor(total/60)+' hours '+String(total%60).padStart(2,'0')+' minutes'}
+function crewTaskRows(){return [{type:'inspection',name:'Before photos and property inspection',minutes:config.photoBefore??10,level:'normal'},...roomRows(),...extraRows(),{type:'completion',name:'After photos and final walkthrough',minutes:config.photoAfter??5,level:'normal'}]}
 function upgradeRows(){return roomRows().filter(r=>r.type!=='floor'&&r.level!==by('service').value)}
 function specialtyDescriptions(){return extraRows().map(r=>r.name)}
 function documentDetails(){return roomRows().map(r=>r.qty+' × '+r.name+(r.type==='kitchen'?' ('+r.size+')':'')+' — '+LABEL[r.level]).concat(specialtyDescriptions())}
@@ -128,11 +130,11 @@ function updateDocuments(){
  const selected=by('service').value;
  const exceptions=upgradeRows().map(r=>r.qty+' '+r.name+(r.type==='kitchen'?' ('+r.size+')':'')+' — '+LABEL[r.level]+(LEVELS.indexOf(r.level)>LEVELS.indexOf(selected)?' (upgraded)':' (adjusted scope)'));
  if(by('pScope'))by('pScope').textContent=scope[selected]||'Property cleaning at the selected service level.';
- if(by('pAddons')){const parts=exceptions.concat(specialtyDescriptions());by('pAddons').textContent=parts.length?parts.join(' • '):'No additional services or room-level changes.'}
+ if(by('pAddons')){const parts=exceptions.concat(specialtyDescriptions());by('pAddons').innerHTML=parts.length?'<ul class="cws-proposal-addons">'+parts.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'No additional services or room-level changes.'}
  if(by('pPrice'))by('pPrice').textContent=money(model.quote);
  if(by('pProperty')){const beds=groups.bed.reduce((a,g)=>a+g.qty,0),baths=groups.bath.reduce((a,g)=>a+g.qty,0);by('pProperty').textContent=(by('propertyType')?.selectedOptions?.[0]?.text||'Property')+' • '+beds+' bd / '+baths+' ba • '+num('sqft')+' sqft'}
- if(by('cwTasks')){let index=0;const rows=roomRows().concat(extraRows());let html='<tr class="group"><td colspan="5">Assigned Cleaning Areas & Specialty Services</td></tr>';rows.forEach(r=>{const title=r.qty+' × '+r.name+(r.type==='kitchen'?' ('+r.size+')':'')+(LABEL[r.level]?' — '+LABEL[r.level]:'');html+='<tr><td class="order">'+(++index)+'</td><td><strong>'+esc(title)+'</strong><div class="cws-crew-subtasks">'+taskList(r).map(t=>'<div>□ '+esc(t)+'</div>').join('')+'</div></td><td class="target">'+roundTarget(r.minutes)+' min</td><td class="assign"></td><td class="done"><span class="crew-check-square"></span></td></tr>'});by('cwTasks').innerHTML=html;}
- if(by('cwLabor'))by('cwLabor').textContent=model.labor.toFixed(2)+' worker-hours';
+ if(by('cwTasks')){let index=0;const rows=crewTaskRows();let html='<tr class="group"><td colspan="5">Assigned Cleaning Areas & Specialty Services</td></tr>';rows.forEach(r=>{const title=(r.type==='inspection'||r.type==='completion'||r.type==='oven'||r.type==='windows'||SPECIAL[r.type])?r.name:r.qty+' × '+r.name+(r.type==='kitchen'?' ('+r.size+')':'')+(LABEL[r.level]?' — '+LABEL[r.level]:'');html+='<tr><td class="order">'+(++index)+'</td><td><strong>'+esc(title)+'</strong><div class="cws-crew-subtasks">'+taskList(r).map(t=>'<div>□ '+esc(t)+'</div>').join('')+'</div></td><td class="target">'+roundTarget(r.minutes)+' min</td><td class="assign"></td><td class="done"><span class="crew-check-square"></span></td></tr>'});by('cwTasks').innerHTML=html;}
+ if(by('cwLabor'))by('cwLabor').textContent=laborDisplay(model.labor);
  if(by('cwCrew'))by('cwCrew').textContent=String(model.crew);
  if(by('wScope'))by('wScope').textContent=scope[selected];
  if(by('wLabor'))by('wLabor').textContent=model.labor.toFixed(2)+' worker-hours';
@@ -142,7 +144,7 @@ function updateDocuments(){
  if(by('csAddonWrap')){const adds=specialtyDescriptions();by('csAddonWrap').style.display=adds.length?'block':'none';if(by('csAddons'))by('csAddons').innerHTML=adds.length?'<div class="cws-summary-section" style="grid-column:1/-1">'+adds.map(t=>'<div class="cws-check">'+esc(t)+'</div>').join('')+'</div>':''}
 }
 window.cwsRenderGroupedDocuments=updateDocuments;
-const docStyle=document.createElement('style');docStyle.textContent='.cws-crew-subtasks{font-size:10px;line-height:1.4;margin-top:5px;color:#41546a}.cws-crew-subtasks>div{padding:2px 0}.cws-summary-room{margin:8px 0 12px}.cws-summary-room strong{display:block;margin-bottom:5px}#pScope,#pAddons{line-height:1.55;white-space:normal}@media print{.cws-crew-subtasks{font-size:9px}.cws-summary-room{break-inside:avoid}}';document.head.appendChild(docStyle);
+const docStyle=document.createElement('style');docStyle.textContent='.cws-crew-subtasks{font-size:10px;line-height:1.4;margin-top:5px;color:#41546a}.cws-crew-subtasks>div{padding:2px 0}.cws-summary-room{margin:8px 0 12px}.cws-summary-room strong{display:block;margin-bottom:5px}#pScope,#pAddons{line-height:1.55;white-space:normal}.cws-proposal-addons{margin:0;padding-left:22px;list-style:disc}.cws-proposal-addons li{display:list-item;margin:4px 0;break-inside:avoid}@media print{.cws-crew-subtasks{font-size:9px}.cws-summary-room{break-inside:avoid}}';document.head.appendChild(docStyle);
 ['proposalBtn','workOrderBtn'].forEach(id=>by(id)?.addEventListener('click',()=>setTimeout(updateDocuments,200)));
 
 document.addEventListener('input',e=>{if(e.target.closest('.cws-production'))return;setTimeout(calculate,5)});
