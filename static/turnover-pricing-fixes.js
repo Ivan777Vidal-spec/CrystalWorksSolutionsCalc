@@ -60,7 +60,6 @@
     const roomAdj=(n('beds')-expectedBeds)*.22+(actualBathEq-expectedBathEq)*.42;
     base=Math.max(1,base+roomAdj);
 
-    const serviceMult=settings[$('service').value+'Mult']||1;
     const conditionMult=settings[$('condition').value+'Mult']||1;
     const add=addonCalc();
     const extra=(settings.pricingMode==='advanced'?n('extraMinutes')/60:0);
@@ -71,7 +70,7 @@
     const nonWindowAddonPrice=Math.max(0,add.price-windows.standard*10);
     const nonWindowAddonLabor=Math.max(0,add.labor-windows.standard*.08);
 
-    const baseLabor=Math.max(.5,(base+extra)*serviceMult*conditionMult);
+    const baseLabor=Math.max(.5,(base+extra)*conditionMult);
     const labor=baseLabor+nonWindowAddonLabor+windows.labor;
     const manual=(settings.pricingMode==='advanced'?n('manualAdjust'):0);
     const addonPrice=nonWindowAddonPrice+windows.price;
