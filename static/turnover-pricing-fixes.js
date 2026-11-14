@@ -123,8 +123,7 @@
     const addonTotal=readMoney(local$('addons')?.textContent);
     const base=Math.max(0,total-addonTotal);
     const service=local$('service')?.selectedOptions?.[0]?.textContent||'Property Turnover';
-    const condition=local$('condition')?.selectedOptions?.[0]?.textContent||'Normal';
-    let html=`<div class="cws-breakdown"><div class="cws-price-row"><span>${service} — ${condition}</span><strong>${fmt(base)}</strong></div>`;
+    let html=`<div class="cws-breakdown"><div class="cws-price-row"><span>${service}</span><strong>${fmt(base)}</strong></div>`;
     addonLineItems().forEach(([name,price])=>{html+=`<div class="cws-price-row"><span>${name}</span><strong>${fmt(price)}</strong></div>`;});
     html+=`<div class="cws-price-row cws-price-total"><span>Recommended total</span><strong>${fmt(total)}</strong></div></div>`;
     box.innerHTML=html;
