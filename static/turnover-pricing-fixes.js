@@ -60,7 +60,7 @@
     const roomAdj=(n('beds')-expectedBeds)*.22+(actualBathEq-expectedBathEq)*.42;
     base=Math.max(1,base+roomAdj);
 
-    const conditionMult=settings[$('condition').value+'Mult']||1;
+    const conditionMult=1;
     const add=addonCalc();
     const extra=(settings.pricingMode==='advanced'?n('extraMinutes')/60:0);
     const windows=windowCalc();
